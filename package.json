@@ -1,11 +1,21 @@
 {
-  "name": "my-project",
+  "name": "lighting",
   "source": "src/index.html",
   "scripts": {
     "start": "parcel",
-    "build": "parcel build"
+    "build": "rm -rf dist && parcel build",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "parcel": "latest"
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.10",
+    "parcel": "latest",
+    "prettier": "3.3.3"
+  },
+  "dependencies": {
+    "p5": "^1.10.0"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }
