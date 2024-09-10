@@ -3,6 +3,12 @@ import { lights } from "../lights";
 
 const s = (p) => {
   const params = {
+    // INITIAL LOOK
+    z: {
+      background: p.color(0),
+      color: p.color(0),
+    },
+
     5: {
       background: p.color(0),
       color: p.color(255),
@@ -16,8 +22,8 @@ const s = (p) => {
       color: p.color(0),
     },
 
-    // INITIAL LOOK
-    z: {
+    // BLACKOUT
+    Enter: {
       background: p.color(0),
       color: p.color(0),
     },
@@ -75,6 +81,7 @@ const s = (p) => {
   };
 
   p.keyPressed = () => {
+    if (p.key === "ArrowUp") window.open("/02/index.html");
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
   };
 
@@ -135,6 +142,19 @@ const s = (p) => {
         );
         fade = Math.max(fade - 2.125, 0);
         break;
+
+      // BLACKOUT
+      case "Enter":
+        p.background(0);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(0),
+              g: p.green(0),
+              b: p.blue(0),
+            }),
+        );
 
       // INITIAL LOOK
       default:
