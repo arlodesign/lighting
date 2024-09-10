@@ -35,7 +35,7 @@ const s = (p) => {
   };
 
   p.keyPressed = () => {
-    if (p.key === "ArrowUp") window.open("/02/index.html");
+    if (p.key === "ArrowUp") window.open("/02/index.html", "_self");
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
   };
 
@@ -94,6 +94,7 @@ const s = (p) => {
               b: p.blue(0),
             }),
         );
+        break;
 
       // INITIAL LOOK
       default:
