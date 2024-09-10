@@ -81,7 +81,7 @@ const s = (p) => {
   };
 
   p.keyPressed = () => {
-    if (p.key === "ArrowUp") window.open("/02/index.html");
+    if (p.key === "ArrowUp") window.open("/02/index.html", "_self");
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
   };
 
@@ -91,7 +91,6 @@ const s = (p) => {
     p.background(background);
     p.fill(color);
     p.noStroke();
-    // p.circle(100, 100, 50);
 
     switch (currentKey) {
       case "5":
@@ -150,11 +149,12 @@ const s = (p) => {
         lights.forEach(
           (light) =>
             (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
+              r: p.red(p.random() * 255),
+              g: p.green(p.random() * 255),
+              b: p.blue(p.random() * 255),
             }),
         );
+        break;
 
       // INITIAL LOOK
       default:

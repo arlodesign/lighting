@@ -35,7 +35,7 @@ const s = (p) => {
   };
 
   p.keyPressed = () => {
-    if (p.key === "ArrowUp") window.open("/02/index.html", "_self");
+    if (p.key === "ArrowUp") window.open("/03/index.html");
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
   };
 
