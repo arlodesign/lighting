@@ -3,19 +3,25 @@ import { lights } from "../lights";
 
 const s = (p) => {
   const params = {
-    5: {
-      background: p.color(255),
-    },
-    m: {
-      background: p.color(127),
-    },
-    "-": {
+    // INITIAL LOOK
+    z: {
       background: p.color(255, 0, 0),
     },
 
-    // INITIAL LOOK
-    z: {
+    5: {
+      background: p.color(0, 255, 0),
+    },
+    m: {
+      background: p.color(0, 0, 255),
+    },
+    "-": {
+      background: p.color(255, 0, 255),
+    },
+
+    // BLACKOUT
+    Enter: {
       background: p.color(0),
+      color: p.color(0),
     },
   };
 
@@ -29,15 +35,17 @@ const s = (p) => {
   };
 
   p.keyPressed = () => {
+    if (p.key === "ArrowUp") window.open("/02/index.html");
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
   };
 
   p.draw = () => {
     const { background } = params[currentKey];
-    p.background(background);
 
     switch (currentKey) {
       case "f":
+        p.background(background);
+
         lights.forEach(
           (light) =>
             (light.color = {
@@ -49,6 +57,8 @@ const s = (p) => {
         break;
 
       case "j":
+        p.background(background);
+
         lights.forEach(
           (light) =>
             (light.color = {
@@ -60,6 +70,8 @@ const s = (p) => {
         break;
 
       case ";":
+        p.background(background);
+
         lights.forEach(
           (light) =>
             (light.color = {
@@ -70,8 +82,23 @@ const s = (p) => {
         );
         break;
 
+      // BLACKOUT
+      case "Enter":
+        p.background(0);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(0),
+              g: p.green(0),
+              b: p.blue(0),
+            }),
+        );
+
       // INITIAL LOOK
       default:
+        p.background(background);
+
         lights.forEach(
           (light) =>
             (light.color = {
