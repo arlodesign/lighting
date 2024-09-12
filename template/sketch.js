@@ -43,7 +43,7 @@ const s = (p) => {
     const { background } = params[currentKey];
 
     switch (currentKey) {
-      case "f":
+      case "5":
         p.background(background);
 
         lights.forEach(
@@ -56,7 +56,7 @@ const s = (p) => {
         );
         break;
 
-      case "j":
+      case "m":
         p.background(background);
 
         lights.forEach(
@@ -69,7 +69,7 @@ const s = (p) => {
         );
         break;
 
-      case ";":
+      case "-":
         p.background(background);
 
         lights.forEach(
