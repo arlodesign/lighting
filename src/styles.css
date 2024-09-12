@@ -37,6 +37,8 @@ li a {
 canvas {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  width: 1280px !important;
+  height: 800px !important;
 }
 
 #lights {
