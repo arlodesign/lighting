@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { lights } from "../lib/lights";
+import { cues } from "../lib/cues";
 
 const s = (p) => {
   const pink = p.color("#EF65A7");
@@ -7,26 +8,26 @@ const s = (p) => {
 
   const params = {
     // INITIAL LOOK
-    z: {
+    [cues[0].key]: {
       background: p.color(0),
       duration: 60,
     },
 
-    5: {
+    [cues[1].key]: {
       background: p.color(0),
       duration: 200,
     },
-    m: {
+    [cues[2].key]: {
       background: p.color(0),
       duration: 200,
     },
-    "-": {
+    [cues[3].key]: {
       background: pink,
       duration: 45,
     },
 
     // BLACKOUT
-    Enter: {
+    [cues[4].key]: {
       background: p.color(0),
       color: p.color(0),
     },
@@ -45,6 +46,7 @@ const s = (p) => {
 
   p.setup = () => {
     p.createCanvas(width, height);
+    p.keyPressed();
     p.stroke(0);
     p.strokeWeight(4);
   };
@@ -54,9 +56,11 @@ const s = (p) => {
       window.open("/03/index.html", "_self");
       return;
     }
+
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
     frameStart = p.frameCount;
     currentLightsState = JSON.parse(JSON.stringify(lights));
+    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
   };
 
   p.draw = () => {
@@ -64,8 +68,8 @@ const s = (p) => {
     const lerpVal = (p.frameCount - frameStart) / duration;
 
     switch (currentKey) {
-      case "5":
-      case "m":
+      case cues[1].key:
+      case cues[2].key:
         p.background(background);
         for (let x = 0; x < width; x += diameter) {
           for (let y = 0; y < height; y += diameter) {
@@ -95,7 +99,7 @@ const s = (p) => {
         });
         break;
 
-      case "-":
+      case cues[3].key:
         const currentColor = p.lerpColor(pink, p.color(0), lerpVal);
 
         p.background(currentColor);
@@ -111,7 +115,7 @@ const s = (p) => {
         break;
 
       // BLACKOUT
-      case "Enter":
+      case cues[4].key:
         p.background(0);
 
         lights.forEach(

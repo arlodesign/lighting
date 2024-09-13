@@ -36,8 +36,9 @@ class Light {
     this.g = g;
     this.b = b;
 
-    this.update();
+    this.updateDot();
     this.updateStorage();
+    this.updateFixture();
   }
 
   updateDot() {
@@ -48,14 +49,8 @@ class Light {
     window.localStorage.setItem(this.name, JSON.stringify(this));
   }
 
-  update() {
-    // Get duration
-    // set current time
-    // make changes
+  updateFixture() {
     // send message to lights
-
-    // update screen
-    this.updateDot();
   }
 }
 
