@@ -1,29 +1,30 @@
 import p5 from "p5";
 import { lights } from "../lib/lights";
+import { cues } from "../lib/cues";
 
 const s = (p) => {
   const params = {
     // INITIAL LOOK
-    z: {
+    [cues[0].key]: {
       background: p.color(0),
       color: p.color(0),
     },
 
-    5: {
+    [cues[1].key]: {
       background: p.color(0),
       color: p.color(255),
     },
-    m: {
+    [cues[2].key]: {
       background: p.color(255),
       color: p.color(0),
     },
-    "-": {
+    [cues[3].key]: {
       background: p.color(255),
       color: p.color(0),
     },
 
     // BLACKOUT
-    Enter: {
+    [cues[4].key]: {
       background: p.color(0),
       color: p.color(0),
     },
@@ -70,6 +71,7 @@ const s = (p) => {
   p.setup = () => {
     p.createCanvas(width, height);
     p.frameRate(30);
+    p.keyPressed();
 
     circles = [
       new Circle(),
@@ -83,6 +85,7 @@ const s = (p) => {
   p.keyPressed = () => {
     if (p.key === "ArrowUp") window.open("/02/index.html", "_self");
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
+    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
   };
 
   p.draw = () => {
@@ -93,7 +96,7 @@ const s = (p) => {
     p.noStroke();
 
     switch (currentKey) {
-      case "5":
+      case cues[1].key:
         fade = 255;
         drawCircles();
 
@@ -111,7 +114,7 @@ const s = (p) => {
         });
         break;
 
-      case "m":
+      case cues[2].key:
         fade = 255;
         drawCircles();
 
@@ -127,7 +130,7 @@ const s = (p) => {
         });
         break;
 
-      case "-":
+      case cues[3].key:
         p.background(fade);
         drawCircles();
 
@@ -143,15 +146,15 @@ const s = (p) => {
         break;
 
       // BLACKOUT
-      case "Enter":
+      case cues[4].key:
         p.background(0);
 
         lights.forEach(
           (light) =>
             (light.color = {
-              r: p.red(p.random() * 255),
-              g: p.green(p.random() * 255),
-              b: p.blue(p.random() * 255),
+              r: p.red(0),
+              g: p.green(0),
+              b: p.blue(0),
             }),
         );
         break;

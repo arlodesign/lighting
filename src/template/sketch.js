@@ -41,6 +41,7 @@ const s = (p) => {
 
   p.setup = () => {
     p.createCanvas(width, height);
+    p.keyPressed();
   };
 
   p.keyPressed = () => {
@@ -51,13 +52,14 @@ const s = (p) => {
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
     frameStart = p.frameCount;
     currentLightsState = JSON.parse(JSON.stringify(lights));
+    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
   };
 
   p.draw = () => {
     const { background } = params[currentKey];
 
     switch (currentKey) {
-      case "5":
+      case cues[1].key:
         p.background(background);
 
         lights.forEach(
@@ -70,7 +72,7 @@ const s = (p) => {
         );
         break;
 
-      case "m":
+      case cues[2].key:
         p.background(background);
 
         lights.forEach(
@@ -83,7 +85,7 @@ const s = (p) => {
         );
         break;
 
-      case "-":
+      case cues[3].key:
         p.background(background);
 
         lights.forEach(
@@ -97,7 +99,7 @@ const s = (p) => {
         break;
 
       // BLACKOUT
-      case "Enter":
+      case cues[4].key:
         p.blendMode(p.BLEND);
         p.background(0);
 

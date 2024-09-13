@@ -42,7 +42,6 @@ canvas {
 }
 
 #lights {
-  list-style: none;
   padding: 2rem;
   margin: 0;
   display: grid;
@@ -55,4 +54,31 @@ canvas {
   height: 2rem;
   border-radius: 2rem;
   border: 1px solid gray;
+}
+
+#dashboard {
+  position: relative;
+}
+
+#cues {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  gap: 1ch;
+}
+.cue {
+  font-size: 2em;
+  display: block;
+  width: 2ch;
+  height: 2ch;
+  border: 1px solid gray;
+}
+.cue.is-current {
+  background: white;
+  color: black;
 }

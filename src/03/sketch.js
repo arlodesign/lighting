@@ -1,30 +1,31 @@
 import p5 from "p5";
 import { lights } from "../lib/lights";
+import { cues } from "../lib/cues";
 import { AudioSpectrum } from "../lib/audio-spectrum";
 
 const s = (p) => {
   const params = {
     // INITIAL LOOK
-    z: {
+    [cues[0].key]: {
       background: p.color("magenta"),
       duration: 200,
     },
 
-    5: {
+    [cues[1].key]: {
       background: p.color(0),
       duration: 0,
     },
-    m: {
+    [cues[2].key]: {
       background: p.color(0),
       duration: 0,
     },
-    "-": {
+    [cues[3].key]: {
       background: p.color("magenta"),
       duration: 60,
     },
 
     // BLACKOUT
-    Enter: {
+    [cues[4].key]: {
       background: p.color(0),
       duration: 0,
       color: p.color(0),
@@ -105,6 +106,7 @@ const s = (p) => {
     await spectrum.startMicInput();
     p.createCanvas(width, height);
     p.frameRate(30);
+    p.keyPressed();
   };
 
   p.keyPressed = () => {
@@ -115,6 +117,7 @@ const s = (p) => {
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
     frameStart = p.frameCount;
     currentLightsState = JSON.parse(JSON.stringify(lights));
+    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
   };
 
   p.draw = () => {
@@ -133,7 +136,7 @@ const s = (p) => {
     const lerpVal = (p.frameCount - frameStart) / duration;
 
     switch (currentKey) {
-      case "m":
+      case cues[2].key:
         spotlightsVertical();
         break;
 
@@ -143,8 +146,8 @@ const s = (p) => {
     }
 
     switch (currentKey) {
-      case "5":
-      case "m":
+      case cues[1].key:
+      case cues[2].key:
         p.blendMode(p.BLEND);
         p.background(0);
         p.blendMode(p.ADD);
@@ -165,7 +168,7 @@ const s = (p) => {
         );
         break;
 
-      case "-":
+      case cues[3].key:
         p.blendMode(p.BLEND);
         p.background(p.lerpColor(p.color(0), background, lerpVal));
         p.blendMode(p.ADD);
@@ -190,7 +193,7 @@ const s = (p) => {
         break;
 
       // BLACKOUT
-      case "Enter":
+      case cues[4].key:
         p.blendMode(p.BLEND);
         p.background(0);
 
@@ -206,6 +209,7 @@ const s = (p) => {
 
       // INITIAL LOOK
       default:
+        p.blendMode(p.BLEND);
         p.background(0);
 
         p.fill(p.lerp(0, 255, lerpVal));
@@ -230,28 +234,3 @@ const s = (p) => {
 };
 
 new p5(s, document.getElementById("sketch"));
-
-//
-// console.log(
-//   frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length,
-// );
-
-// frequencyData = [...frequencyData].slice(
-//   Math.floor(frequencyData.length / 4),
-//   Math.floor(frequencyData.length / 2),
-// );
-
-// p.beginShape();
-// frequencyData.forEach((data, index) => {
-//   const x = (p.width / frequencyData.length) * index;
-//   const xRatio = x / p.width;
-//   // 𝑦=−4𝑥2+4𝑥
-//   const y =
-//     p.height *
-//     p.noise(x / 100, data / 50) *
-//     (-4 * xRatio * xRatio + 4 * xRatio);
-//   p.vertex(x, y);
-// });
-// p.vertex(p.width, 0);
-// p.vertex(0, 0);
-// p.endShape(p.CLOSE);
