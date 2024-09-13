@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { lights } from "../lights";
+import { lights } from "../lib/lights";
 
 const s = (p) => {
   const width = 1280;

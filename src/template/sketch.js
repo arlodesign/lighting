@@ -1,0 +1,135 @@
+import p5 from "p5";
+import { lights } from "../lib/lights";
+
+const s = (p) => {
+  const params = {
+    // INITIAL LOOK
+    z: {
+      background: p.color(255, 0, 0),
+      duration: 0,
+    },
+
+    5: {
+      background: p.color(0, 255, 0),
+      duration: 0,
+    },
+    m: {
+      background: p.color(0, 0, 255),
+      duration: 0,
+    },
+    "-": {
+      background: p.color(255, 0, 255),
+      duration: 0,
+    },
+
+    // BLACKOUT
+    Enter: {
+      background: p.color(0),
+      duration: 0,
+      color: p.color(0),
+    },
+  };
+
+  let currentKey = "z";
+  let frameStart = 0;
+
+  const previousLightsState = JSON.parse(JSON.stringify(lights));
+  let currentLightsState = null;
+
+  const width = 1280;
+  const height = 800;
+
+  p.setup = () => {
+    p.createCanvas(width, height);
+  };
+
+  p.keyPressed = () => {
+    if (p.key === "ArrowUp") {
+      window.open("/03/index.html", "_self");
+      return;
+    }
+    currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
+    frameStart = p.frameCount;
+    currentLightsState = JSON.parse(JSON.stringify(lights));
+  };
+
+  p.draw = () => {
+    const { background } = params[currentKey];
+
+    switch (currentKey) {
+      case "5":
+        p.background(background);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(background),
+              g: p.green(background),
+              b: p.blue(background),
+            }),
+        );
+        break;
+
+      case "m":
+        p.background(background);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(background),
+              g: p.green(background),
+              b: p.blue(background),
+            }),
+        );
+        break;
+
+      case "-":
+        p.background(background);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(background),
+              g: p.green(background),
+              b: p.blue(background),
+            }),
+        );
+        break;
+
+      // BLACKOUT
+      case "Enter":
+        p.blendMode(p.BLEND);
+        p.background(0);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(0),
+              g: p.green(0),
+              b: p.blue(0),
+            }),
+        );
+        break;
+
+      // INITIAL LOOK
+      default:
+        p.background(background);
+
+        lights.forEach((light, index) => {
+          const { r, g, b } = currentLightsState
+            ? currentLightState[index]
+            : previousLightsState[index];
+          const currentColor = p.color(r, g, b);
+          const thisColor = p.lerpColor(currentColor, background, lerpVal);
+          light.color = {
+            r: p.red(thisColor),
+            g: p.green(thisColor),
+            b: p.blue(thisColor),
+          };
+        });
+        break;
+    }
+  };
+};
+
+new p5(s, document.getElementById("sketch"));
