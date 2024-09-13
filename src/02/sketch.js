@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { lights } from "../lights";
+import { lights } from "../lib/lights";
 
 const s = (p) => {
   const pink = p.color("#EF65A7");
@@ -13,10 +13,14 @@ const s = (p) => {
     },
 
     5: {
-      background: purple,
+      background: p.color(0),
       duration: 200,
     },
     m: {
+      background: p.color(0),
+      duration: 200,
+    },
+    "-": {
       background: pink,
       duration: 45,
     },
@@ -33,7 +37,7 @@ const s = (p) => {
 
   const width = 1280 / 4;
   const height = 800 / 4;
-  const boxSize = 20;
+  const diameter = 40;
 
   const previousLightsState = JSON.parse(JSON.stringify(lights));
   let currentLightsState = null;
@@ -42,11 +46,14 @@ const s = (p) => {
   p.setup = () => {
     p.createCanvas(width, height);
     p.stroke(0);
-    p.strokeWeight(2);
+    p.strokeWeight(4);
   };
 
   p.keyPressed = () => {
-    if (p.key === "ArrowUp") window.open("/03/index.html");
+    if (p.key === "ArrowUp") {
+      window.open("/03/index.html", "_self");
+      return;
+    }
     currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
     frameStart = p.frameCount;
     currentLightsState = JSON.parse(JSON.stringify(lights));
@@ -58,13 +65,20 @@ const s = (p) => {
 
     switch (currentKey) {
       case "5":
+      case "m":
         p.background(background);
-        for (let x = 0; x < width; x += boxSize) {
-          for (let y = 0; y < height; y += boxSize) {
+        for (let x = 0; x < width; x += diameter) {
+          for (let y = 0; y < height; y += diameter) {
             p.fill(
-              p.noise(x / 50, y / 50, p.frameCount / 100) < 0.5 ? pink : purple,
+              p.noise(
+                x / 50,
+                y / 50,
+                p.frameCount / (currentKey === "5" ? 1000 : 100),
+              ) < 0.5
+                ? pink
+                : purple,
             );
-            p.rect(x, y, boxSize, boxSize);
+            p.circle(x + diameter / 2, y + diameter / 2, diameter);
           }
         }
 
@@ -81,7 +95,7 @@ const s = (p) => {
         });
         break;
 
-      case "m":
+      case "-":
         const currentColor = p.lerpColor(pink, p.color(0), lerpVal);
 
         p.background(currentColor);
@@ -113,9 +127,11 @@ const s = (p) => {
       // INITIAL LOOK
       default:
         p.background(background);
-        const { r, g, b } = currentLightsState || previousLightsState;
 
         lights.forEach((light, index) => {
+          const { r, g, b } = Boolean(currentLightsState)
+            ? currentLightsState[index]
+            : previousLightsState[index];
           const currentColor = p.color(r, g, b);
           const thisColor =
             index % 2
