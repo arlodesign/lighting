@@ -35,7 +35,7 @@ const s = (p) => {
   const speed = 15;
   const frames = 500;
 
-  let currentKey = "z";
+  let currentKey = cues[0].key;
   let fade = 255;
 
   class Circle {

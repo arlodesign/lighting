@@ -14,6 +14,7 @@ class Cue {
     bool
       ? this.li.classList.add("is-current")
       : this.li.classList.remove("is-current");
+    bool && console.log("CUE: ", this.name, `[${this.key}]`);
   }
 }
 

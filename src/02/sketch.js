@@ -33,7 +33,7 @@ const s = (p) => {
     },
   };
 
-  let currentKey = "z";
+  let currentKey = cues[0].key;
   let frameStart = 0;
 
   const width = 1280 / 4;
