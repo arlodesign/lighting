@@ -30,7 +30,7 @@ const s = (p) => {
     },
   };
 
-  let currentKey = "z";
+  let currentKey = cues[0].key;
   let frameStart = 0;
 
   const previousLightsState = JSON.parse(JSON.stringify(lights));
@@ -49,10 +49,13 @@ const s = (p) => {
       window.open("/03/index.html", "_self");
       return;
     }
-    currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
-    frameStart = p.frameCount;
-    currentLightsState = JSON.parse(JSON.stringify(lights));
-    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
+    if (thisKey !== currentKey) {
+      currentKey = thisKey;
+      frameStart = p.frameCount;
+      currentLightsState = JSON.parse(JSON.stringify(lights));
+      cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    }
   };
 
   p.draw = () => {

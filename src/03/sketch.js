@@ -32,7 +32,9 @@ const s = (p) => {
     },
   };
 
-  let currentKey = "z";
+  let currentKey = cues[0].key;
+  cues[0].isCurrent = true;
+
   let frameStart = 0;
 
   const previousLightsState = JSON.parse(JSON.stringify(lights));
@@ -75,6 +77,18 @@ const s = (p) => {
     }
   }
 
+  let chaseLightColors = [
+    p.color(255, 255, 0),
+    p.color(255, 0, 255),
+    p.color(0, 255, 255),
+    p.color("white"),
+    p.color(255, 255, 0),
+    p.color(255, 0, 255),
+    p.color(0, 255, 255),
+    p.color("white"),
+  ];
+  let chaseSpeed = 50;
+
   const spotlights = [
     new Spotlight(p.color(255, 255, 0), { x: speed, y: speed * 1.25 }),
     new Spotlight(p.color(255, 0, 255), { x: speed * 1.25, y: -speed * 1.5 }),
@@ -114,10 +128,13 @@ const s = (p) => {
       window.open("/03/index.html", "_self");
       return;
     }
-    currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
-    frameStart = p.frameCount;
-    currentLightsState = JSON.parse(JSON.stringify(lights));
-    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
+    if (thisKey !== currentKey) {
+      currentKey = thisKey;
+      frameStart = p.frameCount;
+      currentLightsState = JSON.parse(JSON.stringify(lights));
+      cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    }
   };
 
   p.draw = () => {
@@ -147,6 +164,38 @@ const s = (p) => {
 
     switch (currentKey) {
       case cues[1].key:
+        if (p.frameCount % chaseSpeed === 0) {
+          const firstColor = chaseLightColors.shift();
+          chaseLightColors = [...chaseLightColors, firstColor];
+          lights.forEach(
+            (light, index) =>
+              (light.color = {
+                r: p.red(chaseLightColors[index]),
+                g: p.green(chaseLightColors[index]),
+                b: p.blue(chaseLightColors[index]),
+              }),
+          );
+        }
+        break;
+
+      case cues[2].key:
+        if (p.frameCount % Math.floor(chaseSpeed / 3) === 0) {
+          const firstColor = chaseLightColors.shift();
+          chaseLightColors = [...chaseLightColors, firstColor];
+          lights.forEach(
+            (light, index) =>
+              (light.color = {
+                r: p.red(chaseLightColors[index]),
+                g: p.green(chaseLightColors[index]),
+                b: p.blue(chaseLightColors[index]),
+              }),
+          );
+        }
+        break;
+    }
+
+    switch (currentKey) {
+      case cues[1].key:
       case cues[2].key:
         p.blendMode(p.BLEND);
         p.background(0);
@@ -157,15 +206,6 @@ const s = (p) => {
           p.circle(s.x, s.y, radius * 2);
           s.move();
         });
-
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(background),
-              g: p.green(background),
-              b: p.blue(background),
-            }),
-        );
         break;
 
       case cues[3].key:
