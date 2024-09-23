@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { lights } from "../lib/lights";
+import { cues } from "../lib/cues";
 
 const s = (p) => {
   const params = {
@@ -59,7 +60,8 @@ const s = (p) => {
   };
 
   p.draw = () => {
-    const { background } = params[currentKey];
+    const { background, duration } = params[currentKey];
+    const lerpVal = (p.frameCount - frameStart) / duration;
 
     switch (currentKey) {
       case cues[1].key:
@@ -122,7 +124,7 @@ const s = (p) => {
 
         lights.forEach((light, index) => {
           const { r, g, b } = currentLightsState
-            ? currentLightState[index]
+            ? currentLightsState[index]
             : previousLightsState[index];
           const currentColor = p.color(r, g, b);
           const thisColor = p.lerpColor(currentColor, background, lerpVal);

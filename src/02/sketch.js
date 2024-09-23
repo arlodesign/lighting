@@ -5,20 +5,22 @@ import { cues } from "../lib/cues";
 const s = (p) => {
   const pink = p.color("#EF65A7");
   const purple = p.color("#330099");
+  const gold = p.color("#FFD700");
+  const black = p.color(0);
 
   const params = {
     // INITIAL LOOK
     [cues[0].key]: {
-      background: p.color(0),
+      background: black,
       duration: 60,
     },
 
     [cues[1].key]: {
-      background: p.color(0),
+      background: black,
       duration: 200,
     },
     [cues[2].key]: {
-      background: p.color(0),
+      background: black,
       duration: 200,
     },
     [cues[3].key]: {
@@ -28,8 +30,8 @@ const s = (p) => {
 
     // BLACKOUT
     [cues[4].key]: {
-      background: p.color(0),
-      color: p.color(0),
+      background: black,
+      color: black,
     },
   };
 
@@ -56,11 +58,13 @@ const s = (p) => {
       window.open("/03/index.html", "_self");
       return;
     }
-
-    currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
-    frameStart = p.frameCount;
-    currentLightsState = JSON.parse(JSON.stringify(lights));
-    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
+    if (thisKey !== currentKey) {
+      currentKey = thisKey;
+      frameStart = p.frameCount;
+      currentLightsState = JSON.parse(JSON.stringify(lights));
+      cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    }
   };
 
   p.draw = () => {
@@ -90,7 +94,7 @@ const s = (p) => {
 
         lights.forEach((light, index) => {
           const thisColor =
-            index % 2 ? (alternate ? pink : purple) : alternate ? purple : pink;
+            index % 2 ? (alternate ? gold : black) : alternate ? black : gold;
           light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),
@@ -100,7 +104,7 @@ const s = (p) => {
         break;
 
       case cues[3].key:
-        const currentColor = p.lerpColor(pink, p.color(0), lerpVal);
+        const currentColor = p.lerpColor(gold, p.color(0), lerpVal);
 
         p.background(currentColor);
 
