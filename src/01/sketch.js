@@ -83,9 +83,17 @@ const s = (p) => {
   };
 
   p.keyPressed = () => {
-    if (p.key === "ArrowUp") window.open("/02/index.html", "_self");
-    currentKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
-    cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    if (p.key === "ArrowUp") {
+      window.open("/02/index.html", "_self");
+      return;
+    }
+    const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
+    if (thisKey !== currentKey) {
+      currentKey = thisKey;
+      frameStart = p.frameCount;
+      currentLightsState = JSON.parse(JSON.stringify(lights));
+      cues.forEach((c) => (c.isCurrent = c.key === currentKey));
+    }
   };
 
   p.draw = () => {

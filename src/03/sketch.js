@@ -21,7 +21,7 @@ const s = (p) => {
     },
     [cues[3].key]: {
       background: p.color("magenta"),
-      duration: 60,
+      duration: 30,
     },
 
     // BLACKOUT
@@ -79,12 +79,12 @@ const s = (p) => {
 
   let chaseLightColors = [
     p.color(255, 255, 0),
-    p.color(255, 0, 255),
     p.color(0, 255, 255),
+    p.color(255, 0, 255),
     p.color("white"),
-    p.color(255, 255, 0),
     p.color(255, 0, 255),
     p.color(0, 255, 255),
+    p.color(255, 255, 0),
     p.color("white"),
   ];
   let chaseSpeed = 50;
@@ -125,7 +125,7 @@ const s = (p) => {
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/03/index.html", "_self");
+      window.open("/04/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
