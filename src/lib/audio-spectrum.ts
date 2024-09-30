@@ -1,9 +1,10 @@
 // audioSpectrum.js
 export class AudioSpectrum {
-  constructor(
-    fftSize = 2048,
-    audioContext = new (window.AudioContext || window.webkitAudioContext)(),
-  ) {
+  audioContext!: AudioContext;
+  analyser!: AnalyserNode;
+  dataArray!: Uint8Array;
+
+  constructor(fftSize = 2048, audioContext = new window.AudioContext()) {
     this.audioContext = audioContext;
     this.analyser = this.audioContext.createAnalyser();
     this.analyser.fftSize = fftSize;
@@ -11,7 +12,7 @@ export class AudioSpectrum {
   }
 
   // Connects the audio source (file, microphone, etc.) to the analyser
-  async connectAudioSource(stream) {
+  async connectAudioSource(stream: MediaStream) {
     const source = this.audioContext.createMediaStreamSource(stream);
     source.connect(this.analyser);
   }
@@ -30,12 +31,5 @@ export class AudioSpectrum {
     } catch (err) {
       console.error("Error accessing microphone: ", err);
     }
-  }
-
-  // Optionally, connect an audio element
-  connectAudioElement(audioElement) {
-    const source = this.audioContext.createMediaElementSource(audioElement);
-    source.connect(this.analyser);
-    this.analyser.connect(this.audioContext.destination); // Connect to output so audio plays
   }
 }
