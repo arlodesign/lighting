@@ -1,7 +1,11 @@
 const cuesDiv = document.getElementById("cues");
 
 class Cue {
-  constructor(name, key, isCurrent = false) {
+  name!: string;
+  key!: string;
+  li!: HTMLLIElement;
+
+  constructor(name: string, key: string) {
     this.name = name;
     this.key = key;
 
@@ -10,11 +14,11 @@ class Cue {
     this.li.classList.add("cue");
     cuesDiv.append(this.li);
   }
-  set isCurrent(bool) {
+  set isCurrent(bool: boolean) {
     bool
       ? this.li.classList.add("is-current")
       : this.li.classList.remove("is-current");
-    bool && console.log("CUE: ", this.name, `[${this.key}]`);
+    bool && console.debug("CUE: ", this.name, `[${this.key}]`);
   }
 }
 
