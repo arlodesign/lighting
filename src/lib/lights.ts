@@ -4,13 +4,11 @@ let isConnected = false;
 let youHaveBeenWarned = false;
 
 websocket.onopen = function (event) {
-  alert("QLC+ connection successful");
   console.log("QLC+ connection successful", event);
   isConnected = true;
 };
 
 websocket.onclose = function (event) {
-  alert("QLC+ connection lost!");
   console.warn("QLC+ connection lost!", event);
 };
 
