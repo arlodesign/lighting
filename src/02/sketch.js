@@ -40,7 +40,7 @@ const s = (p) => {
 
   const width = 1280 / 4;
   const height = 800 / 4;
-  const diameter = 40;
+  const diameter = 10;
 
   const previousLightsState = JSON.parse(JSON.stringify(lights));
   let currentLightsState = null;
@@ -75,8 +75,8 @@ const s = (p) => {
       case cues[1].key:
       case cues[2].key:
         p.background(background);
-        for (let x = 0; x < width; x += diameter) {
-          for (let y = 0; y < height; y += diameter) {
+        for (let x = 0; x < width; x += diameter * 2) {
+          for (let y = 0; y < height; y += diameter * 2) {
             p.fill(
               p.noise(
                 x / 50,
