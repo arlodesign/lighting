@@ -32,7 +32,7 @@ const s = (p) => {
     // BLACKOUT
     Enter: {
       background: p.color(0),
-      duration: 0,
+      duration: 60,
       color: p.color(0),
     },
   };
@@ -118,7 +118,7 @@ const s = (p) => {
 
   p.draw = () => {
     const { background, duration } = params[currentKey || cues[0].key];
-    const lerpVal = (p.frameCount - frameStart) / duration;
+    const lerpVal = Math.min((p.frameCount - frameStart) / duration, 1);
 
     switch (currentKey) {
       case cues[0].key:
@@ -147,6 +147,10 @@ const s = (p) => {
             g: p.green(thisColor),
             b: p.blue(thisColor),
           };
+
+          currentKey === cues[3].key
+            ? (light.master = 128)
+            : (light.master = 255);
         });
 
         break;
@@ -156,14 +160,19 @@ const s = (p) => {
         p.blendMode(p.BLEND);
         p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light, index) => {
+          const thisColor = p.lerpColor(
+            currentChaseLightsColors[index],
+            p.color(0),
+            lerpVal,
+          );
+
+          light.color = {
+            r: p.red(thisColor),
+            g: p.green(thisColor),
+            b: p.blue(thisColor),
+          };
+        });
         break;
 
       // INITIAL LOOK

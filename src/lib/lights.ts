@@ -80,6 +80,7 @@ class Light {
 
   updateDot() {
     this.dot.style.backgroundColor = `rgb(${this.r},${this.g},${this.b})`;
+    this.dot.style.opacity = String(this.master / 255);
   }
 
   updateStorage() {
