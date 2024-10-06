@@ -99,12 +99,13 @@ const s = (p) => {
 
   p.setup = () => {
     p.createCanvas(width, height);
+    p.frameRate(30);
     p.keyPressed();
   };
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/03/index.html", "_self");
+      window.open("/05/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;

@@ -114,4 +114,15 @@ const lights = [
   new Light("SR_4", 113),
 ];
 
-export { lights };
+const lightsObj = {
+  SL_1: lights[0],
+  SL_2: lights[1],
+  SL_3: lights[2],
+  SL_4: lights[3],
+  SR_1: lights[4],
+  SR_2: lights[5],
+  SR_3: lights[6],
+  SR_4: lights[7],
+};
+
+export { lights, lightsObj };
