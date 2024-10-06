@@ -42,12 +42,13 @@ const s = (p) => {
 
   p.setup = () => {
     p.createCanvas(width, height);
+    p.frameRate(30);
     p.keyPressed();
   };
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/03/index.html", "_self");
+      window.open("/CHANGE/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
@@ -61,7 +62,7 @@ const s = (p) => {
 
   p.draw = () => {
     const { background, duration } = params[currentKey];
-    const lerpVal = (p.frameCount - frameStart) / duration;
+    const lerpVal = Math.min((p.frameCount - frameStart) / duration, 1);
 
     switch (currentKey) {
       case cues[1].key:
