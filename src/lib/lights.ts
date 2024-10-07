@@ -21,34 +21,46 @@ websocket.onmessage = function (event) {
   console.debug("QLC+ message", event);
 };
 
+type Fixture = {
+  channel: number;
+  master: number;
+  r: number;
+  g: number;
+  b: number;
+  strobe: number;
+  effect: number;
+  colorShift: number;
+};
+
 class Light {
   name!: string;
-  channel!: number;
-  master!: number;
-  r!: number;
-  g!: number;
-  b!: number;
-  strobe!: number;
-  effect!: number;
-  colorShift!: number;
+  channel!: Fixture["channel"];
+  master!: Fixture["master"];
+  r!: Fixture["r"];
+  g!: Fixture["g"];
+  b!: Fixture["b"];
+  strobe!: Fixture["strobe"];
+  effect!: Fixture["effect"];
+  colorShift!: Fixture["colorShift"];
   li!: HTMLLIElement;
   dot!: HTMLDivElement;
+  data!: Fixture;
 
   constructor(name: string, channel: number) {
     this.name = name;
 
-    const data = window.localStorage.getItem(this.name)
+    this.data = window.localStorage.getItem(this.name)
       ? JSON.parse(window.localStorage.getItem(this.name))
       : {};
 
-    this.channel = channel || data.channel || 0;
-    this.master = data.master || 255;
-    this.r = data.r || 0;
-    this.g = data.g || 0;
-    this.b = data.b || 0;
-    this.strobe = data.strobe || 0;
-    this.effect = data.effect || 0;
-    this.colorShift = data.colorShift || 0;
+    this.channel = channel || this.data.channel || 0;
+    this.master = this.data.master || 255;
+    this.r = this.data.r || 0;
+    this.g = this.data.g || 0;
+    this.b = this.data.b || 0;
+    this.strobe = this.data.strobe || 0;
+    this.effect = this.data.effect || 0;
+    this.colorShift = this.data.colorShift || 0;
 
     this.li = document.createElement("li");
     this.li.setAttribute("id", name);
@@ -67,15 +79,17 @@ class Light {
    * @param Object
    */
   set color({ r, g, b }: { r: number; g: number; b: number }) {
-    if (this.r === r && this.g === g && this.b === b) return;
+    this.r = Math.round(r);
+    this.g = Math.round(g);
+    this.b = Math.round(b);
 
-    this.r = r;
-    this.g = g;
-    this.b = b;
+    this.update();
+  }
 
+  update() {
     this.updateDot();
-    this.updateStorage();
     this.updateFixture();
+    this.updateStorage();
   }
 
   updateDot() {
@@ -84,18 +98,38 @@ class Light {
   }
 
   updateStorage() {
-    window.localStorage.setItem(this.name, JSON.stringify(this));
+    const { channel, master, r, g, b, strobe, effect, colorShift } = this;
+    window.localStorage.setItem(
+      this.name,
+      JSON.stringify({
+        channel,
+        master,
+        r,
+        g,
+        b,
+        strobe,
+        effect,
+        colorShift,
+      }),
+    );
   }
 
   updateFixture() {
     if (isConnected === true) {
-      websocket.send(`CH|${this.channel}|${this.master}`);
-      websocket.send(`CH|${this.channel + 1}|${this.r}`);
-      websocket.send(`CH|${this.channel + 2}|${this.g}`);
-      websocket.send(`CH|${this.channel + 3}|${this.b}`);
-      websocket.send(`CH|${this.channel + 4}|${this.strobe}`);
-      websocket.send(`CH|${this.channel + 5}|${this.effect}`);
-      websocket.send(`CH|${this.channel + 6}|${this.colorShift}`);
+      this.data.master !== this.master &&
+        websocket.send(`CH|${this.channel}|${this.master}`);
+      this.data.r !== this.r &&
+        websocket.send(`CH|${this.channel + 1}|${this.r}`);
+      this.data.g !== this.g &&
+        websocket.send(`CH|${this.channel + 2}|${this.g}`);
+      this.data.b !== this.b &&
+        websocket.send(`CH|${this.channel + 3}|${this.b}`);
+      this.data.strobe !== this.strobe &&
+        websocket.send(`CH|${this.channel + 4}|${this.strobe}`);
+      this.data.effect !== this.effect &&
+        websocket.send(`CH|${this.channel + 5}|${this.effect}`);
+      this.data.colorShift !== this.colorShift &&
+        websocket.send(`CH|${this.channel + 6}|${this.colorShift}`);
     } else {
       !youHaveBeenWarned && alert("You must connect to QLC+ WebSocket first!");
       youHaveBeenWarned = true;

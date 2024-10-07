@@ -48,6 +48,7 @@ const s = (p) => {
 
   p.setup = () => {
     p.createCanvas(width, height);
+    p.frameRate(30);
     p.keyPressed();
     p.stroke(0);
     p.strokeWeight(4);
