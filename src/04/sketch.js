@@ -152,6 +152,8 @@ const s = (p) => {
           currentKey === cues[3].key
             ? (light.master = 128)
             : (light.master = 255);
+
+          light.update();
         });
 
         break;

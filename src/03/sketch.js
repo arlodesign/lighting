@@ -138,7 +138,7 @@ const s = (p) => {
   };
 
   p.draw = () => {
-    let frequencyData = spectrum.getFrequencyData();
+    const frequencyData = spectrum.getFrequencyData();
     const average =
       frequencyData.reduce((a, b) => a + b, 0) / frequencyData.length;
 
