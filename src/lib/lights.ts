@@ -13,7 +13,6 @@ websocket.onclose = function (event) {
 };
 
 websocket.onerror = function (event) {
-  alert("QLC+ connection error!");
   console.error("QLC+ connection error!", event);
 };
 
@@ -115,25 +114,22 @@ class Light {
   }
 
   updateFixture() {
-    if (isConnected === true) {
-      this.data.master !== this.master &&
-        websocket.send(`CH|${this.channel}|${this.master}`);
-      this.data.r !== this.r &&
-        websocket.send(`CH|${this.channel + 1}|${this.r}`);
-      this.data.g !== this.g &&
-        websocket.send(`CH|${this.channel + 2}|${this.g}`);
-      this.data.b !== this.b &&
-        websocket.send(`CH|${this.channel + 3}|${this.b}`);
-      this.data.strobe !== this.strobe &&
-        websocket.send(`CH|${this.channel + 4}|${this.strobe}`);
-      this.data.effect !== this.effect &&
-        websocket.send(`CH|${this.channel + 5}|${this.effect}`);
-      this.data.colorShift !== this.colorShift &&
-        websocket.send(`CH|${this.channel + 6}|${this.colorShift}`);
-    } else {
-      !youHaveBeenWarned && alert("You must connect to QLC+ WebSocket first!");
-      youHaveBeenWarned = true;
-    }
+    if (!isConnected) return;
+
+    this.data.master !== this.master &&
+      websocket.send(`CH|${this.channel}|${this.master}`);
+    this.data.r !== this.r &&
+      websocket.send(`CH|${this.channel + 1}|${this.r}`);
+    this.data.g !== this.g &&
+      websocket.send(`CH|${this.channel + 2}|${this.g}`);
+    this.data.b !== this.b &&
+      websocket.send(`CH|${this.channel + 3}|${this.b}`);
+    this.data.strobe !== this.strobe &&
+      websocket.send(`CH|${this.channel + 4}|${this.strobe}`);
+    this.data.effect !== this.effect &&
+      websocket.send(`CH|${this.channel + 5}|${this.effect}`);
+    this.data.colorShift !== this.colorShift &&
+      websocket.send(`CH|${this.channel + 6}|${this.colorShift}`);
   }
 }
 
