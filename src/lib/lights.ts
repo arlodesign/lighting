@@ -81,8 +81,6 @@ class Light {
     this.r = Math.round(r);
     this.g = Math.round(g);
     this.b = Math.round(b);
-
-    this.update();
   }
 
   update() {

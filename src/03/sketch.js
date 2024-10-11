@@ -270,6 +270,8 @@ const s = (p) => {
           };
         });
     }
+
+    lights.forEach((l) => l.update());
   };
 };
 
