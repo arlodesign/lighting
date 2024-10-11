@@ -64,15 +64,14 @@ const s = (p) => {
     }
     draw(index) {
       const x = (width / 2 / barCount) * index + width / 2;
+      const noiseVal = p.noise(x / 10, p.frameCount / 10);
       const y = this.noise
-        ? height * 0.5 +
-          p.lerp(
-            -height * 0.5,
-            height * 0.5,
-            p.noise(x / 10, p.frameCount / 10),
-          )
+        ? height * 0.5 + p.lerp(-height * 0.5, height * 0.5, noiseVal)
         : height * 0.5;
 
+      this.noise
+        ? p.fill(p.lerpColor(p.color("pink"), p.color("blue"), noiseVal))
+        : p.fill(255);
       p.rectMode(p.CENTER);
       p.rect(x, y, width / 2 / barCount - 2, this.height);
       p.rect(width - x, y, width / 2 / barCount - 2, this.height);
@@ -89,6 +88,7 @@ const s = (p) => {
     p.createCanvas(width, height);
     p.frameRate(30);
     p.keyPressed();
+    p.noStroke();
   };
 
   p.keyPressed = () => {
@@ -117,8 +117,6 @@ const s = (p) => {
     switch (currentKey) {
       case cues[1].key:
         p.background(background);
-        p.fill(255);
-
         ["SL_1", "SL_2", "SL_3"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
