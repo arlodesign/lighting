@@ -137,6 +137,8 @@ const s = (p) => {
         });
         break;
     }
+
+    lights.forEach((l) => l.update());
   };
 };
 

@@ -90,8 +90,8 @@ const s = (p) => {
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
     if (thisKey !== currentKey) {
       currentKey = thisKey;
-      frameStart = p.frameCount;
-      currentLightsState = JSON.parse(JSON.stringify(lights));
+      // frameStart = p.frameCount;
+      // currentLightsState = JSON.parse(JSON.stringify(lights));
       cues.forEach((c) => (c.isCurrent = c.key === currentKey));
     }
   };
@@ -181,6 +181,7 @@ const s = (p) => {
         );
         break;
     }
+    lights.forEach((l) => l.update());
   };
 };
 

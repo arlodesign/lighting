@@ -267,6 +267,8 @@ const s = (p) => {
       b.setHeight(frequencyData);
       b.draw(i);
     });
+
+    lights.forEach((l) => l.update());
   };
 };
 

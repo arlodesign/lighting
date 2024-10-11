@@ -29,6 +29,8 @@ const s = (p) => {
           b: 127,
         }),
     );
+
+    lights.forEach((l) => l.update());
   };
 };
 
