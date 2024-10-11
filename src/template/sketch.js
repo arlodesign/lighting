@@ -124,11 +124,12 @@ const s = (p) => {
         p.background(background);
 
         lights.forEach((light, index) => {
-          const { r, g, b } = currentLightsState
+          const { r, g, b, master } = currentLightsState
             ? currentLightsState[index]
             : previousLightsState[index];
           const currentColor = p.color(r, g, b);
           const thisColor = p.lerpColor(currentColor, background, lerpVal);
+          light.master = p.round(p.lerp(master, 255, lerpVal));
           light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),
