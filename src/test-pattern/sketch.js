@@ -6,6 +6,20 @@ const s = (p) => {
   const height = 800;
   const squareSize = 20;
 
+  // Tap tempo experiment
+  let start = window.performance.now();
+  let end;
+  let values = [];
+
+  p.keyPressed = () => {
+    if (p.key === "`") {
+      end = window.performance.now();
+      values.push(end - start);
+      start = window.performance.now();
+      console.log(values.reduce((a, b) => a + b, 0) / values.length / 1000);
+    }
+  };
+
   p.setup = () => {
     p.createCanvas(width, height);
     p.background(0);

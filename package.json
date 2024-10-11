@@ -13,6 +13,7 @@
     "prettier": "3.3.3"
   },
   "dependencies": {
+    "@bluehexagons/easing": "^0.4.2",
     "p5": "^1.10.0",
     "random-int": "^3.0.0"
   },
