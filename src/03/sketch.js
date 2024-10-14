@@ -258,11 +258,12 @@ const s = (p) => {
         p.circle(p.width / 2, 0, radius * 2);
 
         lights.forEach((light, index) => {
-          const { r, g, b } = Boolean(currentLightsState)
+          const { r, g, b, master } = Boolean(currentLightsState)
             ? currentLightsState[index]
             : previousLightsState[index];
           const currentColor = p.color(r, g, b);
           const thisColor = p.lerpColor(currentColor, background, lerpVal);
+          light.master = p.lerp(master, 255, lerpVal);
           light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),
