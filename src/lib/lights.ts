@@ -63,6 +63,7 @@ class Light {
 
     this.li = document.createElement("li");
     this.li.setAttribute("id", name);
+    this.li.innerText = name[0];
 
     this.dot = document.createElement("div");
     this.dot.classList.add("dot");
@@ -132,25 +133,19 @@ class Light {
 }
 
 const lights = [
-  new Light("SL_1", 1),
-  new Light("SL_2", 17),
-  new Light("SL_3", 33),
-  new Light("SL_4", 49),
-  new Light("SR_1", 65),
-  new Light("SR_2", 81),
-  new Light("SR_3", 97),
-  new Light("SR_4", 113),
+  new Light("JEREMY_SL", 1),
+  new Light("BECKY_SL", 17),
+  new Light("TORI_SL", 33),
+  new Light("ARLO_SL", 49),
+  new Light("JEREMY_SR", 65),
+  new Light("TORI_SR", 81),
+  new Light("BECKY_SR", 97),
+  new Light("ARLO_SR", 113),
 ];
 
-const lightsObj = {
-  SL_1: lights[0],
-  SL_2: lights[1],
-  SL_3: lights[2],
-  SL_4: lights[3],
-  SR_1: lights[4],
-  SR_2: lights[5],
-  SR_3: lights[6],
-  SR_4: lights[7],
-};
+const lightsObj = lights.reduce(
+  (obj, light) => Object.assign(obj, { [light.name]: light }),
+  {},
+);
 
 export { lights, lightsObj };

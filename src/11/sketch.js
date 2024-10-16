@@ -92,8 +92,8 @@ const s = (p) => {
       case cues[0].key:
         p.background(background);
         lights.forEach((l) => (l.color = { r: 255, g: 255, b: 255 }));
-        lightsObj["SR_1"].color = { r: 255, g: 125, b: 0 };
-        lightsObj["SR_1"].master = p.round(p.lerp(64, 255, lerpVal));
+        lightsObj["JEREMY_SR"].color = { r: 255, g: 125, b: 0 };
+        lightsObj["JEREMY_SR"].master = p.round(p.lerp(64, 255, lerpVal));
         break;
 
       case cues[1].key:
