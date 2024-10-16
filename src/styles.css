@@ -21,9 +21,12 @@ body {
   padding: 0;
   text-align: center;
   background: black;
-  max-width: 1280px;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
 ul,
 li {
   list-style: none;
@@ -37,6 +40,7 @@ li a {
 canvas {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  aspect-ratio: 1280 / 800;
   width: 1280px !important;
   height: 800px !important;
 }
@@ -47,7 +51,7 @@ canvas {
   display: grid;
   grid-template-columns: 2rem 2rem 2rem 1fr 2rem 2rem 2rem 2rem;
   gap: 2em;
-  width: 100%;
+  width: 1280px;
 }
 .dot {
   width: 2rem;
@@ -58,6 +62,9 @@ canvas {
 
 #dashboard {
   position: relative;
+  width: 1280px;
+  margin: 0 auto;
+  order: -1;
 }
 
 #cues {
@@ -66,10 +73,10 @@ canvas {
   align-items: center;
   justify-content: center;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
   bottom: 0;
   gap: 1ch;
+  transform: translateX(-50%);
 }
 .cue {
   font-size: 2em;
@@ -82,3 +89,9 @@ canvas {
   background: white;
   color: black;
 }
+
+/* uncomment for production */
+
+/* #dashboard {
+  display: none;
+} */

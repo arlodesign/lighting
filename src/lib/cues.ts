@@ -30,4 +30,10 @@ const cues = [
   new Cue("X", "Enter"),
 ];
 
+const a = document.createElement("a");
+a.innerText = "🏠";
+a.href = "/";
+a.classList.add("cue");
+cuesDiv.append(a);
+
 export { cues };
