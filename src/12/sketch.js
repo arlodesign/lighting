@@ -193,7 +193,7 @@ const s = (p) => {
         );
 
         if (currentKey === cues[1].key) {
-          lightsObj.SR_4.color = {
+          lightsObj.ARLO_SR.color = {
             r: 255 * lerpVal,
             g: 255 * lerpVal,
             b: 255 * lerpVal,

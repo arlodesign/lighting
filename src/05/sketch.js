@@ -117,7 +117,7 @@ const s = (p) => {
     switch (currentKey) {
       case cues[1].key:
         p.background(background);
-        ["SL_1", "SL_2", "SL_3"].forEach((i) => {
+        ["JEREMY_SL", "BECKY_SL", "TORI_SL"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
             r: p.red(p.color(0)),
@@ -126,7 +126,7 @@ const s = (p) => {
           };
         });
 
-        ["SR_2", "SR_3", "SR_4"].forEach((i) => {
+        ["TORI_SR", "BECKY_SR", "ARLO_SR"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
             r: p.red(p.color(0)),
@@ -135,14 +135,14 @@ const s = (p) => {
           };
         });
 
-        lightsObj.SL_4.master = 255;
-        lightsObj.SL_4.color = {
+        lightsObj.ARLO_SL.master = 255;
+        lightsObj.ARLO_SL.color = {
           r: p.red(stageLeftColor),
           g: p.green(stageLeftColor),
           b: p.blue(stageLeftColor),
         };
-        lightsObj.SR_1.master = 255;
-        lightsObj.SR_1.color = {
+        lightsObj.JEREMY_SR.master = 255;
+        lightsObj.JEREMY_SR.color = {
           r: p.red(stageRightColor),
           g: p.green(stageRightColor),
           b: p.blue(stageRightColor),
@@ -153,7 +153,7 @@ const s = (p) => {
         p.background(background);
         p.fill(255);
 
-        ["SL_1", "SL_2", "SL_3"].forEach((i) => {
+        ["JEREMY_SL", "BECKY_SL", "TORI_SL"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
             r: p.red(stageLeftColor),
@@ -162,7 +162,7 @@ const s = (p) => {
           };
         });
 
-        ["SR_2", "SR_3", "SR_4"].forEach((i) => {
+        ["TORI_SR", "BECKY_SR", "ARLO_SR"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
             r: p.red(stageRightColor),
@@ -171,14 +171,14 @@ const s = (p) => {
           };
         });
 
-        lightsObj.SL_4.master = 255;
-        lightsObj.SL_4.color = {
+        lightsObj.ARLO_SL.master = 255;
+        lightsObj.ARLO_SL.color = {
           r: p.red(p.color("pink")),
           g: p.green(p.color("pink")),
           b: p.blue(p.color("pink")),
         };
-        lightsObj.SR_1.master = 255;
-        lightsObj.SR_1.color = {
+        lightsObj.JEREMY_SR.master = 255;
+        lightsObj.JEREMY_SR.color = {
           r: p.red(p.color("blue")),
           g: p.green(p.color("blue")),
           b: p.blue(p.color("blue")),
@@ -206,7 +206,7 @@ const s = (p) => {
         p.background(background);
         p.fill(0);
 
-        ["SL_1", "SL_2", "SL_3"].forEach((i) => {
+        ["JEREMY_SL", "BECKY_SL", "TORI_SL"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
             r: 0,
@@ -215,7 +215,7 @@ const s = (p) => {
           };
         });
 
-        ["SR_2", "SR_3", "SR_4"].forEach((i) => {
+        ["TORI_SR", "BECKY_SR", "ARLO_SR"].forEach((i) => {
           lightsObj[i].master = 255;
           lightsObj[i].color = {
             r: 0,
@@ -224,14 +224,14 @@ const s = (p) => {
           };
         });
 
-        lightsObj.SL_4.master = 255;
-        lightsObj.SL_4.color = {
+        lightsObj.ARLO_SL.master = 255;
+        lightsObj.ARLO_SL.color = {
           r: p.red(p.color("pink")),
           g: p.green(p.color("pink")),
           b: p.blue(p.color("pink")),
         };
-        lightsObj.SR_1.master = 255;
-        lightsObj.SR_1.color = {
+        lightsObj.JEREMY_SR.master = 255;
+        lightsObj.JEREMY_SR.color = {
           r: p.red(p.color("blue")),
           g: p.green(p.color("blue")),
           b: p.blue(p.color("blue")),

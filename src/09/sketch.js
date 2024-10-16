@@ -130,7 +130,7 @@ const s = (p) => {
         p.background(background);
 
         lights.forEach((light) => {
-          if (light.name !== "SL_4" && light.name !== "SR_1")
+          if (light.name !== "ARLO_SL" && light.name !== "JEREMY_SR")
             return (light.master = p.round(p.lerp(255, 128, lerpVal)));
         });
         balls.push(new Ball(nucleus.x, nucleus.y));

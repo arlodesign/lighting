@@ -53,6 +53,9 @@ canvas {
   gap: 2em;
   width: 1280px;
 }
+#lights li {
+  width: 2rem;
+}
 .dot {
   width: 2rem;
   height: 2rem;
