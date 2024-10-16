@@ -10,10 +10,12 @@
     "husky": "^9.1.5",
     "lint-staged": "^15.2.10",
     "parcel": "latest",
+    "parcel-reporter-static-files-copy": "^1.5.3",
     "prettier": "3.3.3"
   },
   "dependencies": {
     "@bluehexagons/easing": "^0.4.2",
+    "fast-shuffle": "^6.1.0",
     "p5": "^1.10.0",
     "random-int": "^3.0.0"
   },
