@@ -11,26 +11,26 @@ const s = (p) => {
 
   const params = {
     // INITIAL LOOK
-    z: {
+    [cues[0].key]: {
       background: black,
       duration: 60,
     },
 
-    5: {
+    [cues[1].key]: {
       background: black,
       duration: 120,
     },
-    m: {
+    [cues[2].key]: {
       background: black,
       duration: 15,
     },
-    "-": {
+    [cues[3].key]: {
       background: black,
       duration: 15,
     },
 
     // BLACKOUT
-    Enter: {
+    [cues[4].key]: {
       background: black,
       duration: 0,
       color: black,

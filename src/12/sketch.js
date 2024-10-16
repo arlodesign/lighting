@@ -22,30 +22,30 @@ const s = (p) => {
 
   const params = {
     // INITIAL LOOK
-    z: {
+    [cues[0].key]: {
       background: p.color(0),
       duration: 0,
       tempoRate: 1,
     },
 
-    5: {
+    [cues[1].key]: {
       background: p.color(0),
       duration: 0,
       tempoRate: 1,
     },
-    m: {
+    [cues[2].key]: {
       background: p.color(0),
       duration: 15,
       tempoRate: 0.5,
     },
-    "-": {
+    [cues[3].key]: {
       background: p.color(0),
       duration: 30,
       tempoRate: 1,
     },
 
     // BLACKOUT
-    Enter: {
+    [cues[4].key]: {
       background: p.color(0),
       duration: 0,
       color: p.color(0),

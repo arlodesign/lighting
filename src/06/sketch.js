@@ -6,26 +6,26 @@ import randomInteger from "random-int";
 const s = (p) => {
   const params = {
     // INITIAL LOOK
-    z: {
+    [cues[0].key]: {
       background: p.color(255, 0, 0),
       duration: 30,
     },
 
-    5: {
+    [cues[1].key]: {
       background: p.color(0),
       duration: 0,
     },
-    m: {
+    [cues[2].key]: {
       background: p.color(255),
       duration: 15,
     },
-    "-": {
+    [cues[3].key]: {
       background: p.color(255, 0, 0),
       duration: 45,
     },
 
     // BLACKOUT
-    Enter: {
+    [cues[4].key]: {
       background: p.color(0),
       duration: 0,
       color: p.color(0),
