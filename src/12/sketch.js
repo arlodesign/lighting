@@ -1,117 +1,105 @@
 import p5 from "p5";
 import { lights, lightsObj } from "../lib/lights";
 import { cues } from "../lib/cues";
-import getAverage from "../lib/average";
-import randomInteger from "random-int";
-import { quintIn, quadInOut } from "@bluehexagons/easing";
-import { shuffle } from "fast-shuffle";
+import { lerp } from "@bluehexagons/easing";
 
 const s = (p) => {
-  let tempo = 30;
-  let tempoStart;
-  let tempoEnd;
-  let tempoValues = [];
-  let countDownFrame = 0;
-  let countDownPoints = [];
-  let maxPoints = 0;
-  let font;
+  const yellow = p.color("#beb367");
+  const blue = p.color("#677BBE");
+  const darkBlue = p.color("#132258");
 
-  p.preload = () => {
-    font = p.loadFont("/DMMono-Medium.ttf");
-  };
+  const colors = [darkBlue, blue, yellow];
 
   const params = {
     // INITIAL LOOK
     [cues[0].key]: {
       background: p.color(0),
-      duration: 0,
-      tempoRate: 1,
+      duration: 10,
     },
 
     [cues[1].key]: {
       background: p.color(0),
-      duration: 0,
-      tempoRate: 1,
+      duration: 60,
     },
     [cues[2].key]: {
       background: p.color(0),
-      duration: 15,
-      tempoRate: 0.5,
+      duration: 45,
     },
     [cues[3].key]: {
       background: p.color(0),
-      duration: 30,
-      tempoRate: 1,
+      duration: 14,
     },
 
     // BLACKOUT
     [cues[4].key]: {
       background: p.color(0),
-      duration: 0,
+      duration: 60,
       color: p.color(0),
     },
   };
 
   let currentKey = null;
   let frameStart = 0;
-  let lightIndex = 0;
 
   const previousLightsState = JSON.parse(JSON.stringify(lights));
   let currentLightsState = null;
 
+  let thisChase = [
+    darkBlue,
+    darkBlue,
+    blue,
+    darkBlue,
+    darkBlue,
+    yellow,
+    darkBlue,
+    darkBlue,
+  ];
+  let nextChase = [...thisChase];
+
   const width = 1280 / 2;
   const height = 800 / 2;
 
-  const getPoint = (theta) => ({
-    x: p.cos(theta) * width,
-    y: p.sin(theta) * width,
-  });
+  let dotsGo = false;
+  class Dot {
+    constructor(x) {
+      this.x = x;
+      this.speed = p.random() + 3;
+      this.y = height + 5;
+      this.previousY1 = height + 5;
+      this.previousY2 = height + 5;
+    }
+    draw(color) {
+      p.stroke(color);
+      p.strokeWeight(5);
+      p.point(this.x, this.y);
+      p.strokeWeight(4);
+      p.point(this.x, this.previousY1);
+      p.strokeWeight(2);
+      p.point(this.x, this.previousY2);
+
+      if (p.frameCount % 2 === 0) this.previousY1 = this.y;
+      if (p.frameCount % 3 === 0) this.previousY2 = this.previousY1;
+      this.y -= this.speed;
+
+      if (dotsGo && this.y < -5) {
+        this.y = height + 5;
+      }
+    }
+  }
+
+  const dots = Array(35)
+    .fill(null)
+    .map((_, i) => new Dot((width / 35) * i));
 
   p.setup = () => {
     p.createCanvas(width, height);
     p.frameRate(30);
     p.keyPressed();
-
-    // the numbers I'm going to use
-    const numbers = [1, 2, 3, 4, 5, 6, 7, 8];
-
-    // get all the points
-    countDownPoints = numbers.map((n) =>
-      shuffle(
-        font.textToPoints(String(n), -198, 225, width, {
-          sampleFactor: 0.05,
-        }),
-      ),
-    );
-
-    // get the max number of points
-    maxPoints = Math.max(...countDownPoints.map((n) => n.length));
-
-    countDownPoints = countDownPoints.map((n) => {
-      // pad all of them with points outside of canvas
-      const interval = p.TWO_PI / (maxPoints - n.length);
-      let theta = 0;
-      while (n.length < maxPoints) {
-        n.push(getPoint(theta));
-        theta += interval;
-      }
-
-      return n;
-    });
-
-    // add one more at the beginning
-    countDownPoints.unshift(
-      new Array(maxPoints)
-        .fill({})
-        .map((_, i) => getPoint((p.TWO_PI / maxPoints) * i)),
-    );
-
-    console.log(countDownPoints[0]);
   };
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/CHANGE/index.html", "_self");
+      window.open("/13/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
@@ -120,130 +108,96 @@ const s = (p) => {
       frameStart = p.frameCount;
       currentLightsState = JSON.parse(JSON.stringify(lights));
       cues.forEach((c) => (c.isCurrent = c.key === currentKey));
-    } else if (thisKey === cues[0].key) {
-      if (tempoStart) {
-        tempoEnd = window.performance.now();
-        tempoValues.push(tempoEnd - tempoStart);
-        tempo = getAverage(tempoValues) / tempoValues.length / 1000;
-      }
-      tempoStart = window.performance.now();
-    }
-    if (thisKey === cues[3].key) {
-      frameStart = p.frameCount;
-      countDownFrame++;
-      countDownFrame = countDownFrame > 8 ? 1 : countDownFrame;
     }
   };
 
   p.draw = () => {
-    const { background, duration, tempoRate } =
-      params[currentKey || cues[0].key];
+    const { background, duration } = params[currentKey || cues[0].key];
     const lerpVal = Math.min((p.frameCount - frameStart) / duration, 1);
-    p.background(0);
-
-    p.translate(width / 2, height / 2);
-    p.rotate(p.radians(p.frameCount % 360));
-    p.scale(
-      p.lerp(
-        0.9,
-        Math.max(countDownFrame / 4, 1),
-        quadInOut(p.noise(p.frameCount / 100)),
-      ),
-    );
-    p.stroke(255);
-    p.fill(255);
+    dotsGo = currentKey === cues[2].key;
 
     switch (currentKey) {
       case cues[0].key:
-      case cues[1].key:
-      case cues[2].key:
-        if (countDownFrame === 8) {
-          for (let i = 0; i < countDownPoints[8].length; i++) {
-            const { x, y } = countDownPoints[8][i];
-            const { x: x2, y: y2 } = countDownPoints[0][i];
-            p.strokeWeight(p.lerp(5, 30, lerpVal));
-            p.point(
-              p.lerp(x, x2, quadInOut(lerpVal)),
-              p.lerp(y, y2, quadInOut(lerpVal)),
-            );
-          }
-        }
+        p.background(background);
 
-        const willUpdate =
-          p.frameCount %
-            Math.floor(p.getTargetFrameRate() * tempo * tempoRate) !==
-          0;
+        lights.forEach((light, index) => {
+          const thisColor = p.lerpColor(thisChase[index], darkBlue, lerpVal);
+          return (light.color = {
+            r: p.red(thisColor),
+            g: p.green(thisColor),
+            b: p.blue(thisColor),
+          });
+        });
+        const colorSL = p.lerpColor(darkBlue, blue, lerpVal);
+        const colorSR = p.lerpColor(darkBlue, yellow, lerpVal);
 
-        if (willUpdate) break;
+        lightsObj["TORI_SL"].color = {
+          r: p.red(colorSL),
+          g: p.green(colorSL),
+          b: p.blue(colorSL),
+        };
 
-        let newLightIndex;
-        do {
-          newLightIndex = randomInteger(0, 7);
-        } while (newLightIndex === lightIndex);
-
-        lightIndex = newLightIndex;
-
-        lights.forEach(
-          (light, index) =>
-            (light.color = {
-              r: p.red(index === lightIndex ? 255 : 0),
-              g: p.green(index === lightIndex ? 255 : 0),
-              b: p.blue(index === lightIndex ? 255 : 0),
-            }),
-        );
-
-        if (currentKey === cues[1].key) {
-          lightsObj.ARLO_SR.color = {
-            r: 255 * lerpVal,
-            g: 255 * lerpVal,
-            b: 255 * lerpVal,
-          };
-        }
+        lightsObj["TORI_SR"].color = {
+          r: p.red(colorSR),
+          g: p.green(colorSR),
+          b: p.blue(colorSR),
+        };
 
         break;
 
+      case cues[1].key:
+      case cues[2].key:
       case cues[3].key:
-        const lastCountDownPoints = countDownPoints[countDownFrame - 1];
-        const thisCountDownPoints = countDownPoints[countDownFrame];
+        p.background(background);
 
-        for (let i = 0; i < thisCountDownPoints.length; i++) {
-          const { x, y } = lastCountDownPoints[i];
-          const { x: x2, y: y2 } = thisCountDownPoints[i];
-          p.strokeWeight(
-            p.lerp(
-              5,
-              30,
-              quintIn(p.noise(x2 + p.frameCount, y2 + p.frameCount)),
-            ),
+        lights.forEach((light, index) => {
+          const thisColor = p.lerpColor(
+            thisChase[index],
+            nextChase[index],
+            lerpVal,
           );
-          p.point(
-            p.lerp(x, x2, quadInOut(lerpVal)),
-            p.lerp(y, y2, quadInOut(lerpVal)),
-          );
+          return (light.color = {
+            r: p.red(thisColor),
+            g: p.green(thisColor),
+            b: p.blue(thisColor),
+          });
+        });
+
+        if (lerpVal === 1) {
+          frameStart = p.frameCount;
+
+          thisChase = [...nextChase];
+          nextChase = Array(8)
+            .fill(null)
+            .map((_, i) => {
+              const index =
+                currentKey === cues[3].key
+                  ? (p.frameCount + i) % 3
+                  : p.floor(p.noise(p.frameCount * (i + 1)) * 3);
+              return colors[index];
+            });
         }
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(background),
-              g: p.green(background),
-              b: p.blue(background),
-            }),
-        );
         break;
 
       // BLACKOUT
       case cues[4].key:
         p.blendMode(p.BLEND);
+        p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light, index) => {
+          const { r, g, b, master } = currentLightsState
+            ? currentLightsState[index]
+            : previousLightsState[index];
+          const currentColor = p.color(r, g, b);
+          const thisColor = p.lerpColor(currentColor, p.color(0), lerpVal);
+          light.master = p.round(p.lerp(master, 255, lerpVal));
+          light.color = {
+            r: p.red(thisColor),
+            g: p.green(thisColor),
+            b: p.blue(thisColor),
+          };
+        });
         break;
 
       // INITIAL LOOK
@@ -255,7 +209,7 @@ const s = (p) => {
             ? currentLightsState[index]
             : previousLightsState[index];
           const currentColor = p.color(r, g, b);
-          const thisColor = p.lerpColor(currentColor, background, lerpVal);
+          const thisColor = p.lerpColor(currentColor, darkBlue, lerpVal);
           light.master = p.round(p.lerp(master, 255, lerpVal));
           light.color = {
             r: p.red(thisColor),
@@ -266,6 +220,7 @@ const s = (p) => {
         break;
     }
 
+    dots.forEach((dot) => dot.draw(yellow));
     lights.forEach((l) => l.update());
   };
 };
