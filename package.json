@@ -17,7 +17,8 @@
     "@bluehexagons/easing": "^0.4.2",
     "fast-shuffle": "^6.1.0",
     "p5": "^1.10.0",
-    "random-int": "^3.0.0"
+    "random-int": "^3.0.0",
+    "tinycolor2": "^1.6.0"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
