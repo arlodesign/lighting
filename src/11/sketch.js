@@ -152,7 +152,6 @@ const s = (p) => {
             100 * p.noise(p.frameCount / 10),
             100,
           );
-          console.log(thisLightColor);
           light.color = {
             r: p.red(thisLightColor),
             g: p.green(thisLightColor),
