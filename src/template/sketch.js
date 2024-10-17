@@ -31,7 +31,7 @@ const s = (p) => {
     },
   };
 
-  let currentKey = cues[0].key;
+  let currentKey = null;
   let frameStart = 0;
 
   const previousLightsState = JSON.parse(JSON.stringify(lights));
@@ -61,10 +61,23 @@ const s = (p) => {
   };
 
   p.draw = () => {
-    const { background, duration } = params[currentKey];
+    const { background, duration } = params[currentKey || cues[0].key];
     const lerpVal = Math.min((p.frameCount - frameStart) / duration, 1);
 
     switch (currentKey) {
+      case cues[0].key:
+        p.background(background);
+
+        lights.forEach(
+          (light) =>
+            (light.color = {
+              r: p.red(background),
+              g: p.green(background),
+              b: p.blue(background),
+            }),
+        );
+        break;
+
       case cues[1].key:
         p.background(background);
 
