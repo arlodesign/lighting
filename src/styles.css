@@ -19,7 +19,6 @@ html,
 body {
   margin: 0 auto;
   padding: 0;
-  text-align: center;
   background: black;
 }
 
@@ -29,7 +28,6 @@ body {
 }
 ul,
 li {
-  list-style: none;
   padding: 0;
   margin: 0;
 }
@@ -54,6 +52,8 @@ canvas {
   width: 1280px;
 }
 #lights li {
+  list-style: none;
+  text-align: center;
   width: 2rem;
 }
 .dot {
@@ -87,6 +87,7 @@ canvas {
   width: 2ch;
   height: 2ch;
   border: 1px solid gray;
+  text-align: center;
 }
 .cue.is-current {
   background: white;
