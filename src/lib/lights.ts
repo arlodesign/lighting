@@ -116,7 +116,7 @@ class Light {
     if (!isConnected) return;
 
     this.data.master !== this.master &&
-      websocket.send(`CH|${this.channel}|${this.master}`);
+      websocket.send(`CH|${this.channel}|${Math.round(this.master)}`);
     this.data.r !== this.r &&
       websocket.send(`CH|${this.channel + 1}|${this.r}`);
     this.data.g !== this.g &&
