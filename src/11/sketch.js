@@ -2,7 +2,7 @@ import p5 from "p5";
 import { lights, lightsObj } from "../lib/lights";
 import { cues } from "../lib/cues";
 import { AudioSpectrum } from "../lib/audio-spectrum";
-import { quadOut as ease, quintIn } from "@bluehexagons/easing";
+import { quadOut as ease } from "@bluehexagons/easing";
 import getAverage from "../lib/average";
 
 const s = (p) => {

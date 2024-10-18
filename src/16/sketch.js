@@ -66,7 +66,7 @@ const s = (p) => {
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/CHANGE/index.html", "_self");
+      window.open("/17/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
@@ -187,7 +187,13 @@ const s = (p) => {
           quadInOut,
         );
 
-        lights.forEach((light) => (light.master = p.lerp(255, 0, lerpVal)));
+        lights.forEach((light) => {
+          if (lerpVal === 1) {
+            light.color = { r: 0, g: 0, b: 0 };
+          }
+          return (light.master = p.lerp(255, 0, lerpVal));
+        });
+
         break;
 
       // INITIAL LOOK
