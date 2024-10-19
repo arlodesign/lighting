@@ -60,7 +60,7 @@ const s = (p) => {
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/CHANGE/index.html", "_self");
+      window.open("/18/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
