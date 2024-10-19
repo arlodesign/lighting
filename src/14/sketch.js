@@ -109,22 +109,22 @@ const s = (p) => {
 
         let thisGreen = p.lerpColor(p.color(0), green, lerpVal);
         let thisYellow = p.lerpColor(p.color(0), yellow, lerpVal);
-        ["JEREMY_SL", "TORI_SL", "BECKY_SR", "ARLO_SR"].forEach(
-          (light) =>
-            (lightsObj[light].color = {
-              r: p.red(thisGreen),
-              g: p.green(thisGreen),
-              b: p.blue(thisGreen),
-            }),
-        );
-        ["JEREMY_SR", "TORI_SR", "BECKY_SL", "ARLO_SL"].forEach(
-          (light) =>
-            (lightsObj[light].color = {
-              r: p.red(thisYellow),
-              g: p.green(thisYellow),
-              b: p.blue(thisYellow),
-            }),
-        );
+        ["JEREMY_SL", "TORI_SL", "BECKY_SR", "ARLO_SR"].forEach((light) => {
+          lightsObj[light].master = 255 * lerpVal;
+          lightsObj[light].color = {
+            r: p.red(thisGreen),
+            g: p.green(thisGreen),
+            b: p.blue(thisGreen),
+          };
+        });
+        ["JEREMY_SR", "TORI_SR", "BECKY_SL", "ARLO_SL"].forEach((light) => {
+          lightsObj[light].master = 255 * lerpVal;
+          lightsObj[light].color = {
+            r: p.red(thisYellow),
+            g: p.green(thisYellow),
+            b: p.blue(thisYellow),
+          };
+        });
         drawWater();
         break;
 

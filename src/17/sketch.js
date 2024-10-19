@@ -188,6 +188,7 @@ const s = (p) => {
           g: p.green(thisOrange),
           b: p.blue(thisOrange),
         };
+        lightsObj["JEREMY_SL"].master = 255 * lerpVal;
         break;
     }
 

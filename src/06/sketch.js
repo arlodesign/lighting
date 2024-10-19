@@ -49,7 +49,7 @@ const s = (p) => {
 
   p.keyPressed = () => {
     if (p.key === "ArrowUp") {
-      window.open("/7/index.html", "_self");
+      window.open("/07/index.html", "_self");
       return;
     }
     const thisKey = Object.keys(params).includes(p.key) ? p.key : currentKey;
@@ -69,32 +69,28 @@ const s = (p) => {
       case cues[1].key:
         p.background(background);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(255),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 255;
+          light.color = {
+            r: p.red(255),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       case cues[2].key:
         if (p.frameCount % duration === 0) {
-          lights.forEach(
-            (light) =>
-              (light.color = {
-                r: 0,
-                g: 0,
-                b: 0,
-              }),
-          );
+          lights.forEach((light) => {
+            light.master = 0;
+            light.color = {
+              r: 255,
+              g: 255,
+              b: 255,
+            };
+          });
 
-          lights[randomInteger(lights.length - 1)].color = {
-            r: 255,
-            g: 255,
-            b: 255,
-          };
+          lights[randomInteger(lights.length - 1)].master = 255;
         }
 
         if (p.frameCount % (duration * 2) === 0) {
@@ -118,14 +114,14 @@ const s = (p) => {
 
       case cues[3].key:
         if (p.frameCount % duration === 0) {
-          lights.forEach(
-            (light) =>
-              (light.color = {
-                r: p.red(p.color("gold")),
-                g: p.green(p.color("gold")),
-                b: p.blue(p.color("gold")),
-              }),
-          );
+          lights.forEach((light) => {
+            light.master = 255;
+            light.color = {
+              r: p.red(p.color("gold")),
+              g: p.green(p.color("gold")),
+              b: p.blue(p.color("gold")),
+            };
+          });
 
           lights[randomInteger(lights.length - 1)].color = {
             r: 255,
@@ -167,14 +163,14 @@ const s = (p) => {
         p.blendMode(p.BLEND);
         p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(0),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       // INITIAL LOOK
@@ -191,6 +187,7 @@ const s = (p) => {
             p.color("black"),
             lerpVal,
           );
+          light.master = p.lerp(255, 0, lerpVal);
           light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),
