@@ -109,15 +109,14 @@ const s = (p) => {
         drawCircles();
 
         lights.forEach((light, index) => {
-          const lightColor = p.color(
+          light.master =
             p.noise(0.005 * p.frameCount + 100000 * (index + 10)) > 0.5
               ? 255
-              : 0,
-          );
+              : 0;
           light.color = {
-            r: p.red(lightColor),
-            g: p.green(lightColor),
-            b: p.blue(lightColor),
+            r: p.red(255),
+            g: p.green(255),
+            b: p.blue(255),
           };
         });
         break;
@@ -127,18 +126,18 @@ const s = (p) => {
         drawCircles();
 
         lights.forEach((light, index) => {
-          const lightColor = p.color(
-            p.noise(0.005 * p.frameCount + (index + 10)) > 0.25 ? 255 : 0,
-          );
+          light.master =
+            p.noise(0.005 * p.frameCount + (index + 10)) > 0.25 ? 255 : 0;
+
           light.color = {
-            r: p.red(lightColor),
-            g: p.green(lightColor),
-            b: p.blue(lightColor),
+            r: p.red(255),
+            g: p.green(255),
+            b: p.blue(255),
           };
         });
         break;
 
-      case cues[3].key:
+      case cues[4].key:
         p.background(fade);
         drawCircles();
 
@@ -153,32 +152,18 @@ const s = (p) => {
         fade = Math.max(fade - 2.125, 0);
         break;
 
-      // BLACKOUT
-      case cues[4].key:
-        p.background(0);
-
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
-        break;
-
       // INITIAL LOOK
       default:
         fade = 255;
         p.background(background);
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(background),
-              g: p.green(background),
-              b: p.blue(background),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(background),
+            g: p.green(background),
+            b: p.blue(background),
+          };
+        });
         break;
     }
     lights.forEach((l) => l.update());

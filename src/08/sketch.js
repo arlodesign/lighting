@@ -159,14 +159,14 @@ const s = (p) => {
         p.blendMode(p.BLEND);
         p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(0),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       // INITIAL LOOK
@@ -184,6 +184,7 @@ const s = (p) => {
             lerpVal,
           );
 
+          light.master = 255;
           light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),

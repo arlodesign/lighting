@@ -92,8 +92,8 @@ const s = (p) => {
       case cues[0].key:
         p.background(background);
         lights.forEach((l) => (l.color = { r: 255, g: 255, b: 255 }));
-        lightsObj["JEREMY_SR"].color = { r: 255, g: 125, b: 0 };
-        lightsObj["JEREMY_SR"].master = p.round(p.lerp(64, 255, lerpVal));
+        lightsObj["TORI_SR"].color = { r: 255, g: 125, b: 0 };
+        lightsObj["TORI_SR"].master = p.round(p.lerp(64, 255, lerpVal));
         break;
 
       case cues[1].key:
@@ -165,14 +165,14 @@ const s = (p) => {
         p.blendMode(p.BLEND);
         p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(0),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       // INITIAL LOOK

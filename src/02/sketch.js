@@ -1,6 +1,7 @@
 import p5 from "p5";
 import { lights } from "../lib/lights";
 import { cues } from "../lib/cues";
+import { lerp } from "@bluehexagons/easing";
 
 const s = (p) => {
   const pink = p.color("#EF65A7");
@@ -94,43 +95,43 @@ const s = (p) => {
         if (p.frameCount % 100 === 0) alternate = !alternate;
 
         lights.forEach((light, index) => {
-          const thisColor =
-            index % 2 ? (alternate ? gold : black) : alternate ? black : gold;
+          light.master =
+            index % 2 ? (alternate ? 255 : 0) : alternate ? 0 : 255;
           light.color = {
-            r: p.red(thisColor),
-            g: p.green(thisColor),
-            b: p.blue(thisColor),
+            r: p.red(gold),
+            g: p.green(gold),
+            b: p.blue(gold),
           };
         });
         break;
 
       case cues[3].key:
-        const currentColor = p.lerpColor(gold, p.color(0), lerpVal);
+        const master = p.lerp(255, 0, lerpVal);
 
-        p.background(currentColor);
+        p.background(p.lerpColor(gold, black, lerpVal));
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(currentColor),
-              g: p.green(currentColor),
-              b: p.blue(currentColor),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = master;
+          return (light.color = {
+            r: p.red(gold),
+            g: p.green(gold),
+            b: p.blue(gold),
+          });
+        });
         break;
 
       // BLACKOUT
       case cues[4].key:
         p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(0),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       // INITIAL LOOK
@@ -138,7 +139,7 @@ const s = (p) => {
         p.background(background);
 
         lights.forEach((light, index) => {
-          const { r, g, b } = Boolean(currentLightsState)
+          const { r, g, b, master } = Boolean(currentLightsState)
             ? currentLightsState[index]
             : previousLightsState[index];
           const currentColor = p.color(r, g, b);
@@ -146,6 +147,7 @@ const s = (p) => {
             index % 2
               ? p.lerpColor(currentColor, pink, lerpVal)
               : p.lerpColor(currentColor, purple, lerpVal);
+          light.master = p.lerp(master, 255, lerpVal);
           light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),

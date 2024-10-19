@@ -73,11 +73,12 @@ const s = (p) => {
             ? p.color("pink")
             : p.color("green");
           const thisColor = p.lerpColor(p.color(0), color, lerpVal);
-          return (light.color = {
+          light.master = 255 * lerpVal;
+          light.color = {
             r: p.red(thisColor),
             g: p.green(thisColor),
             b: p.blue(thisColor),
-          });
+          };
         });
         break;
 
@@ -145,14 +146,14 @@ const s = (p) => {
         p.blendMode(p.BLEND);
         p.background(0);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(0),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       // INITIAL LOOK

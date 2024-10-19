@@ -82,6 +82,11 @@ class Light {
     this.r = Math.round(r);
     this.g = Math.round(g);
     this.b = Math.round(b);
+
+    if (this.r === 0 && this.g === 0 && this.b === 0) {
+      this.master = 0;
+      return;
+    }
   }
 
   update() {

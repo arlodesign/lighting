@@ -4,7 +4,6 @@ import { cues } from "../lib/cues";
 import getAverage from "../lib/average";
 import randomInteger from "random-int";
 import { quintIn, quadInOut } from "@bluehexagons/easing";
-import { shuffle } from "fast-shuffle";
 
 const s = (p) => {
   let tempo = 30;
@@ -77,11 +76,9 @@ const s = (p) => {
 
     // get all the points
     countDownPoints = numbers.map((n) =>
-      shuffle(
-        font.textToPoints(String(n), -198, 225, width, {
-          sampleFactor: 0.05,
-        }),
-      ),
+      font.textToPoints(String(n), -198, 225, width, {
+        sampleFactor: 0.05,
+      }),
     );
 
     // get the max number of points
@@ -181,21 +178,22 @@ const s = (p) => {
 
         lightIndex = newLightIndex;
 
-        lights.forEach(
-          (light, index) =>
-            (light.color = {
-              r: p.red(index === lightIndex ? 255 : 0),
-              g: p.green(index === lightIndex ? 255 : 0),
-              b: p.blue(index === lightIndex ? 255 : 0),
-            }),
-        );
+        lights.forEach((light, index) => {
+          light.master = index === lightIndex ? 255 : 0;
+          light.color = {
+            r: 255,
+            g: 255,
+            b: 255,
+          };
+        });
 
         if (currentKey === cues[1].key) {
-          lightsObj["ARLO_SR"].color = {
+          lightsObj["JEREMY_SL"].color = {
             r: 255 * lerpVal,
             g: 255 * lerpVal,
             b: 255 * lerpVal,
           };
+          lightsObj["JEREMY_SL"].master = 255 * lerpVal;
         }
 
         break;
@@ -234,14 +232,14 @@ const s = (p) => {
       case cues[4].key:
         p.blendMode(p.BLEND);
 
-        lights.forEach(
-          (light) =>
-            (light.color = {
-              r: p.red(0),
-              g: p.green(0),
-              b: p.blue(0),
-            }),
-        );
+        lights.forEach((light) => {
+          light.master = 0;
+          light.color = {
+            r: p.red(0),
+            g: p.green(0),
+            b: p.blue(0),
+          };
+        });
         break;
 
       // INITIAL LOOK
