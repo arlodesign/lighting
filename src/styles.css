@@ -20,6 +20,7 @@ body {
   margin: 0 auto;
   padding: 0;
   background: black;
+  overflow: hidden;
 }
 
 body {
@@ -39,8 +40,8 @@ canvas {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   aspect-ratio: 1280 / 800;
-  width: 1280px !important;
-  height: 800px !important;
+  width: 100vw !important;
+  height: 100vh !important;
 }
 
 #lights {
@@ -96,6 +97,6 @@ canvas {
 
 /* uncomment for production */
 
-/* #dashboard {
+#dashboard {
   display: none;
-} */
+}
