@@ -1,34 +1,28 @@
 {
   "name": "lighting",
-  "version": "2.0.0",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "eleventy --serve",
-    "build": "eleventy"
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/arlodesign/lighting.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/arlodesign/lighting/issues"
-  },
-  "homepage": "https://github.com/arlodesign/lighting#readme",
-  "description": "",
-  "devDependencies": {
-    "@11ty/eleventy": "^3.1.2",
-    "@tailwindcss/postcss": "^4.1.12",
-    "cssnano": "^7.1.1",
-    "esbuild": "^0.25.9",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.12"
-  },
-  "type": "module",
-  "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184",
   "dependencies": {
-    "p5": "^2.0.5"
-  }
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "next": "15.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.2",
+    "@eslint/eslintrc": "^3"
+  },
+  "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184"
 }
