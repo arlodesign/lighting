@@ -1,8 +1,1 @@
-.DS_Store
-.husky
-.parcel-cache
-.vscode
-dist
-fixture.jpg
 node_modules
-static

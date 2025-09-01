@@ -1,26 +1,26 @@
 {
   "name": "lighting",
-  "source": "src/index.html",
+  "version": "2.0.0",
   "scripts": {
-    "start": "parcel",
-    "build": "rm -rf dist && parcel build",
-    "prepare": "husky"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "eleventy --serve",
+    "build": "eleventy"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arlodesign/lighting.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arlodesign/lighting/issues"
+  },
+  "homepage": "https://github.com/arlodesign/lighting#readme",
+  "description": "",
   "devDependencies": {
-    "husky": "^9.1.5",
-    "lint-staged": "^15.2.10",
-    "parcel": "latest",
-    "parcel-reporter-static-files-copy": "^1.5.3",
-    "prettier": "3.3.3"
+    "@11ty/eleventy": "^3.1.2"
   },
-  "dependencies": {
-    "@bluehexagons/easing": "^0.4.2",
-    "fast-shuffle": "^6.1.0",
-    "p5": "^1.10.0",
-    "random-int": "^3.0.0",
-    "tinycolor2": "^1.6.0"
-  },
-  "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
-  }
+  "type": "module",
+  "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184"
 }
