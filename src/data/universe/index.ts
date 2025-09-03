@@ -1,10 +1,15 @@
+import { DMX_UNIVERSE_SIZE } from "../dmx/constants";
+
 class Universe {
-  private _currentUniverse = Array(512).fill(0);
-  private _nextUniverse = Array(512).fill(0);
+  private _currentUniverse = Array(DMX_UNIVERSE_SIZE).fill(0);
+  private _nextUniverse = Array(DMX_UNIVERSE_SIZE).fill(0);
   private _hasChanges = false;
 
+  /**
+   * Sets a 1-based DMX address to a value (0–255). No-op if unchanged since last set.
+   * Addresses are 1-based in DMX; we convert to 0-based for internal arrays.
+   */
   set(index: number, value: number) {
-    // Because DMX universes are 1-indexed, we need to subtract 1 from the index.
     const idx = index - 1;
     const prev = this._nextUniverse[idx];
     if (prev !== value) {
@@ -13,16 +18,18 @@ class Universe {
     }
   }
 
+  /**
+   * Computes a sparse diff of channel changes between current and next universes.
+   * Returns undefined if nothing changed since last update.
+   * Keys are 1-based DMX addresses; values are the new channel values.
+   */
   update(): Record<number, number> | undefined {
-    // If no channel was touched since the last update, skip the diff work.
     if (!this._hasChanges) return undefined;
 
-    // Build a sparse diff of channel changes between current and next universes.
-    // Keys are 1-based DMX addresses; values are the new channel values.
     const changes: Record<number, number> = {};
     let hasChanges = false;
 
-    for (let i = 0; i < 512; i++) {
+    for (let i = 0; i < DMX_UNIVERSE_SIZE; i++) {
       const currentVal = this._currentUniverse[i];
       const nextVal = this._nextUniverse[i];
       if (currentVal !== nextVal) {

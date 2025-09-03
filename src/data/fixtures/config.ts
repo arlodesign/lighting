@@ -14,6 +14,7 @@ export type Coordinate = {
 };
 
 // Default LED PAR layout for existing fixtures
+// IMPORTANT: Array order defines DMX channel offsets for this fixture schema.
 export const LED_PAR_LABELS = [
   "master",
   "r",
@@ -86,12 +87,20 @@ export const FIXTURE_CONFIG = [
     labels: LED_PAR_LABELS,
     initial: { strobe: 1, mode: 1 },
   },
-] as const;
+] as const satisfies readonly {
+  id: string;
+  location: Coordinate;
+  startChannel: number;
+  labels: readonly LedParLabel[];
+  initial?: Partial<Record<LedParLabel, number>>;
+}[];
 
 export type FixtureConfig = (typeof FIXTURE_CONFIG)[number];
 export type FixtureId = FixtureConfig["id"];
 export type FixtureLocation = FixtureConfig["location"];
 
-// Runtime helper if needed elsewhere
+/**
+ * Normalizes a physical location coordinate into a stable Map key.
+ * Do not change without migrating existing saved references.
+ */
 export const coordKey = (l: Coordinate) => `${l.x}:${l.y}:${l.slot}`;
-

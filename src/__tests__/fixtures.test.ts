@@ -8,14 +8,7 @@ import {
   type FixtureId,
 } from "../data/fixtures";
 import { Universe } from "../data/universe";
-
-// Helper to apply a fixture's current DMX state to a Universe
-function applyFixtureToUniverse(u: Universe, f: Fixture<any>) {
-  const patch = f.toDmx();
-  for (const [addrStr, val] of Object.entries(patch)) {
-    u.set(Number(addrStr), val);
-  }
-}
+import { applySparsePatch } from "../data/universe/apply";
 
 describe("Fixture (generic, label-driven)", () => {
   it("maps labels to absolute DMX addresses from startChannel", () => {
@@ -100,7 +93,7 @@ describe("Fixture + Universe integration", () => {
     f.setValues({ master: 100, r: 64 } as any);
 
     const u = new Universe();
-    applyFixtureToUniverse(u, f);
+    applySparsePatch(u, f.toDmx());
 
     const diff = u.update();
     expect(diff).toBeDefined();
@@ -136,8 +129,8 @@ describe("Universe with multiple fixtures", () => {
     fx2.setValues({ g: 80 } as any);
 
     const u = new Universe();
-    applyFixtureToUniverse(u, fx1);
-    applyFixtureToUniverse(u, fx2);
+    applySparsePatch(u, fx1.toDmx());
+    applySparsePatch(u, fx2.toDmx());
 
     const diff = u.update();
     expect(diff).toBeDefined();
@@ -181,7 +174,7 @@ describe("Batch selection by area", () => {
     fixtures.forEach((f, i) => f.setValue("master" as any, 50 + i * 10));
 
     const u = new Universe();
-    fixtures.forEach((f) => applyFixtureToUniverse(u, f));
+    fixtures.forEach((f) => applySparsePatch(u, f.toDmx()));
     const diff = u.update();
     expect(diff).toBeDefined();
 
@@ -206,7 +199,7 @@ describe("Fixture boundary near DMX 512", () => {
     expect(fx.getAddress("b" as any)).toBe(512);
 
     const u = new Universe();
-    applyFixtureToUniverse(u, fx);
+    applySparsePatch(u, fx.toDmx());
     const diff = u.update();
     expect(diff).toEqual({ 511: 1, 512: 2 });
   });
