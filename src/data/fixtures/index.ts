@@ -1,14 +1,23 @@
-import { Fixture } from "./fixture.type";
+export { Fixture } from "./fixture";
+export type { IFixture, DmxValue } from "./fixture";
 
-const fixtures = {
-  SL1: new Fixture({ dmx: 1 }),
-  SL2: new Fixture({ dmx: 11 }),
-  SL3: new Fixture({ dmx: 21 }),
-  SL4: new Fixture({ dmx: 31 }),
-  SR4: new Fixture({ dmx: 41 }),
-  SR3: new Fixture({ dmx: 51 }),
-  SR2: new Fixture({ dmx: 61 }),
-  SR1: new Fixture({ dmx: 71 }),
-};
+export {
+  LED_PAR_LABELS,
+  type LedParLabel,
+  X_AXIS,
+  Y_AXIS,
+  type X,
+  type Y,
+  type Coordinate,
+  FIXTURE_CONFIG,
+  type FixtureConfig,
+  type FixtureId,
+  type FixtureLocation,
+} from "./config";
 
-export { fixtures };
+export {
+  getFixture,
+  findByLocation,
+  allFixtureIds,
+  allFixtures,
+} from "./registry";
