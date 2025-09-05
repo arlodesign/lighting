@@ -80,10 +80,29 @@ export function ShowRunner({
   const [, setTick] = useState(0); // force minimal re-render for aria-live
   // Initialize p5 sketch; use p5's draw to drive our frame updates.
   useEffect(() => {
-    let cleanup = () => {};
+    let cleaned = false;
+
+    // Guard against React Strict Mode double-invocation in dev:
+    // remove any existing sketch/canvas synchronously before creating a new one.
+    if (p5Ref.current && typeof (p5Ref.current as any).remove === "function") {
+      try {
+        (p5Ref.current as any).remove();
+      } catch {}
+      p5Ref.current = null;
+    }
+    const container = p5ContainerRef.current;
+    if (container) {
+      container.querySelectorAll("canvas").forEach((c) => c.remove());
+    }
+
+    let inst: any = null;
+
     (async () => {
       const p5Constructor = (await import("p5")).default;
-      const inst = new p5Constructor((sk) => {
+      // Safety: if unmounted while loading, bail
+      if (cleaned) return;
+
+      inst = new p5Constructor((sk) => {
         sk.setup = () => {
           sk.createCanvas(LOGICAL_W, LOGICAL_H);
           sk.pixelDensity(1);
@@ -114,15 +133,22 @@ export function ShowRunner({
             Object.assign(levelsRef.current, diff);
             setTick((v) => v + 1); // re-render to update FloorSim HUD
           }
-
-          // Visuals are now drawn within SceneManager (draw first, then lights)
-          // No HUD overlay; header already shows scene and look
         };
       }, p5ContainerRef.current!);
       p5Ref.current = inst;
-      cleanup = () => inst.remove();
     })();
-    return () => cleanup();
+
+    return () => {
+      cleaned = true;
+      if (inst && typeof inst.remove === "function") {
+        try {
+          inst.remove();
+        } catch {}
+      }
+      // Also clear any straggler canvases in the container
+      const node = p5ContainerRef.current;
+      if (node) node.querySelectorAll("canvas").forEach((c) => c.remove());
+    };
   }, [manager, show, transport, universe]);
 
   return (
