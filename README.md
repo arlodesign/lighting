@@ -38,6 +38,102 @@ This branch is a typed rewrite focused on making it as easy as your original p5 
 
 ## Authoring: ergonomic layer
 
+### Scene visuals: single draw vs update+draw
+
+You can author visuals in one of two ergonomic styles:
+
+- Single draw (p5-like): put both state updates and drawing inside `drawVisual`. This matches p5’s `draw()` mental model and is simplest to start with.
+- Split update+draw: put motion/physics in `updateVisual` and presentation in `drawVisual`. This unlocks fixed‑timestep updates, headless (lights‑only) runs, and the ability to throttle drawing without affecting state.
+
+Both hooks are optional.
+
+Example — Single draw (update + render in one place):
+
+```ts
+export const MyScene: Scene = {
+  id: "my",
+  name: "My Scene",
+  looks: [
+    /* ... */
+  ],
+  drawVisual: (p5, ctx) => {
+    if (!p5) return;
+    // (re)create state on first frame or size change
+    // update state (move points, bounce, envelopes, etc.)
+    // render state
+    p5.background(0);
+    // ... draw your visuals ...
+  },
+};
+```
+
+Example — Split update + draw:
+
+```ts
+export const MyScene: Scene = {
+  id: "my",
+  name: "My Scene",
+  looks: [
+    /* ... */
+  ],
+  updateVisual: (ctx) => {
+    // advance scene state (no p5 required)
+  },
+  drawVisual: (p5, ctx) => {
+    if (!p5) return;
+    // render the current state
+  },
+};
+```
+
+Why split can help later:
+
+- Fixed‑timestep updates: keep motion consistent even if the browser drops frames.
+- Headless runs: state can evolve and drive lights even when the projector/canvas isn’t mounted.
+- Performance: you can throttle drawing (e.g., 30 fps) but keep updates smooth.
+
+### Look-provided visualStyle (optional)
+
+Looks can provide a `visualStyle(ctx)` object to theme how a scene is drawn (palette, stroke/fill, weights, backgrounds, blend). The scene owns the “what” (state/geometry); looks own the “how” (treatment).
+
+Look defines a style:
+
+```ts
+const WarmFill: Look = {
+  id: 1,
+  name: "Warm Fill",
+  visualStyle: () => ({
+    background: (p5) => p5.background(0),
+    fill: (p5) => p5.color(240, 120, 40, 160),
+    stroke: null,
+    strokeWeight: 0,
+  }),
+  render: ({ lights }) => lights?.all.rgb(240, 120, 40).master(150),
+};
+```
+
+Scene applies it in `drawVisual`:
+
+```ts
+drawVisual: (p5, ctx, style) => {
+  if (!p5) return;
+  style?.background?.(p5);
+  // example: draw a polygon list using the style
+  const applyFill = style?.fill?.(p5);
+  if (applyFill) {
+    p5.noStroke();
+    p5.fill(applyFill);
+  } else if (style?.stroke) {
+    p5.noFill();
+    p5.strokeWeight(style.strokeWeight ?? 1);
+    p5.stroke(style.stroke(p5));
+  }
+  // ... draw shapes ...
+};
+```
+
+This separation lets you A/B creative treatments (outline vs fill, warm vs cool palettes) without touching simulation logic. It also makes it easy to add “safe” looks (reduced brightness/contrast) for WCAG‑aware contexts.
+
 ### Lights facade
 
 Target selectors:
