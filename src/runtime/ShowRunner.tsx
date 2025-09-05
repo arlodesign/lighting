@@ -181,30 +181,41 @@ export function ShowRunner({
               <div className="font-semibold text-white">
                 {manager.currentScene().name}
               </div>
-              <div
-                role="group"
-                aria-label="Looks"
-                className="flex items-center gap-2"
-              >
-                {([1, 2, 3, 4] as const).map((i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      manager.setLook(i);
-                      setUiVersion((v) => v + 1);
-                    }}
-                    aria-pressed={manager.getState().lookIndex === i}
-                    className={
-                      "w-8 h-8 rounded-full border flex items-center justify-center text-sm " +
-                      (manager.getState().lookIndex === i
-                        ? "bg-white text-black border-white"
-                        : "bg-zinc-800 text-zinc-200 border-zinc-500 hover:bg-zinc-700")
-                    }
+              {(() => {
+                const lookCount = manager.currentScene().looks.length;
+                const count = Math.min(4, lookCount);
+                if (count < 2) return null; // Hide numbering when there's only 1 look
+                const nums = Array.from(
+                  { length: count },
+                  (_, idx) => (idx + 1) as 1 | 2 | 3 | 4
+                );
+                return (
+                  <div
+                    role="group"
+                    aria-label="Looks"
+                    className="flex items-center gap-2"
                   >
-                    {i}
-                  </button>
-                ))}
-              </div>
+                    {nums.map((i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          manager.setLook(i);
+                          setUiVersion((v) => v + 1);
+                        }}
+                        aria-pressed={manager.getState().lookIndex === i}
+                        className={
+                          "w-8 h-8 rounded-full border flex items-center justify-center text-sm " +
+                          (manager.getState().lookIndex === i
+                            ? "bg-white text-black border-white"
+                            : "bg-zinc-800 text-zinc-200 border-zinc-500 hover:bg-zinc-700")
+                        }
+                      >
+                        {i}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             <button
@@ -238,7 +249,14 @@ export function ShowRunner({
         >
           <h2 className="font-semibold text-white">Controls</h2>
           <ul className="list-disc ml-5 text-sm">
-            <li>1–4: switch Looks</li>
+            {manager.currentScene().looks.length >= 2 && (
+              <li>
+                {`1–${Math.min(
+                  4,
+                  manager.currentScene().looks.length
+                )}: switch Looks`}
+              </li>
+            )}
             <li>Arrow Up/Down: next/previous Scene</li>
             <li>B: Blackout toggle</li>
             <li>T: Tap tempo; Shift+T double, Alt+T half; R: reset</li>
@@ -248,8 +266,14 @@ export function ShowRunner({
       )}
       {/* aria-live region for Scene/Look changes (simplified for now) */}
       <div className="sr-only" aria-live="polite">
-        Scene {manager.getState().sceneIndex + 1} of {show.scenes.length}. Look{" "}
-        {manager.getState().lookIndex}.
+        {(() => {
+          const sceneNum = manager.getState().sceneIndex + 1;
+          const totalScenes = show.scenes.length;
+          const lookCount = manager.currentScene().looks.length;
+          const lookPart =
+            lookCount >= 2 ? ` Look ${manager.getState().lookIndex}.` : "";
+          return `Scene ${sceneNum} of ${totalScenes}.${lookPart}`;
+        })()}
       </div>
     </div>
   );
