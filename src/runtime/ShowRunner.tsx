@@ -70,10 +70,13 @@ export function ShowRunner({
   // Keyboard handling
   useEffect(() => {
     if (!controlsEnabled) return;
-    const handler = (e: KeyboardEvent) =>
-      manager.handleKey(e, performance.now());
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    const handler = (e: KeyboardEvent) => {
+      const handled = manager.handleKey(e, performance.now());
+      if (handled) setUiVersion((v) => v + 1);
+    };
+    window.addEventListener("keydown", handler, { capture: true });
+    return () =>
+      window.removeEventListener("keydown", handler, { capture: true } as any);
   }, [controlsEnabled, manager]);
 
   // Main loop (requestAnimationFrame)

@@ -118,6 +118,12 @@ export class SceneManager {
       // End crossfade
       if (alpha >= 1) this.state.crossfadeActive = false;
 
+      // Clear projection during crossfade so previous scene's visuals don't linger
+      if (extras?.p5 && typeof extras.p5.clear === "function") {
+        try {
+          extras.p5.clear();
+        } catch {}
+      }
       return {
         patch: this.state.blackout ? {} : blended,
         ctx: {
@@ -165,6 +171,12 @@ export class SceneManager {
     // Draw visuals first (scene-level), then render lights
     const scene = this.currentScene();
     if (extras?.p5) {
+      // Always clear before drawing scene visuals to avoid lingering from previous scene
+      if (typeof extras.p5.clear === "function") {
+        try {
+          extras.p5.clear();
+        } catch {}
+      }
       if (scene.updateVisual) scene.updateVisual(ctx);
       const style = look.visualStyle ? look.visualStyle(ctx) : undefined;
       if (scene.drawVisual) scene.drawVisual(extras.p5, ctx, style);
