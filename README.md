@@ -134,6 +134,115 @@ drawVisual: (p5, ctx, style) => {
 
 This separation lets you A/B creative treatments (outline vs fill, warm vs cool palettes) without touching simulation logic. It also makes it easy to add “safe” looks (reduced brightness/contrast) for WCAG‑aware contexts.
 
+### Look render (per frame)
+
+A Look’s `render(ctx)` runs every frame and is responsible for setting DMX values. It can also read from the just‑drawn projection and use time helpers.
+
+What you get in `ctx`:
+
+- `lights`: ergonomic facade for groups/fixtures (preferred)
+- `t`: time helpers (`nowMs`, `deltaMs`, `cycle`, `pulse`, etc.)
+- `sample(x, y)`: read `[r,g,b,a]` from the current p5 frame
+- `crossfade`: `{ role: 'none'|'incoming'|'outgoing', alpha, remainingMs }`
+- `p5`/`canvas`: optional drawing surfaces (usually not needed inside looks)
+- `universe`: low‑level writer (escape hatch; avoid when the facade suffices)
+
+Recommended patterns
+
+- Keep render stateless. Persist evolving state in the scene visual if needed.
+- Prefer `lights.group(...)`/`lights.all` to per‑fixture loops.
+- Use `t` for LFO/tempo logic; clamp values to 0..255.
+- It’s safe to `sample()` the projection: visuals are drawn before looks run.
+
+Examples
+
+Basic wash:
+
+```ts
+const WarmWash: Look = {
+  id: 1,
+  name: "Warm Wash",
+  render: ({ lights }) => lights?.all.rgb(200, 90, 20).master(160),
+};
+```
+
+Time‑based pulse:
+
+```ts
+const CoolPulse: Look = {
+  id: 2,
+  name: "Cool Pulse",
+  render: ({ t, lights }) => {
+    const base = 120 + 80 * Math.sin((t?.nowMs ?? 0) * 0.002);
+    lights?.all
+      .rgb(40, 120, 220)
+      .master(Math.round(Math.max(0, Math.min(255, base))));
+  },
+};
+```
+
+Sample the projection to color SL/SR groups:
+
+```ts
+const SampledSides: Look = {
+  id: 3,
+  name: "Sampled Sides",
+  render: ({ lights, p5, sample, t }) => {
+    if (!lights || !sample) return;
+    const w = p5?.width ?? 800,
+      h = p5?.height ?? 600;
+    const clamp = (v: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, v));
+
+    const avgSample = (cx: number, cy: number): [number, number, number] => {
+      const offsets = [-20, 0, 20];
+      let r = 0,
+        g = 0,
+        b = 0,
+        n = 0;
+      for (const ox of offsets)
+        for (const oy of offsets) {
+          const [rr, gg, bb] = sample(
+            clamp(cx + ox, 0, w - 1),
+            clamp(cy + oy, 0, h - 1)
+          );
+          r += rr;
+          g += gg;
+          b += bb;
+          n++;
+        }
+      return [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+    };
+
+    const [rL, gL, bL] = avgSample(Math.round(w * 0.25), Math.round(h * 0.5));
+    const [rR, gR, bR] = avgSample(Math.round(w * 0.75), Math.round(h * 0.5));
+
+    const master = Math.round(120 + 80 * Math.sin((t?.nowMs ?? 0) * 0.002));
+    lights.group("left").rgb(rL, gL, bL).master(master);
+    lights.group("right").rgb(rR, gR, bR).master(master);
+  },
+};
+```
+
+Crossfade‑aware dimming (optional):
+
+```ts
+render: ({ crossfade, lights }) => {
+  const dim =
+    crossfade.role === "incoming"
+      ? crossfade.alpha
+      : crossfade.role === "outgoing"
+      ? 1 - crossfade.alpha
+      : 1;
+  lights?.all.master(Math.round(160 * dim));
+};
+```
+
+A11y notes
+
+- Avoid rapid duty‑cycle modulation (>3 flashes/sec). Favor smooth transitions.
+- Keep average brightness reasonable for projection legibility; use `master` to cap peaks.
+
 ### Lights facade
 
 Target selectors:

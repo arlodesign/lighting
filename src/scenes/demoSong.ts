@@ -37,13 +37,43 @@ const Look1: Look = {
 
 const Look2: Look = {
   id: 2,
-  name: "Cool Pulse",
-  render: ({ t, lights }) => {
-    if (!t || !lights) return;
-    const base = 120 + 80 * Math.sin(t.nowMs * 0.002);
-    lights.all
-      .rgb(40, 120, 220)
-      .master(Math.round(Math.max(0, Math.min(255, base))));
+  name: "Cool Pulse (Sampled Colors)",
+  render: ({ t, lights, p5, sample }) => {
+    if (!lights) return;
+    const w = p5?.width ?? 800;
+    const h = p5?.height ?? 600;
+
+    const clamp = (v: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, v));
+    const avgSample = (cx: number, cy: number): [number, number, number] => {
+      if (!sample) return [0, 0, 0];
+      const offsets = [-20, 0, 20];
+      let r = 0,
+        g = 0,
+        b = 0,
+        n = 0;
+      for (const ox of offsets)
+        for (const oy of offsets) {
+          const [rr, gg, bb] = sample(
+            clamp(cx + ox, 0, w - 1),
+            clamp(cy + oy, 0, h - 1)
+          );
+          r += rr;
+          g += gg;
+          b += bb;
+          n++;
+        }
+      return [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+    };
+
+    const [rL, gL, bL] = avgSample(Math.round(w * 0.25), Math.round(h * 0.5)); // stage left
+    const [rR, gR, bR] = avgSample(Math.round(w * 0.75), Math.round(h * 0.5)); // stage right
+
+    const base = t ? 120 + 80 * Math.sin(t.nowMs * 0.002) : 160;
+    const master = Math.round(clamp(base, 0, 255));
+
+    lights.group("left").rgb(rL, gL, bL).master(master);
+    lights.group("right").rgb(rR, gR, bR).master(master);
   },
 };
 
