@@ -2,7 +2,9 @@
 import { FrameUniverseWriter } from "./universeWriter";
 import { blendPatches } from "./crossfade";
 import { SceneTempo } from "./tempo";
-import { allFixtures } from "@/data/fixtures";
+// import { allFixtures } from "@/data/fixtures";
+import { createTimeHelpers } from "./timeHelpers";
+import { createLightsFacade } from "./lightsFacade";
 import type {
   CrossfadeInfo,
   DmxPatch,
@@ -132,6 +134,22 @@ export class SceneManager {
     // Normal frame: single scene + current look
     const writer: UniverseWriter = new FrameUniverseWriter();
     const look = this.currentLook();
+
+    // Create helpers and facade
+    const t = createTimeHelpers({ nowMs: timeNowMs, deltaMs }, tempoInfo);
+    const lights = createLightsFacade(writer);
+
+    // Helper to safely sample the current projection frame (if available)
+    const sample = (x: number, y: number): [number, number, number, number] => {
+      const p5 = extras?.p5 as any;
+      if (p5 && typeof p5.get === "function") {
+        const c = p5.get(x, y);
+        // p5.get returns [r,g,b,a]
+        return c as [number, number, number, number];
+      }
+      return [0, 0, 0, 255];
+    };
+
     const ctx: LookRenderCtx = {
       time: { nowMs: timeNowMs, deltaMs },
       tempo: tempoInfo,
@@ -139,7 +157,19 @@ export class SceneManager {
       universe: writer,
       p5: extras?.p5,
       canvas: extras?.canvas ?? null,
+      lights,
+      t,
+      sample,
     };
+
+    // Draw visuals first (scene-level), then render lights
+    const scene = this.currentScene();
+    if (extras?.p5) {
+      if (scene.updateVisual) scene.updateVisual(ctx);
+      const style = look.visualStyle ? look.visualStyle(ctx) : undefined;
+      if (scene.drawVisual) scene.drawVisual(extras.p5, ctx, style);
+    }
+
     look.render(ctx);
 
     const patch = (writer as FrameUniverseWriter).patch;

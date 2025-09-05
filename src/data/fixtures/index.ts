@@ -21,3 +21,5 @@ export {
   allFixtureIds,
   allFixtures,
 } from "./registry";
+
+export { GROUPS, type GroupName, type BuiltInGroupName } from "./groups";

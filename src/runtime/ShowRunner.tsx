@@ -103,7 +103,7 @@ export function ShowRunner({
             (sk as any)._last ?? now ? now - ((sk as any)._last ?? now) : 16;
           (sk as any)._last = now;
 
-          const { patch, ctx } = manager.renderFrame(now, delta, {
+          const { patch } = manager.renderFrame(now, delta, {
             p5: sk,
             canvas: (sk as any).canvas?.getContext("2d") ?? null,
           } as any);
@@ -115,17 +115,7 @@ export function ShowRunner({
             setTick((v) => v + 1); // re-render to update FloorSim HUD
           }
 
-          // Clear and let the Scene draw visuals using style from active Look
-          sk.clear();
-          const scene = manager.currentScene();
-          const look = manager.currentLook();
-          // Update scene-level visual state (e.g., circle position) before drawing
-          if (scene.updateVisual) scene.updateVisual(ctx as any);
-          const style = look.visualStyle
-            ? look.visualStyle(ctx as any)
-            : undefined;
-          if (scene.drawVisual) scene.drawVisual(sk as any, ctx as any, style);
-
+          // Visuals are now drawn within SceneManager (draw first, then lights)
           // No HUD overlay; header already shows scene and look
         };
       }, p5ContainerRef.current!);

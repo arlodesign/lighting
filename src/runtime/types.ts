@@ -2,6 +2,8 @@
 // Note: We keep this p5-agnostic so we can stub visuals without the p5 dependency.
 
 import type { FixtureId, LedParLabel } from "@/data/fixtures";
+import type { LightsFacade } from "./lightsFacade";
+import type { TimeHelpers } from "./timeHelpers";
 
 export type DmxAddress = number; // 1-based DMX address
 export type DmxValue = number; // 0-255
@@ -69,6 +71,14 @@ export type LookRenderCtx = {
   canvas?: CanvasRenderingContext2D | null;
   /** Optional p5 instance for visuals */
   p5?: any;
+  /** Ergonomic lights facade */
+  lights?: LightsFacade;
+  /** Time helpers */
+  t?: TimeHelpers;
+  /** Sample RGBA from current projection frame */
+  sample?: (x: number, y: number) => [number, number, number, number];
+  /** Scene-level persistent state (created by visual.init) */
+  sceneState?: any;
 };
 
 // Visual style for scene-level drawing provided by active Look
