@@ -1,17 +1,22 @@
 import type { Look, Scene } from "@/runtime/types";
 
 // Calibration scene: provides projector alignment and fixture check without creative content.
-// Look 1: Projector test grid + all fixtures to neutral white at mid intensity.
+// Look 1: neutral white wash at mid intensity; visuals are drawn at the scene level.
 const CalibrationLook: Look = {
   id: 1,
   name: "Calibration",
-  render: ({ p5, lights }) => {
+  render: ({ lights }) => {
     // DMX: neutral white mid-intensity across all fixtures
     lights?.all.rgb(200, 200, 200).master(160);
+  },
+};
 
-    // Visuals: draw only if p5 is available (no placeholder drawing otherwise)
+export const CalibrationScene: Scene = {
+  id: "calibration",
+  name: "Calibration",
+  looks: [CalibrationLook],
+  drawVisual: (p5) => {
     if (!p5) return;
-
     const w = p5.width,
       h = p5.height;
     p5.clear();
@@ -58,10 +63,4 @@ const CalibrationLook: Look = {
       12
     );
   },
-};
-
-export const CalibrationScene: Scene = {
-  id: "calibration",
-  name: "Calibration",
-  looks: [CalibrationLook],
 };
