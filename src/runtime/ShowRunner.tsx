@@ -17,9 +17,15 @@ const LOGICAL_H = 600;
 export function ShowRunner({
   show,
   keymap = DEFAULT_KEYMAP,
+  initialSceneId,
+  initialLook,
+  onNavigate,
 }: {
   show: Show;
   keymap?: KeyMap;
+  initialSceneId?: string;
+  initialLook?: 1 | 2 | 3 | 4;
+  onNavigate?: (sceneId: string, look: 1 | 2 | 3 | 4) => void;
 }) {
   const p5CanvasElRef = useRef<HTMLCanvasElement | null>(null);
   const p5ContainerRef = useRef<HTMLDivElement | null>(null);
@@ -31,6 +37,17 @@ export function ShowRunner({
   const [, setUiVersion] = useState(0); // nudge React to reflect look changes instantly
 
   const manager = useMemo(() => new SceneManager(show, keymap), [show, keymap]);
+
+  // Initialize from URL-derived props once per manager instance
+  useEffect(() => {
+    if (!manager) return;
+    if (initialSceneId) manager.setSceneById(initialSceneId);
+    if (initialLook) manager.setLook(initialLook);
+    // Reflect to parent so it can sync URL if needed
+    const scId = manager.currentScene().id;
+    onNavigate?.(scId, manager.getState().lookIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manager]);
   const universe = useMemo(() => new Universe(), []);
   const transport = useMemo(() => new NoopTransport(), []);
   const levelsRef = useRef<Record<number, number>>({});
@@ -72,7 +89,12 @@ export function ShowRunner({
     if (!controlsEnabled) return;
     const handler = (e: KeyboardEvent) => {
       const handled = manager.handleKey(e, performance.now());
-      if (handled) setUiVersion((v) => v + 1);
+      if (handled) {
+        setUiVersion((v) => v + 1);
+        // Inform parent about navigation-relevant changes
+        const scId = manager.currentScene().id;
+        onNavigate?.(scId, manager.getState().lookIndex);
+      }
     };
     window.addEventListener("keydown", handler, { capture: true });
     return () =>
@@ -201,6 +223,8 @@ export function ShowRunner({
                         onClick={() => {
                           manager.setLook(i);
                           setUiVersion((v) => v + 1);
+                          const scId = manager.currentScene().id;
+                          onNavigate?.(scId, manager.getState().lookIndex);
                         }}
                         aria-pressed={manager.getState().lookIndex === i}
                         className={

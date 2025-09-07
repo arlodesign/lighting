@@ -195,6 +195,22 @@ export class SceneManager {
     if (i <= sc.looks.length) this.state.lookIndex = i;
   }
 
+  /**
+   * Jump to a specific scene by id without triggering a crossfade.
+   * Resets Look to 1 (caller may set a different Look immediately after).
+   */
+  setSceneById(sceneId: string) {
+    const idx = this.show.scenes.findIndex((s) => s.id === sceneId);
+    if (idx < 0) return;
+    this._prevSceneIndex = this.state.sceneIndex;
+    this.state.sceneIndex = idx;
+    this.state.lookIndex = 1;
+    this.state.crossfadeActive = false;
+    this.state.crossfadeStartMs = 0;
+    this.state.crossfadeDurationMs = this.show.sceneCrossfadeMs;
+    this.tempo = new SceneTempo();
+  }
+
   nextScene(nowMs: number) {
     if (this.state.sceneIndex < this.show.scenes.length - 1) {
       this.startSceneTransition(nowMs, this.state.sceneIndex + 1);

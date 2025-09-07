@@ -1,15 +1,9 @@
-"use client";
-import { ShowRunner } from "@/runtime/ShowRunner";
 import { getShowByName } from "@/shows";
 import Link from "next/link";
-import { use } from "react";
+import { redirect } from "next/navigation";
 
-export default function ShowPage({
-  params,
-}: {
-  params: Promise<{ showName: string }>;
-}) {
-  const { showName } = use(params);
+export default function ShowPage({ params }: { params: { showName: string } }) {
+  const { showName } = params;
   const show = getShowByName(showName);
 
   if (!show) {
@@ -18,7 +12,7 @@ export default function ShowPage({
         <div className="text-center">
           <h1 className="text-3xl font-bold text-white mb-4">Show Not Found</h1>
           <p className="text-zinc-400 mb-6">
-            The show "{showName}" could not be found.
+            The show &quot;{showName}&quot; could not be found.
           </p>
           <Link
             href="/"
@@ -31,5 +25,7 @@ export default function ShowPage({
     );
   }
 
-  return <ShowRunner show={show} />;
+  // Default deep link to first scene/look
+  const firstScene = show.scenes[0];
+  redirect(`/show/${showName}/scene/${firstScene.id}/look/1`);
 }

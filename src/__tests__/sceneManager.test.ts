@@ -2,8 +2,16 @@ import { describe, it, expect } from "vitest";
 import { SceneManager } from "../runtime/sceneManager";
 import type { KeyMap, Look, Scene, Show } from "../runtime/types";
 
-const mkLook = (id: 1|2|3|4, name: string): Look => ({ id, name, render: () => {} });
-const mkScene = (id: string, name: string, looks: Look[]): Scene => ({ id, name, looks });
+const mkLook = (id: 1 | 2 | 3 | 4, name: string): Look => ({
+  id,
+  name,
+  render: () => {},
+});
+const mkScene = (id: string, name: string, looks: Look[]): Scene => ({
+  id,
+  name,
+  looks,
+});
 
 const show: Show = {
   name: "Test",
@@ -35,7 +43,13 @@ describe("SceneManager", () => {
 
   it("handles key actions and toggles blackout", () => {
     const sm = new SceneManager(show, keymap);
-    const e = (key: string) => ({ key, altKey: false, shiftKey: false, preventDefault() {} } as unknown as KeyboardEvent);
+    const e = (key: string) =>
+      ({
+        key,
+        altKey: false,
+        shiftKey: false,
+        preventDefault() {},
+      } as unknown as KeyboardEvent);
     sm.handleKey(e("2"), 0);
     expect(sm.currentLook().id).toBe(2);
     sm.handleKey(e("b"), 0);
@@ -52,5 +66,13 @@ describe("SceneManager", () => {
     res = sm.renderFrame(2000, 16);
     expect(sm["getState"]().crossfadeActive).toBe(false);
   });
-});
 
+  it("setSceneById initializes scene without triggering crossfade", () => {
+    const sm = new SceneManager(show, keymap);
+    sm.setSceneById("s2");
+    expect(sm["getState"]().sceneIndex).toBe(1);
+    expect(sm["getState"]().crossfadeActive).toBe(false);
+    // look reset to 1
+    expect(sm.currentLook().id).toBe(1);
+  });
+});
