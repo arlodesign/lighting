@@ -1,9 +1,14 @@
 import { getShowByName } from "@/shows";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { use } from "react";
 
-export default function ShowPage({ params }: { params: { showName: string } }) {
-  const { showName } = params;
+export default function ShowPage({
+  params,
+}: {
+  params: Promise<{ showName: string }>;
+}) {
+  const { showName } = use(params);
   const show = getShowByName(showName);
 
   if (!show) {
