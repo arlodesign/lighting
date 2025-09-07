@@ -11,7 +11,7 @@ This branch is a typed rewrite focused on making it as easy as your original p5 
 - Start the dev server: `pnpm dev`
 - Open http://localhost:3000
 - Launch a show, e.g. “Live Concert” or “Random Walker Demo”
-- Press the “Enable controls” button to use keyboard:
+- Keyboard controls are enabled by default:
   - 1–4: switch looks
   - Arrow Up/Down: next/previous scene
   - B: blackout, T: tap tempo (Shift+T double, Alt+T half, R reset)

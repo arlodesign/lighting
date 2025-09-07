@@ -1,5 +1,11 @@
 "use client";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Universe } from "@/data/universe";
 import { applySparsePatch } from "@/data/universe/apply";
 import { DEFAULT_KEYMAP } from "./keys";
@@ -32,18 +38,17 @@ export function ShowRunner({
   const p5Ref = useRef<any>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const simRef = useRef<HTMLDivElement | null>(null);
-  const [controlsEnabled, setControlsEnabled] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [, setUiVersion] = useState(0); // nudge React to reflect look changes instantly
 
   const manager = useMemo(() => new SceneManager(show, keymap), [show, keymap]);
 
   // Initialize from URL-derived props once per manager instance
-  useEffect(() => {
+  // Ensure initial scene/look are applied before first paint to avoid flicker
+  useLayoutEffect(() => {
     if (!manager) return;
     if (initialSceneId) manager.setSceneById(initialSceneId);
     if (initialLook) manager.setLook(initialLook);
-    // Reflect to parent so it can sync URL if needed
     const scId = manager.currentScene().id;
     onNavigate?.(scId, manager.getState().lookIndex);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,9 +89,8 @@ export function ShowRunner({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Keyboard handling
+  // Keyboard handling: always enabled
   useEffect(() => {
-    if (!controlsEnabled) return;
     const handler = (e: KeyboardEvent) => {
       const handled = manager.handleKey(e, performance.now());
       if (handled) {
@@ -99,7 +103,7 @@ export function ShowRunner({
     window.addEventListener("keydown", handler, { capture: true });
     return () =>
       window.removeEventListener("keydown", handler, { capture: true } as any);
-  }, [controlsEnabled, manager]);
+  }, [manager]);
 
   // Main loop (requestAnimationFrame)
   const [, setTick] = useState(0); // force minimal re-render for aria-live
@@ -189,13 +193,6 @@ export function ShowRunner({
               >
                 ← Shows
               </Link>
-              <button
-                onClick={() => setControlsEnabled((v) => !v)}
-                className="px-3 py-2 rounded bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-                aria-pressed={controlsEnabled}
-              >
-                {controlsEnabled ? "Controls Enabled" : "Enable controls"}
-              </button>
             </div>
 
             {/* Center: Scene label + Look selector */}
