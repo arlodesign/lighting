@@ -38,12 +38,15 @@ export default function ShowLayout({
   // Validate params; if missing/invalid, ShowRunner will handle and we keep URL stable
   const validScene = sceneId && show.scenes.find((s) => s.id === sceneId);
   const sceneInit = validScene?.id ?? show.scenes[0].id;
-  const lookNum = Math.max(1, Math.min(4, Number(lookId) || 1)) as 1 | 2 | 3 | 4;
+  const lookNum = Math.max(1, Math.min(4, Number(lookId) || 1)) as
+    | 1
+    | 2
+    | 3
+    | 4;
   const maxLooks = (validScene ?? show.scenes[0]).looks.length;
   const lookInit = (lookNum <= maxLooks ? lookNum : 1) as 1 | 2 | 3 | 4;
 
-  const onNavigate = (newSceneId: string, newLook: 1 | 2 | 3 | 4) => {
-    // Keep URL synced without unmounting ShowRunner (layout persists)
+  const updateUrl = (newSceneId: string, newLook: 1 | 2 | 3 | 4) => {
     router.replace(`/show/${showName}/scene/${newSceneId}/look/${newLook}`);
   };
 
@@ -52,8 +55,8 @@ export default function ShowLayout({
       show={show}
       initialSceneId={sceneInit}
       initialLook={lookInit}
-      onNavigate={onNavigate}
+      onNavigate={updateUrl}
+      onNavigateReady={updateUrl}
     />
   );
 }
-

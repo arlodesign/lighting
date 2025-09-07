@@ -32,6 +32,8 @@ export function ShowRunner({
   initialSceneId?: string;
   initialLook?: 1 | 2 | 3 | 4;
   onNavigate?: (sceneId: string, look: 1 | 2 | 3 | 4) => void;
+  // Optional hook to gate URL updates until transitions complete
+  onNavigateReady?: (sceneId: string, look: 1 | 2 | 3 | 4) => void;
 }) {
   const p5CanvasElRef = useRef<HTMLCanvasElement | null>(null);
   const p5ContainerRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +54,12 @@ export function ShowRunner({
     const scId = manager.currentScene().id;
     onNavigate?.(scId, manager.getState().lookIndex);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Defer URL updates until transitions (e.g., look crossfade) complete
+    const onMaybeNavigateReady = () => {
+      const st = manager.getState();
+      const ready = !st.lookCrossfadeActive;
+      if (ready) onNavigateReady?.(manager.currentScene().id, st.lookIndex);
+    };
   }, [manager]);
   const universe = useMemo(() => new Universe(), []);
   const transport = useMemo(() => new NoopTransport(), []);

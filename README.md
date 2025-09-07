@@ -112,6 +112,28 @@ const WarmFill: Look = {
 };
 ```
 
+### Look-to-look crossfades
+
+- Each Look can provide `enterCrossfadeMs` (milliseconds). When you switch into that Look, lights crossfade from the previous Look over this duration.
+- Default is `0` (instant). For now, crossfades are ignored when switching to Look 1 because scene transitions already crossfade into Look 1.
+- Example:
+
+```ts
+const MyLook2: Look = {
+  id: 2,
+  name: "Cool Pulse",
+  enterCrossfadeMs: 1000, // 1s crossfade when entering Look 2
+  render: ({ lights }) => {
+    lights?.all.rgb(80, 140, 255).master(140);
+  },
+};
+```
+
+Notes:
+
+- During scene changes we still use `show.sceneCrossfadeMs`. It’s technically possible to use `looks[0].enterCrossfadeMs` to drive scene transitions, but we keep the current behavior for consistency.
+- `ctx.crossfade` is populated during both scene crossfades and look crossfades so Looks can react (e.g., dim by alpha) if desired.
+
 Scene applies it in `drawVisual`:
 
 ```ts

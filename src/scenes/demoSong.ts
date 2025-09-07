@@ -38,6 +38,7 @@ const Look1: Look = {
 const Look2: Look = {
   id: 2,
   name: "Cool Pulse (Sampled Colors)",
+  enterCrossfadeMs: 1000,
   render: ({ t, lights, p5, sample }) => {
     if (!lights) return;
     const w = p5?.width ?? 800;

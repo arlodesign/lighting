@@ -18,11 +18,17 @@ import type {
 
 export type SceneManagerState = {
   sceneIndex: number;
-  lookIndex: 1 | 2 | 3 | 4;
+  lookIndex: 1 | 2 | 3 | 4; // target/active look index
   blackout: boolean;
+  // Scene crossfade
   crossfadeActive: boolean;
   crossfadeStartMs: number;
   crossfadeDurationMs: number;
+  // Look crossfade (within a scene)
+  lookCrossfadeActive?: boolean;
+  lookCrossfadeStartMs?: number;
+  lookCrossfadeDurationMs?: number;
+  prevLookIndex?: 1 | 2 | 3 | 4 | null;
 };
 
 export class SceneManager {
@@ -137,9 +143,63 @@ export class SceneManager {
       };
     }
 
-    // Normal frame: single scene + current look
+    // Normal frame: single scene + current look (with optional look crossfade)
     const writer: UniverseWriter = new FrameUniverseWriter();
+    const sceneA = this.currentScene();
     const look = this.currentLook();
+
+    // Handle look crossfade blending if active
+    if (this.state.lookCrossfadeActive && this.state.prevLookIndex) {
+      const start = this.state.lookCrossfadeStartMs ?? timeNowMs;
+      const dur = this.state.lookCrossfadeDurationMs ?? 0;
+      const t =
+        dur > 0 ? Math.max(0, Math.min(1, (timeNowMs - start) / dur)) : 1;
+      const outLook = sceneA.looks[(this.state.prevLookIndex as number) - 1];
+      const inLook = look;
+      const outWriter: UniverseWriter = new FrameUniverseWriter();
+      const inWriter: UniverseWriter = new FrameUniverseWriter();
+
+      const baseCtx = {
+        time: { nowMs: timeNowMs, deltaMs },
+        tempo: tempoInfo,
+        p5: extras?.p5,
+        canvas: extras?.canvas ?? null,
+      } as const;
+
+      outLook.render({
+        ...(baseCtx as any),
+        crossfade: { role: "outgoing", alpha: 1 - t, remainingMs: 0 },
+        universe: outWriter,
+      } as any);
+      inLook.render({
+        ...(baseCtx as any),
+        crossfade: { role: "incoming", alpha: t, remainingMs: 0 },
+        universe: inWriter,
+      } as any);
+
+      const blended = blendPatches(
+        (outWriter as FrameUniverseWriter).patch,
+        (inWriter as FrameUniverseWriter).patch,
+        t
+      );
+
+      if (t >= 1) {
+        this.state.lookCrossfadeActive = false;
+        this.state.prevLookIndex = null;
+      }
+
+      return {
+        patch: this.state.blackout ? {} : blended,
+        ctx: {
+          time: { nowMs: timeNowMs, deltaMs },
+          tempo: tempoInfo,
+          crossfade: { role: "incoming", alpha: t, remainingMs: 0 },
+          universe: inWriter,
+          p5: extras?.p5,
+          canvas: extras?.canvas ?? null,
+        } as any,
+      };
+    }
 
     // Create helpers and facade
     const t = createTimeHelpers({ nowMs: timeNowMs, deltaMs }, tempoInfo);
@@ -169,7 +229,7 @@ export class SceneManager {
     };
 
     // Draw visuals first (scene-level), then render lights
-    const scene = this.currentScene();
+    const scene2 = this.currentScene();
     if (extras?.p5) {
       // Always clear before drawing scene visuals to avoid lingering from previous scene
       if (typeof extras.p5.clear === "function") {
@@ -177,9 +237,9 @@ export class SceneManager {
           extras.p5.clear();
         } catch {}
       }
-      if (scene.updateVisual) scene.updateVisual(ctx);
+      if (scene2.updateVisual) scene2.updateVisual(ctx);
       const style = look.visualStyle ? look.visualStyle(ctx) : undefined;
-      if (scene.drawVisual) scene.drawVisual(extras.p5, ctx, style);
+      if (scene2.drawVisual) scene2.drawVisual(extras.p5, ctx, style);
     }
 
     look.render(ctx);
@@ -192,7 +252,26 @@ export class SceneManager {
 
   setLook(i: 1 | 2 | 3 | 4) {
     const sc = this.currentScene();
-    if (i <= sc.looks.length) this.state.lookIndex = i;
+    if (i > sc.looks.length) return;
+    if (i === this.state.lookIndex) return;
+    const targetLook = sc.looks[i - 1];
+    const now = performance.now();
+    const duration = (i === 1 ? 0 : targetLook.enterCrossfadeMs ?? 0) | 0; // ignore Look 1 per spec
+    if (duration > 0) {
+      // Start a look crossfade from previous look to new look
+      this.state.prevLookIndex = this.state.lookIndex;
+      this.state.lookIndex = i; // target becomes active index for reading currentLook
+      this.state.lookCrossfadeActive = true;
+      this.state.lookCrossfadeStartMs = now;
+      this.state.lookCrossfadeDurationMs = duration;
+    } else {
+      // Instant switch
+      this.state.prevLookIndex = null;
+      this.state.lookIndex = i;
+      this.state.lookCrossfadeActive = false;
+      this.state.lookCrossfadeStartMs = 0;
+      this.state.lookCrossfadeDurationMs = 0;
+    }
   }
 
   /**

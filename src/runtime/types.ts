@@ -90,6 +90,8 @@ export type VisualStyle = {
 export type Look = {
   id: 1 | 2 | 3 | 4;
   name: string;
+  /** Optional crossfade duration in ms to apply when entering this Look (ignored for Look 1 for now) */
+  enterCrossfadeMs?: number;
   onEnter?(ctx: LookRenderCtx): void;
   onExit?(ctx: LookRenderCtx): void;
   /** Optional visual style to be used by the Scene's drawVisual */
