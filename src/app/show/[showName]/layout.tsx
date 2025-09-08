@@ -36,8 +36,8 @@ export default function ShowLayout({
   }
 
   // Validate params; if missing/invalid, ShowRunner will handle and we keep URL stable
-  const validScene = sceneId && show.scenes.find((s) => s.id === sceneId);
-  const sceneInit = validScene?.id ?? show.scenes[0].id;
+  const validScene = show.scenes.find((s) => s.id === sceneId);
+  const sceneInit = validScene ? validScene.id : show.scenes[0].id;
   const lookNum = Math.max(1, Math.min(4, Number(lookId) || 1)) as
     | 1
     | 2

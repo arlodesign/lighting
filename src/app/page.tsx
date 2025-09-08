@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { getShowMetadata } from "@/shows";
+import { QlcStatus } from "@/components/QlcStatus";
 
 export default function Home() {
   const shows = getShowMetadata();
@@ -17,6 +20,7 @@ export default function Home() {
         </header>
 
         <section>
+          <QlcStatus variant="banner" />
           <h2 className="text-2xl font-semibold text-white mb-6">
             Available Shows
           </h2>

@@ -70,7 +70,7 @@ export type LookRenderCtx = {
   /** Optional drawing surface when p5 is not present yet */
   canvas?: CanvasRenderingContext2D | null;
   /** Optional p5 instance for visuals */
-  p5?: any;
+  p5?: unknown;
   /** Ergonomic lights facade */
   lights?: LightsFacade;
   /** Time helpers */
@@ -78,7 +78,7 @@ export type LookRenderCtx = {
   /** Sample RGBA from current projection frame */
   sample?: (x: number, y: number) => [number, number, number, number];
   /** Scene-level persistent state (created by visual.init) */
-  sceneState?: any;
+  sceneState?: unknown;
 };
 
 // Visual style for scene-level drawing provided by active Look
@@ -108,7 +108,7 @@ export type Scene = {
   /** Optional per-frame update of scene visual state (e.g., moving circle position) */
   updateVisual?(ctx: LookRenderCtx): void;
   /** Optional scene-level draw using p5, styled by the active look's visualStyle */
-  drawVisual?(p5: any, ctx: LookRenderCtx, style?: VisualStyle): void;
+  drawVisual?(p5: import("p5"), ctx: LookRenderCtx, style?: VisualStyle): void;
 };
 
 export type Show = {

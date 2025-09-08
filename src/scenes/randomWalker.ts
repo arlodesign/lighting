@@ -4,8 +4,8 @@ import type { Look, Scene, VisualStyle } from "@/runtime/types";
 // Persistent scene state (module-level closure for simplicity)
 const CIRCLE_DIAMETER = 60;
 const SPEED = 1.5; // px/frame at 60fps-ish
-let pos = { x: 400, y: 300 };
-let vel = { x: SPEED, y: SPEED * 0.8 };
+const pos = { x: 400, y: 300 };
+const vel = { x: SPEED, y: SPEED * 0.8 };
 
 function updatePosition(width: number, height: number) {
   pos.x += vel.x;
@@ -16,7 +16,15 @@ function updatePosition(width: number, height: number) {
     vel.y *= -1;
 }
 
-function drawCircle(p5: any, style?: VisualStyle) {
+function drawCircle(
+  p5: {
+    background: (...args: number[]) => void;
+    noStroke: () => void;
+    fill: (...args: number[]) => void;
+    circle: (x: number, y: number, d: number) => void;
+  },
+  style?: VisualStyle
+) {
   const bg = style?.bg ?? [0, 0, 0];
   const fg = style?.fg ?? [255, 255, 255];
   p5.background(bg[0], bg[1], bg[2]);

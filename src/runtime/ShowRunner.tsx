@@ -9,7 +9,8 @@ import React, {
 import { Universe } from "@/data/universe";
 import { applySparsePatch } from "@/data/universe/apply";
 import { DEFAULT_KEYMAP } from "./keys";
-import { NoopTransport } from "./transport";
+import { QlcPlusWebSocketTransport } from "./transport";
+import { QlcStatus } from "@/components/QlcStatus";
 import { SceneManager } from "./sceneManager";
 import type { KeyMap, Show } from "./types";
 import { FloorSim } from "./FloorSim";
@@ -37,7 +38,7 @@ export function ShowRunner({
 }) {
   const p5CanvasElRef = useRef<HTMLCanvasElement | null>(null);
   const p5ContainerRef = useRef<HTMLDivElement | null>(null);
-  const p5Ref = useRef<any>(null);
+  const p5Ref = useRef<{ remove?: () => void } | null>(null);
   const headerRef = useRef<HTMLDivElement | null>(null);
   const simRef = useRef<HTMLDivElement | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -53,16 +54,10 @@ export function ShowRunner({
     if (initialLook) manager.setLook(initialLook);
     const scId = manager.currentScene().id;
     onNavigate?.(scId, manager.getState().lookIndex);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // Defer URL updates until transitions (e.g., look crossfade) complete
-    const onMaybeNavigateReady = () => {
-      const st = manager.getState();
-      const ready = !st.lookCrossfadeActive;
-      if (ready) onNavigateReady?.(manager.currentScene().id, st.lookIndex);
-    };
   }, [manager]);
   const universe = useMemo(() => new Universe(), []);
-  const transport = useMemo(() => new NoopTransport(), []);
+  // Always attempt QLC+ connection on localhost; fall back to Noop if needed
+  const transport = useMemo(() => new QlcPlusWebSocketTransport(), []);
   const levelsRef = useRef<Record<number, number>>({});
   const [hudWidth, setHudWidth] = useState<number>(Math.min(LOGICAL_W, 900));
 
@@ -110,7 +105,9 @@ export function ShowRunner({
     };
     window.addEventListener("keydown", handler, { capture: true });
     return () =>
-      window.removeEventListener("keydown", handler, { capture: true } as any);
+      window.removeEventListener("keydown", handler, {
+        capture: true,
+      } as unknown as AddEventListenerOptions);
   }, [manager]);
 
   // Main loop (requestAnimationFrame)
@@ -121,9 +118,9 @@ export function ShowRunner({
 
     // Guard against React Strict Mode double-invocation in dev:
     // remove any existing sketch/canvas synchronously before creating a new one.
-    if (p5Ref.current && typeof (p5Ref.current as any).remove === "function") {
+    if (p5Ref.current && typeof p5Ref.current.remove === "function") {
       try {
-        (p5Ref.current as any).remove();
+        p5Ref.current.remove?.();
       } catch {}
       p5Ref.current = null;
     }
@@ -132,20 +129,20 @@ export function ShowRunner({
       container.querySelectorAll("canvas").forEach((c) => c.remove());
     }
 
-    let inst: any = null;
+    let inst: { remove?: () => void } | null = null;
 
     (async () => {
       const p5Constructor = (await import("p5")).default;
       // Safety: if unmounted while loading, bail
       if (cleaned) return;
 
-      inst = new p5Constructor((sk) => {
+      inst = new p5Constructor((sk: unknown) => {
         sk.setup = () => {
           sk.createCanvas(LOGICAL_W, LOGICAL_H);
           sk.pixelDensity(1);
           // Capture the actual p5 canvas element so we can size it; no second canvas needed
-          p5CanvasElRef.current = (sk as any)
-            .canvas as HTMLCanvasElement | null;
+          p5CanvasElRef.current =
+            (sk as { canvas?: HTMLCanvasElement | null }).canvas ?? null;
           if (p5CanvasElRef.current) {
             p5CanvasElRef.current.setAttribute(
               "aria-label",
@@ -155,14 +152,17 @@ export function ShowRunner({
         };
         sk.draw = () => {
           const now = performance.now();
-          const delta =
-            (sk as any)._last ?? now ? now - ((sk as any)._last ?? now) : 16;
-          (sk as any)._last = now;
+          const last = (sk as { _last?: number })._last ?? now;
+          const delta = now - last;
+          (sk as { _last?: number })._last = now;
 
           const { patch } = manager.renderFrame(now, delta, {
-            p5: sk,
-            canvas: (sk as any).canvas?.getContext("2d") ?? null,
-          } as any);
+            p5: sk as unknown,
+            canvas:
+              (sk as { canvas?: HTMLCanvasElement | null }).canvas?.getContext(
+                "2d"
+              ) ?? null,
+          });
           applySparsePatch(universe, patch);
           const diff = universe.update();
           if (diff) transport.send(diff);
@@ -201,6 +201,8 @@ export function ShowRunner({
               >
                 ← Shows
               </Link>
+              {/* QLC+ connection status pill */}
+              <QlcStatus variant="pill" />
             </div>
 
             {/* Center: Scene label + Look selector */}

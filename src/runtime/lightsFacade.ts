@@ -1,5 +1,11 @@
 import type { UniverseWriter } from "./types";
-import { allFixtureIds, GROUPS, type FixtureId, type GroupName } from "@/data/fixtures";
+import {
+  allFixtureIds,
+  GROUPS,
+  type FixtureId,
+  type GroupName,
+  type LedParLabel,
+} from "@/data/fixtures";
 
 export type RGB = { r: number; g: number; b: number };
 
@@ -11,7 +17,9 @@ function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr));
 }
 
-function resolveTargets(target: "all" | GroupName | FixtureId[] | FixtureId): FixtureId[] {
+function resolveTargets(
+  target: "all" | GroupName | FixtureId[] | FixtureId
+): FixtureId[] {
   if (target === "all") return allFixtureIds();
   if (Array.isArray(target)) return uniq(target);
   if (typeof target === "string" && GROUPS[target]) return GROUPS[target];
@@ -21,8 +29,10 @@ function resolveTargets(target: "all" | GroupName | FixtureId[] | FixtureId): Fi
 export type LightsTargetSelector = {
   rgb: (r: number, g: number, b: number) => LightsTargetSelector;
   master: (value: number) => LightsTargetSelector;
-  set: (label: string, value: number) => LightsTargetSelector; // escape hatch
-  setValues: (values: Partial<Record<string, number>>) => LightsTargetSelector;
+  set: (label: LedParLabel, value: number) => LightsTargetSelector; // escape hatch
+  setValues: (
+    values: Partial<Record<LedParLabel, number>>
+  ) => LightsTargetSelector;
 };
 
 export type LightsFacade = {
@@ -67,29 +77,32 @@ export function createLightsFacade(universe: UniverseWriter): LightsFacade {
     return {
       rgb: (r, g, b) => {
         for (const id of targets) {
-          universe.setFixture(id, "r" as any, clamp(r));
-          universe.setFixture(id, "g" as any, clamp(g));
-          universe.setFixture(id, "b" as any, clamp(b));
+          universe.setFixture(id, "r", clamp(r));
+          universe.setFixture(id, "g", clamp(g));
+          universe.setFixture(id, "b", clamp(b));
         }
         return select(targets);
       },
       master: (value) => {
         for (const id of targets) {
-          universe.setFixture(id, "master" as any, clamp(value));
+          universe.setFixture(id, "master", clamp(value));
         }
         return select(targets);
       },
       set: (label, value) => {
         for (const id of targets) {
-          universe.setFixture(id, label as any, clamp(value));
+          universe.setFixture(id, label, clamp(value));
         }
         return select(targets);
       },
       setValues: (values) => {
         for (const id of targets) {
-          for (const [label, value] of Object.entries(values)) {
+          for (const [label, value] of Object.entries(values) as [
+            LedParLabel,
+            number
+          ][]) {
             if (value == null) continue;
-            universe.setFixture(id, label as any, clamp(value));
+            universe.setFixture(id, label, clamp(value));
           }
         }
         return select(targets);
@@ -105,10 +118,10 @@ export function createLightsFacade(universe: UniverseWriter): LightsFacade {
     fixtures: (ids) => select(uniq(ids)),
     off: () => {
       for (const id of resolveTargets("all")) {
-        universe.setFixture(id, "master" as any, 0);
-        universe.setFixture(id, "r" as any, 0);
-        universe.setFixture(id, "g" as any, 0);
-        universe.setFixture(id, "b" as any, 0);
+        universe.setFixture(id, "master", 0);
+        universe.setFixture(id, "r", 0);
+        universe.setFixture(id, "g", 0);
+        universe.setFixture(id, "b", 0);
       }
     },
     blackout: () => {
@@ -127,7 +140,10 @@ export function createLightsFacade(universe: UniverseWriter): LightsFacade {
         const active = i < width;
         const id = ids[idx];
         if (target === "rgb" || target === "both") {
-          const c = (opts.colors ?? [{ r: 255, g: 255, b: 255 }, { r: 0, g: 0, b: 0 }])[active ? 0 : 1];
+          const c = (opts.colors ?? [
+            { r: 255, g: 255, b: 255 },
+            { r: 0, g: 0, b: 0 },
+          ])[active ? 0 : 1];
           self.fixture(id).rgb(c.r, c.g, c.b);
         }
         if (target === "master" || target === "both") {
@@ -158,4 +174,3 @@ export function createLightsFacade(universe: UniverseWriter): LightsFacade {
 
   return self;
 }
-

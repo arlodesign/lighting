@@ -83,7 +83,7 @@ export const DemoSong: Scene = {
   name: "Demo Song",
   looks: [Look1, Look2],
   updateVisual: (ctx) => {
-    const p5 = ctx.p5 as any;
+    const p5 = ctx.p5;
     if (!p5) return;
     // (Re)create shapes if first frame or size changed
     const w = p5.width,

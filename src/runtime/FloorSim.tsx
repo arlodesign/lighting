@@ -92,17 +92,18 @@ export function FloorSim({
     levels,
     width,
   }: {
-    id: string;
+    id: import("@/data/fixtures").FixtureId;
     levels: Record<number, number>;
     width: number;
   }) {
-    const fx = getFixture(id as any);
-    const addr = (label: any) => fx.getAddress(label);
-    const r = (levels[addr("r")] ?? fx.getValue("r" as any) ?? 0) as number;
-    const g = (levels[addr("g")] ?? fx.getValue("g" as any) ?? 0) as number;
-    const b = (levels[addr("b")] ?? fx.getValue("b" as any) ?? 0) as number;
+    const fx = getFixture(id);
+    const addr = (label: import("@/data/fixtures").LedParLabel) =>
+      fx.getAddress(label);
+    const r = (levels[addr("r")] ?? fx.getValue("r") ?? 0) as number;
+    const g = (levels[addr("g")] ?? fx.getValue("g") ?? 0) as number;
+    const b = (levels[addr("b")] ?? fx.getValue("b") ?? 0) as number;
     const master = (levels[addr("master")] ??
-      fx.getValue("master" as any) ??
+      fx.getValue("master") ??
       0) as number;
     const size = Math.max(18, Math.min(24, Math.round(width * 0.022)));
     const alpha = Math.max(0.2, Math.min(0.95, master / 255));
@@ -148,8 +149,9 @@ function FixtureDot({
   maxSlotSR: number;
   levels: Record<number, number>;
 }) {
-  const fx = getFixture(id as any);
-  const addr = (label: any) => fx.getAddress(label);
+  const fx = getFixture(id as import("@/data/fixtures").FixtureId);
+  const addr = (label: import("@/data/fixtures").LedParLabel) =>
+    fx.getAddress(label);
 
   // DS at top (0.15), US at bottom (0.85)
   const yNorm = y === "DS" ? 0.15 : 0.85;
@@ -161,11 +163,11 @@ function FixtureDot({
   const xWithinHalf = halfPadding + (1 - 2 * halfPadding) * t;
   const xNorm = x === "SL" ? xWithinHalf * 0.5 : 0.5 + xWithinHalf * 0.5;
 
-  const r = (levels[addr("r")] ?? fx.getValue("r" as any) ?? 0) as number;
-  const g = (levels[addr("g")] ?? fx.getValue("g" as any) ?? 0) as number;
-  const b = (levels[addr("b")] ?? fx.getValue("b" as any) ?? 0) as number;
+  const r = (levels[addr("r")] ?? fx.getValue("r") ?? 0) as number;
+  const g = (levels[addr("g")] ?? fx.getValue("g") ?? 0) as number;
+  const b = (levels[addr("b")] ?? fx.getValue("b") ?? 0) as number;
   const master = (levels[addr("master")] ??
-    fx.getValue("master" as any) ??
+    fx.getValue("master") ??
     0) as number;
 
   const size = 22;

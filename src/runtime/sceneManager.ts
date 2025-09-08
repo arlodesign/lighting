@@ -78,7 +78,7 @@ export class SceneManager {
   renderFrame(
     timeNowMs: number,
     deltaMs: number,
-    extras?: { p5?: any; canvas?: CanvasRenderingContext2D | null }
+    extras?: { p5?: unknown; canvas?: CanvasRenderingContext2D | null }
   ): { patch: DmxPatch; ctx: LookRenderCtx } {
     const tempoInfo = this.tempo.info(timeNowMs);
 
@@ -167,15 +167,15 @@ export class SceneManager {
       } as const;
 
       outLook.render({
-        ...(baseCtx as any),
+        ...baseCtx,
         crossfade: { role: "outgoing", alpha: 1 - t, remainingMs: 0 },
         universe: outWriter,
-      } as any);
+      });
       inLook.render({
-        ...(baseCtx as any),
+        ...baseCtx,
         crossfade: { role: "incoming", alpha: t, remainingMs: 0 },
         universe: inWriter,
-      } as any);
+      });
 
       const blended = blendPatches(
         (outWriter as FrameUniverseWriter).patch,
@@ -197,7 +197,7 @@ export class SceneManager {
           universe: inWriter,
           p5: extras?.p5,
           canvas: extras?.canvas ?? null,
-        } as any,
+        },
       };
     }
 
@@ -207,7 +207,9 @@ export class SceneManager {
 
     // Helper to safely sample the current projection frame (if available)
     const sample = (x: number, y: number): [number, number, number, number] => {
-      const p5 = extras?.p5 as any;
+      const p5 = extras?.p5 as
+        | { get?: (x: number, y: number) => [number, number, number, number] }
+        | undefined;
       if (p5 && typeof p5.get === "function") {
         const c = p5.get(x, y);
         // p5.get returns [r,g,b,a]

@@ -9,7 +9,26 @@ declare module "p5" {
     draw?: () => void;
     createCanvas: (width: number, height: number) => void;
     pixelDensity: (density: number) => void;
-    [key: string]: any; // Allow access to other p5 methods
+    width: number;
+    height: number;
+    frameCount: number;
+    canvas?: HTMLCanvasElement | null;
+    _last?: number;
+    clear: () => void;
+    background: (r: number, g?: number, b?: number, a?: number) => void;
+    noStroke: () => void;
+    fill: (r: number, g?: number, b?: number, a?: number) => void;
+    noFill: () => void;
+    strokeWeight: (w: number) => void;
+    stroke: (c: unknown) => void;
+    color: (r: number, g: number, b: number, a?: number) => unknown;
+    beginShape: () => void;
+    vertex: (x: number, y: number) => void;
+    endShape: (mode?: unknown) => void;
+    CLOSE: unknown;
+    circle: (x: number, y: number, d: number) => void;
+    get: (x: number, y: number) => [number, number, number, number];
+    [key: string]: unknown; // Allow access to other p5 methods
   }
 
   // p5 constructor type

@@ -11,10 +11,13 @@ export class NoopTransport implements Transport {
       // log at most every 2s
       const channels = Object.keys(diff).length;
       // eslint-disable-next-line no-console
-      console.debug(`[dmx] sent ${this.sends} frames | last ${channels} channels`);
+      console.debug(
+        `[dmx] sent ${this.sends} frames | last ${channels} channels`
+      );
       this.lastLog = now;
       this.sends = 0;
     }
   }
 }
 
+export { QlcPlusWebSocketTransport } from "./transport/qlcWebSocket";
