@@ -8,6 +8,7 @@
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { networkInterfaces } from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { WebSocketServer, type WebSocket } from "ws";
@@ -35,10 +36,22 @@ const { values: args } = parseArgs({
 });
 const port = Number(args.port);
 const host = args.lan ? "0.0.0.0" : "127.0.0.1";
-const ALLOWED_ORIGINS = [port, 5173].flatMap((p) => [
-  `http://localhost:${p}`,
-  `http://127.0.0.1:${p}`,
-]);
+// Pages allowed to open the WebSocket: this app (and the Vite dev server) on this laptop,
+// plus — only with --lan — the same app reached via this laptop's own network addresses
+// (what a tablet's browser would send). Any other website is refused either way.
+const ownHosts = [
+  "localhost",
+  "127.0.0.1",
+  ...(args.lan
+    ? Object.values(networkInterfaces())
+        .flat()
+        .filter((i) => i?.family === "IPv4" && !i.internal)
+        .map((i) => i!.address)
+    : []),
+];
+const ALLOWED_ORIGINS = [port, 5173].flatMap((p) =>
+  ownHosts.map((h) => `http://${h}:${p}`),
+);
 
 const FRAME_MS = 1000 / 30;
 const AUTOSAVE_MS = 3000;
@@ -104,10 +117,9 @@ const server = createServer(async (req, res) => {
 const wss = new WebSocketServer({
   server,
   path: WS_PATH,
-  // Block other websites open in this browser from connecting. (With --lan, any origin is
-  // allowed so a tablet on the network can connect — only use it on a network you trust.)
+  // Blocks other websites open in a browser from quietly driving the lights.
   verifyClient: ({ origin }: { origin?: string }) =>
-    args.lan || isAllowedOrigin(origin, ALLOWED_ORIGINS),
+    isAllowedOrigin(origin, ALLOWED_ORIGINS),
 });
 const send = (ws: WebSocket, msg: ServerMessage) =>
   ws.readyState === ws.OPEN && ws.send(JSON.stringify(msg));
