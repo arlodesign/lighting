@@ -10,17 +10,24 @@
   "scripts": {
     "probe": "node probe/index.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "preview": "node scripts/preview.ts"
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p hud",
+    "preview": "node scripts/preview.ts",
+    "start": "npm run build:hud && node src/server/main.ts",
+    "dev": "node scripts/dev.ts",
+    "build:hud": "vite build"
   },
   "dependencies": {
     "@julusian/midi": "^3.8.1",
-    "serialport": "^13.0.0"
+    "serialport": "^13.0.0",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
+    "@fontsource/big-shoulders-display": "^5.3.0",
     "@types/node": "^24.19.2",
+    "@types/ws": "^8.18.2",
     "prettier": "^3.9.10",
     "typescript": "^7.0.2",
+    "vite": "^8.3.4",
     "vitest": "^5.0.4"
   }
 }

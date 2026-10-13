@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lights</title>
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <div id="banner" hidden></div>
+
+    <section class="stage" aria-label="Lights">
+      <div class="side" id="side-L"></div>
+      <div class="band" aria-hidden="true"></div>
+      <div class="side" id="side-R"></div>
+    </section>
+
+    <section class="now">
+      <div class="look">
+        <h1 id="look-name">Connecting…</h1>
+        <div class="palette">
+          <span id="palette-swatches"></span>
+          <span id="palette-name"></span>
+        </div>
+      </div>
+      <aside class="set">
+        <div class="song">
+          <h2>Now</h2>
+          <p id="song-now">—</p>
+          <p class="notes" id="song-notes"></p>
+        </div>
+        <div class="song next">
+          <h2>Next <kbd>click big knob</kbd></h2>
+          <p id="song-next">—</p>
+        </div>
+      </aside>
+      <div class="tempo">
+        <div class="bpm"><span id="bpm">—</span><small>bpm</small></div>
+        <div class="beats" id="beats" aria-hidden="true">
+          <i></i><i></i><i></i><i></i>
+        </div>
+        <div class="tapping" id="tapping"></div>
+      </div>
+    </section>
+
+    <section class="console">
+      <div class="group pads">
+        <h2>Pads</h2>
+        <div class="row" id="pads"></div>
+      </div>
+      <div class="group knobs">
+        <h2>Knobs</h2>
+        <div class="row" id="knobs"></div>
+      </div>
+      <div class="group faders">
+        <h2>Faders</h2>
+        <div class="row" id="faders"></div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="mic">
+        <button id="mic-on" type="button">Turn on mic</button>
+        <div class="meter" aria-label="Mic level">
+          <div id="mic-level"></div>
+        </div>
+        <span class="kick" id="kick" title="Kick detected"></span>
+      </div>
+      <div class="devices">
+        <span id="dev-midi" class="dev">MiniLab</span>
+        <span id="dev-dmx" class="dev">Lights</span>
+      </div>
+      <p class="keys">
+        Laptop keys: <kbd>space</kbd> tap <kbd>esc</kbd> blackout
+        <kbd>S</kbd> strobe <kbd>F</kbd> flash <kbd>L</kbd> lightning
+        <kbd>1</kbd>–<kbd>9</kbd> looks <kbd>↑</kbd><kbd>↓</kbd> setlist
+        <kbd>enter</kbd> load song
+      </p>
+    </footer>
+  </body>
+</html>

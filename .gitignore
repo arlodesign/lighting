@@ -5,3 +5,4 @@ dist
 .remember
 fixture.jpg
 .vitest
+state
