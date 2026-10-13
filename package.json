@@ -1,26 +1,25 @@
 {
   "name": "lighting",
-  "source": "src/index.html",
-  "scripts": {
-    "start": "parcel",
-    "build": "rm -rf dist && parcel build",
-    "prepare": "husky"
+  "version": "2.0.0",
+  "private": true,
+  "description": "MiniLab 3 + Open DMX light show for a small bar band",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
   },
-  "devDependencies": {
-    "husky": "^9.1.5",
-    "lint-staged": "^15.2.10",
-    "parcel": "latest",
-    "parcel-reporter-static-files-copy": "^1.5.3",
-    "prettier": "3.3.3"
+  "scripts": {
+    "probe": "node probe/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bluehexagons/easing": "^0.4.2",
-    "fast-shuffle": "^6.1.0",
-    "p5": "^1.10.0",
-    "random-int": "^3.0.0",
-    "tinycolor2": "^1.6.0"
+    "@julusian/midi": "^3.8.1",
+    "serialport": "^13.0.0"
   },
-  "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
   }
 }
