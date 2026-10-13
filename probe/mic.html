@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mic Probe</title>
+    <style>
+      :root {
+        --bg: #111;
+        --fg: #eee;
+        --dim: #888;
+        --accent: #ff6a00;
+        --bass: #b3001b;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          18px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 8px;
+      }
+      p {
+        color: var(--dim);
+        max-width: 40em;
+      }
+      button {
+        font: inherit;
+        font-size: 22px;
+        padding: 12px 28px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #000;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .meter {
+        height: 28px;
+        background: #222;
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 10px 0 18px;
+        max-width: 640px;
+      }
+      .meter div {
+        height: 100%;
+        width: 0;
+        transition: width 50ms linear;
+      }
+      #rms {
+        background: var(--accent);
+      }
+      #bass {
+        background: var(--bass);
+      }
+      #phase {
+        font-size: 30px;
+        font-weight: 700;
+        margin: 20px 0;
+        min-height: 1.4em;
+      }
+      #kick {
+        display: inline-block;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #333;
+        vertical-align: middle;
+        margin-left: 8px;
+      }
+      #kick.on {
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mic check</h1>
+    <p>
+      Click start and allow microphone access. You'll get 8 seconds of quiet,
+      then 15 seconds of loud. Play music through a speaker, or clap and stomp
+      near the laptop.
+    </p>
+    <button id="start">Start mic check</button>
+    <div id="phase"></div>
+    <div>Overall level</div>
+    <div class="meter"><div id="rms"></div></div>
+    <div>Bass (kick drum range) <span id="kick"></span></div>
+    <div class="meter"><div id="bass"></div></div>
+
+    <script type="module">
+      const $ = (id) => document.getElementById(id);
+      const QUIET_S = 8;
+      const LOUD_S = 15;
+
+      $("start").addEventListener("click", async () => {
+        $("start").disabled = true;
+        let stream;
+        try {
+          // Voice processing (AGC, noise suppression) would flatten the very dynamics we want.
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+            },
+          });
+        } catch (err) {
+          await send({ error: String(err) });
+          $("phase").textContent = "Mic permission denied: " + err;
+          return;
+        }
+
+        const ctx = new AudioContext();
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0;
+        ctx.createMediaStreamSource(stream).connect(analyser);
+
+        const time = new Float32Array(analyser.fftSize);
+        const freq = new Uint8Array(analyser.frequencyBinCount);
+        const binHz = ctx.sampleRate / analyser.fftSize;
+        const bassBins = Math.max(1, Math.round(150 / binHz)); // up to ~150 Hz
+
+        const samples = []; // { t, phase, rms, bass }
+        let kicks = 0;
+        let bassAvg = 0;
+        let lastKick = 0;
+        const t0 = performance.now();
+
+        await new Promise((resolve) => {
+          const tick = () => {
+            const t = (performance.now() - t0) / 1000;
+            const phase = t < QUIET_S ? "quiet" : "loud";
+            $("phase").textContent =
+              phase === "quiet"
+                ? `Stay quiet… ${Math.ceil(QUIET_S - t)}`
+                : `LOUD! Music / claps / stomps… ${Math.ceil(QUIET_S + LOUD_S - t)}`;
+
+            analyser.getFloatTimeDomainData(time);
+            analyser.getByteFrequencyData(freq);
+            let sum = 0;
+            for (const v of time) sum += v * v;
+            const rms = Math.sqrt(sum / time.length);
+            let b = 0;
+            for (let i = 1; i <= bassBins; i++) b += freq[i];
+            const bass = b / bassBins / 255;
+
+            // Crude onset detector: bass jumps well above its recent average.
+            const isKick =
+              bass > bassAvg * 1.5 && bass > 0.25 && t - lastKick > 0.15;
+            if (isKick) {
+              lastKick = t;
+              if (phase === "loud") kicks++;
+            }
+            bassAvg = bassAvg * 0.9 + bass * 0.1;
+            $("kick").classList.toggle("on", t - lastKick < 0.08);
+
+            $("rms").style.width = `${Math.min(100, rms * 300)}%`;
+            $("bass").style.width = `${bass * 100}%`;
+            samples.push({
+              t: +t.toFixed(3),
+              phase,
+              rms: +rms.toFixed(4),
+              bass: +bass.toFixed(3),
+            });
+
+            if (t < QUIET_S + LOUD_S) requestAnimationFrame(tick);
+            else resolve();
+          };
+          tick();
+        });
+
+        stream.getTracks().forEach((tr) => tr.stop());
+        const stats = (phase, key) => {
+          const xs = samples
+            .filter((s) => s.phase === phase)
+            .map((s) => s[key])
+            .sort((a, b) => a - b);
+          const pct = (p) =>
+            xs[Math.min(xs.length - 1, Math.floor(p * xs.length))] ?? 0;
+          return {
+            p10: pct(0.1),
+            median: pct(0.5),
+            p90: pct(0.9),
+            max: xs.at(-1) ?? 0,
+          };
+        };
+        const devices = (await navigator.mediaDevices.enumerateDevices())
+          .filter((d) => d.kind === "audioinput")
+          .map((d) => d.label);
+
+        await send({
+          userAgent: navigator.userAgent,
+          sampleRate: ctx.sampleRate,
+          devices,
+          quiet: { rms: stats("quiet", "rms"), bass: stats("quiet", "bass") },
+          loud: { rms: stats("loud", "rms"), bass: stats("loud", "bass") },
+          kicksDetectedWhileLoud: kicks,
+          // ~10 samples/sec is plenty to replay later when tuning the real detector.
+          samples: samples.filter((_, i) => i % 6 === 0),
+        });
+        $("phase").textContent = "Done! Go back to the terminal.";
+      });
+
+      async function send(body) {
+        await fetch("/result", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+      }
+    </script>
+  </body>
+</html>
