@@ -10,7 +10,8 @@
   "scripts": {
     "probe": "node probe/index.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preview": "node scripts/preview.ts"
   },
   "dependencies": {
     "@julusian/midi": "^3.8.1",
