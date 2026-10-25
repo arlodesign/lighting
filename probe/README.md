@@ -11,14 +11,30 @@ Nothing here changes the lights' or controller's settings permanently.
 1. **Install Node 24 LTS** from https://nodejs.org (the macOS installer, "LTS").
    Check in Terminal: `node --version` → `v24.x`.
 2. **Get the code:**
+
    ```bash
    git clone https://github.com/arlodesign/lighting.git
    cd lighting
    git checkout v2
    npm install
    ```
+
    `npm install` needs internet once. It downloads prebuilt MIDI and serial drivers for Intel
    Macs, so there's nothing to compile.
+
+   **If `npm install` fails with a 403 or "not found" on a host that isn't `registry.npmjs.org`:**
+   `package-lock.json` has picked up the registry of whichever machine last ran `npm install`
+   (a corporate proxy or mirror, say). Every package URL in the lockfile should start with
+   `https://registry.npmjs.org/`. Check with `grep -c 'registry.npmjs.org' package-lock.json`.
+   Run `git pull` for the latest lockfile. If you still see another host, re-point it:
+
+   ```bash
+   sed -i '' 's#https://[^/"]*/npm/#https://registry.npmjs.org/#g' package-lock.json && npm install
+   ```
+
+   When you run `npm install` on a machine with a non-default registry, check `git diff
+package-lock.json` before committing, so that machine's registry doesn't get committed.
+
 3. **Plug in through the hub:** MiniLab 3, ENTTEC Open DMX USB → XLR → first light → daisy-chain.
    Lights powered, in **7-channel DMX mode**.
 4. **Do NOT install** FTDI's "VCP" driver, and quit QLC+ or any other lighting app, which
