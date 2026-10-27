@@ -145,7 +145,7 @@ export class Engine {
     this.looks = opts.looks ?? LOOKS;
     this.palettes = opts.palettes ?? PALETTES;
     this.setlist = opts.setlist ?? [];
-    this.maxStrobe = opts.maxStrobe ?? 0.6;
+    this.maxStrobe = opts.maxStrobe ?? 1;
   }
 
   // ── input ────────────────────────────────────────────────────────────────────
@@ -276,10 +276,8 @@ export class Engine {
     const strobeHit = held("strobe");
     if (strobeHit) {
       lights = lights.map(() => WHITE);
-      strobe = Math.max(
-        0.05,
-        (0.3 + 0.7 * strobeHit.pressure) * this.maxStrobe,
-      );
+      // Pressure picks a point along the strobe range (light press = slowest usable flash).
+      strobe = Math.max(0.02, strobeHit.pressure) * this.maxStrobe;
     }
     if (held("blackout")) {
       lights = lights.map(() => BLACK);
