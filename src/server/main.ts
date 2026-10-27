@@ -6,7 +6,8 @@
  *   node src/server/main.ts --dmx fake     no hardware (preview only; --fake is the same)
  *   node src/server/main.ts --dmx usb      straight to the Open DMX over USB (quit QLC+ first)
  *   node src/server/main.ts --dmx serial   straight to the Open DMX over the OS serial driver
- *   (default is --dmx qlc: send DMX through QLC+, which must be running with web access on)
+ *   node src/server/main.ts --dmx qlc      through QLC+ instead (it must be running, web access on)
+ *   (default is --dmx usb: straight to the Open DMX; QLC+ must NOT be running)
  */
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
@@ -30,7 +31,7 @@ import { isAllowedOrigin, parseClientMessage } from "./validate.ts";
 const { values: args } = parseArgs({
   options: {
     fake: { type: "boolean", default: false },
-    dmx: { type: "string", default: "qlc" },
+    dmx: { type: "string", default: "usb" },
     port: { type: "string", default: String(DEFAULT_PORT) },
     "no-caffeinate": { type: "boolean", default: false },
     // Listen on the network (e.g. for a future iPad remote). Off by default: anyone on

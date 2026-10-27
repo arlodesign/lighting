@@ -8,10 +8,11 @@ const POLL_MS = 2000;
 
 /**
  * How DMX leaves the laptop:
- *  - "qlc":    through QLC+ (a lighting app that owns the adapter and does the DMX timing).
- *              Verified on the show laptop; the default.
  *  - "usb":    straight to the Open DMX's FTDI chip over USB (libusb), the way QLC+ does,
- *              with no QLC+ in between. QLC+ must be closed: only one program can own it.
+ *              with no QLC+ in between. Verified on the show laptop; the default.
+ *              QLC+ must be closed: only one program can own the adapter.
+ *  - "qlc":    through QLC+ (a lighting app that owns the adapter and does the DMX timing).
+ *              The backup if the direct route ever misbehaves.
  *  - "serial": straight to the Open DMX via the OS serial driver. Works on some machines,
  *              but on the show MacBook Air the lights never received a valid signal.
  *  - "fake":   no hardware — the preview and tests.

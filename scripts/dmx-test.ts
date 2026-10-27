@@ -2,10 +2,10 @@
  * Quick hardware test, no MiniLab or display needed: lights ONE fixture red for a few
  * seconds through the chosen DMX backend and prints what happened.
  *
- *   npm run dmx-test                       through QLC+ (it must be running, web access on)
- *   npm run dmx-test -- --dmx usb          straight to the Open DMX over USB (QUIT QLC+ first)
- *   npm run dmx-test -- --dmx usb --address 11 --seconds 15
- *   npm run dmx-test -- --dmx usb --walk   light each light in turn, house-left to house-right
+ *   npm run dmx-test                       straight to the Open DMX over USB (QUIT QLC+ first)
+ *   npm run dmx-test -- --walk             light each light in turn, house-left to house-right
+ *   npm run dmx-test -- --address 11 --seconds 15
+ *   npm run dmx-test -- --dmx qlc          through QLC+ instead (it must be running, web access on)
  *
  * Watch the display on the back of the light: blinking = no DMX; steady = DMX arriving.
  */
@@ -16,7 +16,7 @@ import { DmxManager, type DmxBackend } from "../src/dmx/dmxManager.ts";
 
 const { values } = parseArgs({
   options: {
-    dmx: { type: "string", default: "qlc" },
+    dmx: { type: "string", default: "usb" },
     address: { type: "string", default: "1" },
     seconds: { type: "string", default: "10" },
     walk: { type: "boolean", default: false },
