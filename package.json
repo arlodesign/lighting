@@ -14,11 +14,13 @@
     "preview": "node scripts/preview.ts",
     "start": "npm run build:hud && node src/server/main.ts",
     "dev": "node scripts/dev.ts",
-    "build:hud": "vite build"
+    "build:hud": "vite build",
+    "dmx-test": "node scripts/dmx-test.ts"
   },
   "dependencies": {
     "@julusian/midi": "^3.8.1",
     "serialport": "^13.0.0",
+    "usb": "^2.19.1",
     "ws": "^8.22.0"
   },
   "devDependencies": {

@@ -3,7 +3,10 @@
  *
  *   npm start                 build the HUD, then run (what you do at the gig)
  *   npm run dev               HUD with live reload + server, for development
- *   node src/server/main.ts --fake    run without an Open DMX (fake output)
+ *   node src/server/main.ts --dmx fake     no hardware (preview only; --fake is the same)
+ *   node src/server/main.ts --dmx usb      straight to the Open DMX over USB (quit QLC+ first)
+ *   node src/server/main.ts --dmx serial   straight to the Open DMX over the OS serial driver
+ *   (default is --dmx qlc: send DMX through QLC+, which must be running with web access on)
  */
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
@@ -27,6 +30,7 @@ import { isAllowedOrigin, parseClientMessage } from "./validate.ts";
 const { values: args } = parseArgs({
   options: {
     fake: { type: "boolean", default: false },
+    dmx: { type: "string", default: "qlc" },
     port: { type: "string", default: String(DEFAULT_PORT) },
     "no-caffeinate": { type: "boolean", default: false },
     // Listen on the network (e.g. for a future iPad remote). Off by default: anyone on
@@ -67,7 +71,17 @@ if (saved) {
   console.log("[state] restored autosave");
 }
 
-const dmx = new DmxManager({ fps: RIG.fps, forceFake: args.fake });
+const backend = args.fake ? "fake" : args.dmx;
+if (
+  backend !== "qlc" &&
+  backend !== "usb" &&
+  backend !== "serial" &&
+  backend !== "fake"
+) {
+  console.error(`Unknown --dmx "${backend}". Use qlc, usb, serial or fake.`);
+  process.exit(1);
+}
+const dmx = new DmxManager({ backend, fps: RIG.fps });
 await dmx.start();
 
 const midi = new MidiInput({

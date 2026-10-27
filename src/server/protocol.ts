@@ -10,6 +10,7 @@ export type EngineStatus = ReturnType<Engine["status"]>;
 
 export interface DeviceStatus {
   dmx: {
+    backend: "qlc" | "usb" | "serial" | "fake";
     connected: boolean;
     port: string | null;
     fake: boolean;

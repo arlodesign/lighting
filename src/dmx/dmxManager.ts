@@ -1,30 +1,52 @@
 import { FakeDmxOutput } from "./fakeDmx.ts";
+import { FtdiUsbOutput } from "./ftdiUsb.ts";
 import { findOpenDmxPorts, OpenDmxOutput, type BreakMode } from "./openDmx.ts";
+import { QlcOutput, QLC_DEFAULT_URL } from "./qlcOutput.ts";
 import type { DmxOutput } from "./types.ts";
 
 const POLL_MS = 2000;
 
 /**
- * Owns "whatever DMX output we have right now". Looks for the Open DMX, falls back to a
- * fake output while it's missing, and swaps the real one in when it's plugged (back) in.
- * The engine writes to `universe` and never needs to know which is behind it.
+ * How DMX leaves the laptop:
+ *  - "qlc":    through QLC+ (a lighting app that owns the adapter and does the DMX timing).
+ *              Verified on the show laptop; the default.
+ *  - "usb":    straight to the Open DMX's FTDI chip over USB (libusb), the way QLC+ does,
+ *              with no QLC+ in between. QLC+ must be closed: only one program can own it.
+ *  - "serial": straight to the Open DMX via the OS serial driver. Works on some machines,
+ *              but on the show MacBook Air the lights never received a valid signal.
+ *  - "fake":   no hardware — the preview and tests.
+ */
+export type DmxBackend = "qlc" | "usb" | "serial" | "fake";
+
+/**
+ * Owns "whatever DMX output we have right now". The engine writes to `universe` and never
+ * needs to know which backend is behind it.
  */
 export class DmxManager {
-  #output: DmxOutput = new FakeDmxOutput();
+  #output: DmxOutput;
+  #backend: DmxBackend;
   #port: string | null = null;
   #timer: NodeJS.Timeout | undefined;
-  #opts: { fps: number; breakMode: BreakMode; forceFake: boolean };
+  #lastUsbError = "";
+  #lastError = "";
+  #opts: { fps: number; breakMode: BreakMode; qlcUrl: string };
 
   constructor(opts: {
+    backend: DmxBackend;
     fps: number;
     breakMode?: BreakMode;
-    forceFake?: boolean;
+    qlcUrl?: string;
   }) {
+    this.#backend = opts.backend;
     this.#opts = {
       fps: opts.fps,
       breakMode: opts.breakMode ?? "brk",
-      forceFake: opts.forceFake ?? false,
+      qlcUrl: opts.qlcUrl ?? QLC_DEFAULT_URL,
     };
+    this.#output =
+      opts.backend === "qlc"
+        ? new QlcOutput({ url: this.#opts.qlcUrl, fps: opts.fps })
+        : new FakeDmxOutput();
   }
 
   /** The active output's channels. Re-read it each frame: it changes when devices swap. */
@@ -34,30 +56,65 @@ export class DmxManager {
 
   get status() {
     const s = this.#output.stats;
+    const qlc = this.#output instanceof QlcOutput ? this.#output : undefined;
     return {
-      connected: this.#port !== null,
-      port: this.#port,
+      backend: this.#backend,
+      connected: qlc ? qlc.connected : this.#port !== null,
+      port: qlc ? this.#opts.qlcUrl : this.#port,
       fake: this.#output instanceof FakeDmxOutput,
       fps: this.#opts.fps,
       lateFrames: s.lateFrames,
       errors: s.errors,
-      ...(s.lastError && { lastError: s.lastError }),
+      ...((s.lastError || this.#lastError) && {
+        lastError: s.lastError || this.#lastError,
+      }),
     };
   }
 
   async start(): Promise<void> {
     await this.#output.start();
-    if (this.#opts.forceFake) {
-      console.log("[dmx] using fake output (--fake)");
+    if (this.#backend === "qlc") {
+      console.log(`[dmx] sending through QLC+ at ${this.#opts.qlcUrl}`);
       return;
     }
-    await this.#poll();
-    this.#timer = setInterval(() => void this.#poll(), POLL_MS);
+    if (this.#backend === "fake") {
+      console.log("[dmx] using fake output (preview only)");
+      return;
+    }
+    const poll = () =>
+      this.#backend === "usb" ? this.#pollUsb() : this.#poll();
+    await poll();
+    this.#timer = setInterval(() => void poll(), POLL_MS);
   }
 
   async stop(): Promise<void> {
     clearInterval(this.#timer);
     await this.#output.stop();
+  }
+
+  /** Same idea as #poll, for the direct-USB backend: (re)open the adapter when it's available. */
+  async #pollUsb(): Promise<void> {
+    if (this.#port && this.#output.stats.errors > 20) {
+      console.log("[dmx] lost the adapter; falling back to fake output");
+      await this.#swap(new FakeDmxOutput(), null);
+      this.#lastUsbError = "";
+    }
+    if (this.#port) return;
+    const real = new FtdiUsbOutput({ fps: this.#opts.fps });
+    try {
+      await this.#swap(real, "Open DMX (USB)");
+      console.log(
+        `[dmx] sending straight to the Open DMX over USB at ${this.#opts.fps} fps`,
+      );
+      this.#lastUsbError = "";
+      this.#lastError = "";
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message !== this.#lastUsbError) console.log(`[dmx] ${message}`);
+      this.#lastUsbError = message;
+      this.#lastError = message;
+      await this.#swap(new FakeDmxOutput(), null).catch(() => {});
+    }
   }
 
   async #poll(): Promise<void> {

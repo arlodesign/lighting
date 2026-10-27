@@ -248,15 +248,22 @@ function update(state: State): void {
     midi.connected,
     midi.connected ? "MiniLab" : "MiniLab not found",
   );
-  setDevice(
-    "dev-dmx",
-    dmx.connected,
-    dmx.connected
-      ? "Lights"
-      : dmx.fake
-        ? "Lights: no Open DMX (preview only)"
-        : "Lights",
-  );
+  setDevice("dev-dmx", dmx.connected, lightsLabel(dmx));
+}
+
+function lightsLabel(dmx: State["devices"]["dmx"]): string {
+  if (dmx.backend === "qlc") {
+    return dmx.connected
+      ? "Lights (via QLC+)"
+      : "Lights: waiting for QLC+ (start it with web access on)";
+  }
+  if (dmx.backend === "fake") return "Lights: preview only (no DMX output)";
+  if (dmx.backend === "usb") {
+    return dmx.connected
+      ? "Lights (USB)"
+      : "Lights: can't open the Open DMX (plug it in; quit QLC+ if it's running)";
+  }
+  return dmx.connected ? "Lights" : "Lights: no Open DMX found";
 }
 
 function knobDisplay(
