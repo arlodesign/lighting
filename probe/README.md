@@ -40,24 +40,12 @@ package-lock.json` before committing, so that machine's registry doesn't get com
 4. **Do NOT install** FTDI's "VCP" driver, and quit QLC+ or any other lighting app, which
    would grab the Open DMX.
 
-## 2. Make the relative-knob User program (before running the probe)
+## 2. MiniLab program (no setup needed)
 
-Pass 2 of the probe needs a MiniLab program where the 8 knobs send **relative** values. This is
-the mode the real app will use.
-
-1. Install **Arturia Software Center**, then use it to install **MIDI Control Center** (MCC).
-2. Open MCC with the MiniLab connected. If it offers a **firmware update**, take it.
-   Relative knob modes need firmware 1.1 or newer.
-3. Select a **User** program slot (e.g. User 1) in MCC's program browser.
-4. Click each of the 8 knobs in MCC's picture of the MiniLab and set its mode to
-   **Relative** (pick "Relative 1" / "binary offset" if there's a choice). Leave the CC numbers,
-   pads, faders, etc. at their defaults.
-5. **Store / send** the program to the MiniLab's User slot.
-6. On the MiniLab, **SHIFT + pad 3** cycles programs. You'll switch to this one when the probe asks.
-
-MCC's labels may differ slightly from these steps. The goal is "8 knobs → relative, saved to a
-User program". If it fights you, skip pass 2 when the probe asks. Pass 1 alone is still very
-useful.
+The first probe run showed the MiniLab works fine in its **default Arturia program**: the app
+reads that program, and also the "DAW" program, so there is nothing to configure in Arturia's
+MIDI Control Center. (An earlier version of this README asked for a relative-knob User program.
+That turned out to be unnecessary: the knobs are treated as endless in software.)
 
 ## 3. Run it
 
@@ -101,6 +89,13 @@ If not:
 - Replug the Open DMX, preferably straight into the laptop rather than the hub, as a test.
 - If you ever installed FTDI's VCP driver (Arduino setups sometimes do), unload it:
   `sudo kextunload -b com.FTDI.driver.FTDIUSBSerialDriver`
+
+**No light turns on in the DMX section**: the probe works out why. It first sends red to
+address 1; if that fails it sets every channel to 255 (anything listening to DMX should react),
+and if something does react it sweeps red across every address so you can say when a light
+turns red. The report records which of those happened, plus what macOS reports about the adapter.
+If nothing reacts at all, the probe prints a wiring checklist (power, DMX mode, the cable from the
+Open DMX's output to the first light's input, USB port, a terminator plug in the last light).
 
 **Lights flicker during the flicker test**: that's exactly what the test is for. Answer
 honestly; the app will pick the steadiest rate.

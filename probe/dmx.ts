@@ -1,5 +1,6 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { SerialPort } from "serialport";
+import { collectDriverInfo } from "../src/dmx/diagnostics.ts";
 import {
   findOpenDmxPorts,
   OpenDmxOutput,
@@ -43,6 +44,10 @@ export interface DmxSection {
   chosenPort?: string;
   breakMode?: BreakMode;
   firstLight: boolean;
+  /** One entry per break method tried: what happened at each stage of the first-light hunt. */
+  firstLightAttempts: ({ breakMode: BreakMode } & FirstLightResult)[];
+  /** What the OS reports about the adapter (driver, device nodes). */
+  driver?: Record<string, string>;
   colorOrderOk?: boolean;
   /** Values for channels 5–7 that leave a fixture showing plain steady RGB. */
   neutral?: { rgb: number; strobe: number; mode: number };
@@ -64,14 +69,90 @@ function fixture(
   }
 }
 
-async function tryFirstLight(dmx: OpenDmxOutput): Promise<boolean> {
+/**
+ * Values for the "extra" channels that keep a fixture in plain steady manual colour.
+ * The fixture manual lists strobe (CH6) and mode (CH7) as 1–255, so 0 is out of range — and
+ * the original 2024 code always sent 1 for both. Leaving them at 0 can leave a fixture dark.
+ */
+const SAFE = { rgb: 0, strobe: 1, mode: 1 } as const;
+
+export interface FirstLightResult {
+  lit: boolean;
+  /** "address-1": normal red test worked. */
+  stage?: "address-1";
+  /** Did the all-channels-255 blast make any light do anything? (signal reaches the fixtures) */
+  blastResponse?: boolean;
+  /** Address windows that were showing when the user said a light turned red. */
+  scanCandidates?: number[];
+}
+
+/**
+ * Find out why (or whether) a light responds. Three stages, each narrowing the cause:
+ *  1. Red at address 1 with valid strobe/mode → works → done.
+ *  2. Every channel at 255 → if ANY light reacts, DMX is arriving and the problem is the
+ *     fixture's address/mode; if nothing reacts, it's wiring, the adapter, or the break.
+ *  3. Sweep a red window across every address until the user shouts → finds the address.
+ */
+async function findFirstLight(dmx: OpenDmxOutput): Promise<FirstLightResult> {
   dmx.universe.fill(0);
-  fixture(dmx, 1, { master: 255, r: 255 });
-  await sleep(600);
-  return yesNo(
-    `  Sending ${c.bold("red")} to the light at DMX address 1. Did ANY light turn red?`,
-    "y",
+  fixture(dmx, 1, { master: 255, r: 255, ...SAFE });
+  await sleep(700);
+  if (
+    await yesNo(
+      `  Sending ${c.bold("red")} to address 1 (strobe and mode set to 1). Did ANY light turn red?`,
+      "y",
+    )
+  ) {
+    return { lit: true, stage: "address-1" };
+  }
+
+  console.log(
+    `\n${c.bold("Signal test.")} Every one of the 512 channels goes to 255 for 4 seconds. ` +
+      "Whatever address or mode the lights are in, anything listening to DMX should react: " +
+      "light up, flash, or change colour or program.",
   );
+  dmx.universe.fill(255);
+  await sleep(4000);
+  const blastResponse = await yesNo("  Did ANY light do ANYTHING?", "n");
+  dmx.universe.fill(0);
+  if (!blastResponse) return { lit: false, blastResponse };
+
+  console.log(
+    `\n${c.bold("Address scan.")} Red sweeps across every possible DMX address ` +
+      "(a new address about every 0.4 seconds). Watch the lights and press Enter " +
+      c.bold("the moment any light turns red") +
+      ".",
+  );
+  let stop = false;
+  const pressed = ask(c.dim("  Press Enter when a light turns red…")).then(
+    () => {
+      stop = true;
+    },
+  );
+  let address = 1;
+  const shown: number[] = [];
+  for (; address <= 506 && !stop; address++) {
+    dmx.universe.fill(0);
+    fixture(dmx, address, { master: 255, r: 255, ...SAFE });
+    shown.push(address);
+    await sleep(400);
+  }
+  dmx.universe.fill(0);
+  if (!stop)
+    console.log(
+      c.yellow("  Scan finished and nothing lit. Press Enter to continue."),
+    );
+  await pressed;
+  // Reaction time is ~1s, so the light that lit was among the last few addresses shown.
+  const scanCandidates = stop && shown.length ? shown.slice(-4) : [];
+  if (scanCandidates.length) {
+    console.log(
+      c.green(
+        `  ✓ A light turned red while addresses ${scanCandidates.join(", ")} were showing.`,
+      ),
+    );
+  }
+  return { lit: false, blastResponse, scanCandidates };
 }
 
 async function exploreChannel(
@@ -208,11 +289,39 @@ async function flickerTest(
   return results;
 }
 
+function printNoLightAdvice(signalArrives: boolean): void {
+  console.log(
+    `\n${c.red("No light turned on.")} The report records what was tried.`,
+  );
+  if (signalArrives) {
+    console.log(
+      "\nSince a light DID react to the all-channels test, DMX is reaching the fixtures. " +
+        "So the lights' address or mode doesn't match what the app assumes. Check the lights' " +
+        "displays: they should show the 7-channel mode and an address. Tell me what they show.",
+    );
+    return;
+  }
+  console.log(`
+Nothing reacted even with every channel at 255, so DMX isn't getting to (or isn't being
+understood by) the lights. Check, in this order:
+  1. Lights have power and their display is on.
+  2. Lights are in DMX mode (not auto/sound/master-slave), not just powered.
+  3. XLR cable from the Open DMX OUTPUT to the first light's DMX IN.
+     A mic cable (2-wire) usually still works at short range; a loose or damaged cable won't.
+  4. The Open DMX's XLR is the 3-pin output (not a wrong-gender adapter wired differently).
+  5. Try the other break method (the probe already did both) and another USB port,
+     preferably straight into the laptop rather than the hub.
+  6. A 120-ohm terminator plug (or a resistor between pins 2 and 3 in a spare XLR) in the
+     LAST light's DMX OUT fixes flaky or missing signal on many cheap fixtures.
+Then re-run:  npm run probe -- dmx`);
+}
+
 export async function runDmxSection(): Promise<DmxSection> {
   heading("Open DMX + lights");
   const section: DmxSection = {
     serialPorts: [],
     firstLight: false,
+    firstLightAttempts: [],
     exploration: [],
     addressMap: {},
     flicker: [],
@@ -254,18 +363,30 @@ export async function runDmxSection(): Promise<DmxSection> {
   );
   await pause();
 
-  // Try the cleaner break method first; fall back to the baud-rate trick.
+  // What does macOS think of the adapter? Useful whether or not the lights respond.
+  console.log(c.dim("Collecting driver info…"));
+  section.driver = await collectDriverInfo();
+
+  // Try the cleaner break method first; fall back to the baud-rate trick — unless the
+  // signal-test shows DMX is arriving, in which case the break method isn't the problem.
   let dmx: OpenDmxOutput | undefined;
+  let signalArrives = false;
   for (const breakMode of ["brk", "baud"] as const) {
     const out = new OpenDmxOutput({ path, fps: 30, breakMode });
     try {
       await out.start();
-      if (await tryFirstLight(out)) {
+      const result = await findFirstLight(out);
+      section.firstLightAttempts.push({ breakMode, ...result });
+      if (result.lit) {
         dmx = out;
         section.breakMode = breakMode;
         break;
       }
       await out.stop();
+      if (result.blastResponse) {
+        signalArrives = true;
+        break;
+      }
     } catch (err) {
       const msg = `${breakMode}: ${err instanceof Error ? err.message : String(err)}`;
       section.errors.push(msg);
@@ -276,11 +397,7 @@ export async function runDmxSection(): Promise<DmxSection> {
       console.log(c.dim("  Trying the alternate break method…"));
   }
   if (!dmx) {
-    console.log(
-      c.red(
-        "Couldn't light anything. The report will still help diagnose why.",
-      ),
-    );
+    printNoLightAdvice(signalArrives);
     return section;
   }
   section.firstLight = true;
@@ -296,7 +413,13 @@ export async function runDmxSection(): Promise<DmxSection> {
       ["blue", [0, 0, 255]],
       ["white", [255, 255, 255]],
     ] as const) {
-      fixture(dmx, 1, { master: 255, r: rgb[0], g: rgb[1], b: rgb[2] });
+      fixture(dmx, 1, {
+        master: 255,
+        r: rgb[0],
+        g: rgb[1],
+        b: rgb[2],
+        ...SAFE,
+      });
       console.log(`  ${name}`);
       await sleep(1200);
     }
@@ -311,12 +434,12 @@ export async function runDmxSection(): Promise<DmxSection> {
     }
 
     // The manual's channels 5–7 ("RGB", strobe speed, mode) are under-documented.
-    let neutral = { rgb: 0, strobe: 0, mode: 0 };
+    let neutral: { rgb: number; strobe: number; mode: number } = { ...SAFE };
     for (const ch of ["strobe", "mode", "rgb"] as const) {
       section.exploration.push(await exploreChannel(dmx, ch, neutral));
     }
     const steadyAtZero = await yesNo(
-      "\nWith strobe, mode and rgb all at 0, was the light plain steady blue (no flashing, no auto-program)?",
+      "\nWith strobe and mode at 1 and rgb at 0, was the light plain steady blue (no flashing, no auto-program)?",
       "y",
     );
     if (!steadyAtZero) {

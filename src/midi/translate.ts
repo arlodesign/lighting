@@ -10,8 +10,11 @@ const PITCH_CENTER = 8192;
  * Even in "absolute" mode we turn positions into deltas (value − previous value), so the
  * engine always thinks in relative turns. That means a preset can change BPM or palette and
  * the knob just nudges from there — it can never snap a value back to where it sits.
- * The catch: an absolute knob stops sending at 0 or 127, which is why we want the
- * relative User program.
+ *
+ * The MiniLab's knobs are endless encoders that clamp at 0 and 127, but (per the probe
+ * report) they keep sending the clamped value for every tick of continued turning:
+ * `… 126 127 127 127 127`. So a repeat at an end means "still turning that way", which
+ * makes the knobs behave as endless: they never feel stuck at the end of their travel.
  */
 export function knobDelta(
   value: number,
@@ -26,8 +29,19 @@ export function knobDelta(
     case "relative-signed-bit":
       return value & 64 ? -(value & 63) : value & 63;
     case "absolute":
-      return previous === undefined ? 0 : value - previous;
+      if (previous === undefined) return 0;
+      if (value === previous) return value >= 127 ? 1 : value <= 0 ? -1 : 0;
+      return value - previous;
   }
+}
+
+/** Position of `cc` within whichever program's CC list contains it, or -1. */
+function indexInSets(sets: readonly (readonly number[])[], cc: number): number {
+  for (const set of sets) {
+    const i = set.indexOf(cc);
+    if (i >= 0) return i;
+  }
+  return -1;
 }
 
 /** Stateful translator: one per MIDI input. Remembers absolute knob positions between messages. */
@@ -97,14 +111,14 @@ export class MidiTranslator {
         const previous = this.#lastCc.get(cc);
         this.#lastCc.set(cc, value);
 
-        const knob = m.knobs.ccs.indexOf(cc);
+        const knob = indexInSets(m.knobs.ccSets, cc);
         if (knob >= 0 && onChannel(m.knobs.channel)) {
           const delta = knobDelta(value, m.knobs.encoding, previous);
           return delta === 0
             ? []
             : [{ type: "knob", knob: m.knobs.roles[knob]!, delta }];
         }
-        const fader = m.faders.ccs.indexOf(cc);
+        const fader = indexInSets(m.faders.ccSets, cc);
         if (fader >= 0 && onChannel(m.faders.channel)) {
           return [
             {
@@ -117,13 +131,13 @@ export class MidiTranslator {
         if (cc === m.strips.modCc && onChannel(m.strips.channel)) {
           return [{ type: "swell", value: value / 127 }];
         }
-        if (cc === m.mainEncoder.turnCc) {
+        if (m.mainEncoder.turnCcs.includes(cc)) {
           const delta = knobDelta(value, m.mainEncoder.encoding, previous);
           return delta === 0
             ? []
             : [{ type: "setlist-move", delta: Math.sign(delta) }];
         }
-        if (cc === m.mainEncoder.clickCc && value > 0)
+        if (m.mainEncoder.clickCcs.includes(cc) && value > 0)
           return [{ type: "setlist-load" }];
         return [];
       }

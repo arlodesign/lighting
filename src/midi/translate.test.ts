@@ -19,6 +19,13 @@ describe("knobDelta", () => {
   it("turns absolute positions into deltas", () => {
     expect(knobDelta(70, "absolute", undefined)).toBe(0);
     expect(knobDelta(70, "absolute", 65)).toBe(5);
+    expect(knobDelta(60, "absolute", 65)).toBe(-5);
+  });
+
+  it("treats repeated end values as continued turning (endless feel)", () => {
+    expect(knobDelta(127, "absolute", 127)).toBe(1);
+    expect(knobDelta(0, "absolute", 0)).toBe(-1);
+    expect(knobDelta(64, "absolute", 64)).toBe(0);
   });
 });
 
@@ -52,13 +59,40 @@ describe("MidiTranslator", () => {
     expect(t().translate([0x90, 36, 100])[0]).toMatchObject({ type: "look" });
   });
 
-  it("knobs are relative turns, faders absolute", () => {
-    expect(t().translate([0xb0, 74, 65])).toEqual([
-      { type: "knob", knob: "speed", delta: 1 },
+  it("knobs become relative ticks (the first message only establishes position)", () => {
+    const tr = t();
+    expect(tr.translate([0xb0, 74, 60])).toEqual([]);
+    expect(tr.translate([0xb0, 74, 62])).toEqual([
+      { type: "knob", knob: "speed", delta: 2 },
     ]);
-    expect(t().translate([0xb0, 74, 64])).toEqual([]);
+    expect(tr.translate([0xb0, 74, 61])).toEqual([
+      { type: "knob", knob: "speed", delta: -1 },
+    ]);
+  });
+
+  it("a knob held against its end keeps scrolling", () => {
+    const tr = t();
+    tr.translate([0xb0, 77, 126]);
+    tr.translate([0xb0, 77, 127]);
+    expect(tr.translate([0xb0, 77, 127])).toEqual([
+      { type: "knob", knob: "palette", delta: 1 },
+    ]);
+  });
+
+  it("faders are absolute", () => {
     expect(t().translate([0xb0, 82, 127])).toEqual([
       { type: "fader", fader: "master", value: 1 },
+    ]);
+  });
+
+  it("understands the DAW program's CC numbers too", () => {
+    expect(t().translate([0xb0, 14, 0])).toEqual([
+      { type: "fader", fader: "master", value: 0 },
+    ]);
+    const tr = t();
+    tr.translate([0xb0, 86, 10]);
+    expect(tr.translate([0xb0, 86, 12])).toEqual([
+      { type: "knob", knob: "speed", delta: 2 },
     ]);
   });
 
@@ -71,11 +105,23 @@ describe("MidiTranslator", () => {
     ]);
   });
 
-  it("main encoder moves and loads the setlist", () => {
-    expect(t().translate([0xb0, 28, 66])).toEqual([
+  it("main encoder moves and loads the setlist (Arturia program, as recorded)", () => {
+    // Each click sends 65 (right) or 62 (left), then returns to the 64 centre.
+    expect(t().translate([0xb0, 114, 65])).toEqual([
+      { type: "setlist-move", delta: 1 },
+    ]);
+    expect(t().translate([0xb0, 114, 62])).toEqual([
+      { type: "setlist-move", delta: -1 },
+    ]);
+    expect(t().translate([0xb0, 114, 64])).toEqual([]);
+    expect(t().translate([0xb0, 115, 127])).toEqual([{ type: "setlist-load" }]);
+    expect(t().translate([0xb0, 115, 0])).toEqual([]);
+  });
+
+  it("main encoder also works in the DAW program", () => {
+    expect(t().translate([0xb0, 28, 65])).toEqual([
       { type: "setlist-move", delta: 1 },
     ]);
     expect(t().translate([0xb0, 118, 127])).toEqual([{ type: "setlist-load" }]);
-    expect(t().translate([0xb0, 118, 0])).toEqual([]);
   });
 });
