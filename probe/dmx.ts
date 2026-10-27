@@ -48,6 +48,10 @@ export interface DmxSection {
   firstLightAttempts: ({ breakMode: BreakMode } & FirstLightResult)[];
   /** What the OS reports about the adapter (driver, device nodes). */
   driver?: Record<string, string>;
+  /** How fast bytes really leave the adapter at several settings (no lights needed). */
+  wireRate?: WireRateResult[];
+  /** Which signal variant, if any, made a light react. */
+  variantSweep?: VariantSweepResult;
   colorOrderOk?: boolean;
   /** Values for channels 5–7 that leave a fixture showing plain steady RGB. */
   neutral?: { rgb: number; strobe: number; mode: number };
@@ -289,6 +293,165 @@ async function flickerTest(
   return results;
 }
 
+export interface WireRateResult {
+  label: string;
+  requestedBaud: number;
+  /** Baud rate implied by how long the bytes took (bytes/s × bits per byte). */
+  measuredBaud: number;
+  /** measured / requested: ≈1.00 means the driver applied the speed we asked for. */
+  ratio: number;
+  error?: string;
+}
+
+/**
+ * Time how long ~1 second of data takes to leave the adapter, at several settings. The
+ * UART can't send faster than its baud rate, so bytes-per-second reveals the speed the
+ * driver REALLY applied. The 115200 and 230400 rows are standard speeds: they show the
+ * method works. If the 250000 row comes out near 230400, macOS rounded the DMX speed,
+ * and the lights would see garbled data.
+ */
+async function measureWireRate(path: string): Promise<WireRateResult[]> {
+  const cases = [
+    { label: "115200 8N1 (reference)", baudRate: 115200, stopBits: 1 as const },
+    { label: "230400 8N1 (reference)", baudRate: 230400, stopBits: 1 as const },
+    { label: "250000 8N2 (DMX)", baudRate: 250000, stopBits: 2 as const },
+    { label: "250000 8N1", baudRate: 250000, stopBits: 1 as const },
+  ];
+  const results: WireRateResult[] = [];
+  for (const { label, baudRate, stopBits } of cases) {
+    const bitsPerByte = 1 + 8 + stopBits;
+    const bytes = Math.round(baudRate / bitsPerByte); // ≈ 1 second of data
+    try {
+      const port = new SerialPort({
+        path,
+        baudRate,
+        dataBits: 8,
+        stopBits,
+        parity: "none",
+        autoOpen: false,
+      });
+      await new Promise<void>((res, rej) =>
+        port.open((e) => (e ? rej(e) : res())),
+      );
+      const t0 = performance.now();
+      await new Promise<void>((res, rej) =>
+        port.write(Buffer.alloc(bytes), (e) => (e ? rej(e) : res())),
+      );
+      await new Promise<void>((res, rej) =>
+        port.drain((e) => (e ? rej(e) : res())),
+      );
+      const seconds = (performance.now() - t0) / 1000;
+      await new Promise<void>((res) => port.close(() => res()));
+      const measuredBaud = Math.round((bytes / seconds) * bitsPerByte);
+      const ratio = Math.round((measuredBaud / baudRate) * 1000) / 1000;
+      results.push({ label, requestedBaud: baudRate, measuredBaud, ratio });
+      console.log(
+        `  ${label.padEnd(26)} asked ${baudRate}, measured ≈${measuredBaud}  (×${ratio.toFixed(2)})`,
+      );
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      results.push({
+        label,
+        requestedBaud: baudRate,
+        measuredBaud: 0,
+        ratio: 0,
+        error,
+      });
+      console.log(c.red(`  ${label}: ${error}`));
+    }
+  }
+  return results;
+}
+
+export interface VariantSweepResult {
+  variants: string[];
+  /** The variant running when you pressed Enter (reaction time means it may be the one before). */
+  reactedDuring: string | null;
+  previous: string | null;
+}
+
+/**
+ * Run different ways of building the DMX signal, a few seconds each, with every channel at
+ * 255. If any light reacts to one of them, that's the setting to use.
+ */
+async function variantSweep(path: string): Promise<VariantSweepResult> {
+  const variants: {
+    label: string;
+    opts: ConstructorParameters<typeof OpenDmxOutput>[0];
+  }[] = [
+    {
+      label: "break via line-break, 2 stop bits (the default)",
+      opts: { path, breakMode: "brk", stopBits: 2 },
+    },
+    {
+      label: "break via baud-rate drop, 2 stop bits",
+      opts: { path, breakMode: "baud", stopBits: 2 },
+    },
+    {
+      label: "break via line-break, 1 stop bit",
+      opts: { path, breakMode: "brk", stopBits: 1 },
+    },
+    {
+      label: "break via baud-rate drop, 1 stop bit",
+      opts: { path, breakMode: "baud", stopBits: 1 },
+    },
+    {
+      label: "long 5 ms line-break, 2 stop bits",
+      opts: { path, breakMode: "brk", stopBits: 2, breakMs: 5 },
+    },
+    {
+      label: "line-break, 2 stop bits, slow 15 fps",
+      opts: { path, breakMode: "brk", stopBits: 2, fps: 15 },
+    },
+  ];
+  console.log(
+    `\n${c.bold("Variant sweep.")} Six different ways of building the signal, ~7 seconds each, ` +
+      "all channels at 255. Watch the lights and press Enter " +
+      c.bold("the moment ANY light does anything") +
+      " (lights up, flashes, changes colour).",
+  );
+  let pressed = false;
+  const answered = ask(c.dim("  Press Enter when a light reacts…")).then(() => {
+    pressed = true;
+  });
+  let reactedDuring: string | null = null;
+  let previous: string | null = null;
+  for (const [i, v] of variants.entries()) {
+    if (pressed) break;
+    console.log(c.dim(`  ${i + 1}/${variants.length}: ${v.label}`));
+    const out = new OpenDmxOutput(v.opts);
+    try {
+      await out.start();
+      out.universe.fill(255);
+      for (let waited = 0; waited < 7000 && !pressed; waited += 100)
+        await sleep(100);
+    } catch (err) {
+      console.log(
+        c.red(`    error: ${err instanceof Error ? err.message : err}`),
+      );
+    } finally {
+      out.universe.fill(0);
+      await sleep(150);
+      await out.stop().catch(() => {});
+    }
+    if (pressed) {
+      reactedDuring = v.label;
+      previous = variants[i - 1]?.label ?? null;
+    }
+  }
+  if (!pressed)
+    console.log(c.yellow("  Nothing reacted. Press Enter to continue."));
+  await answered;
+  if (reactedDuring)
+    console.log(
+      c.green(
+        `  ✓ A light reacted during: ${reactedDuring}` +
+          (previous ? ` (or just before: ${previous})` : ""),
+      ),
+    );
+  return { variants: variants.map((v) => v.label), reactedDuring, previous };
+}
+
 function printNoLightAdvice(signalArrives: boolean): void {
   console.log(
     `\n${c.red("No light turned on.")} The report records what was tried.`,
@@ -397,6 +560,13 @@ export async function runDmxSection(): Promise<DmxSection> {
       console.log(c.dim("  Trying the alternate break method…"));
   }
   if (!dmx) {
+    if (!signalArrives) {
+      console.log(
+        `\n${c.bold("Wire-speed check")} (no lights needed). How fast do bytes really leave the adapter?`,
+      );
+      section.wireRate = await measureWireRate(path);
+      section.variantSweep = await variantSweep(path);
+    }
     printNoLightAdvice(signalArrives);
     return section;
   }

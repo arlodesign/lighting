@@ -76,6 +76,24 @@ describe("OpenDmxOutput", () => {
     expect(recorded().length % 514).toBe(0);
   });
 
+  it("can be configured for one stop bit and a longer break", async () => {
+    let seen: { stopBits?: number } = {};
+    const dmx = new OpenDmxOutput({
+      path: PATH,
+      stopBits: 1,
+      breakMs: 5,
+      createPort: (settings) => {
+        seen = settings;
+        SerialPortMock.binding.createPort(PATH, { echo: false, record: true });
+        return new SerialPortMock(settings);
+      },
+    });
+    await dmx.start();
+    await dmx.stop();
+    expect(seen.stopBits).toBe(1);
+    expect(dmx.breakMs).toBe(5);
+  });
+
   it("never runs faster than a frame can physically be transmitted", () => {
     const { dmx } = makeOutput("brk");
     dmx.setFps(1000);

@@ -27,7 +27,7 @@ type PortSettings = {
   path: string;
   baudRate: number;
   dataBits: 8;
-  stopBits: 2;
+  stopBits: 1 | 2;
   parity: "none";
   autoOpen: false;
 };
@@ -36,6 +36,10 @@ export interface OpenDmxOptions {
   path: string;
   fps?: number;
   breakMode?: BreakMode;
+  /** DMX specifies 2; some receivers are happier with 1. Used by the probe's variant sweep. */
+  stopBits?: 1 | 2;
+  /** How long the "brk" method holds the line low, in ms (default 1). */
+  breakMs?: number;
   createPort?: (settings: PortSettings) => DmxSerialPort;
 }
 
@@ -72,6 +76,8 @@ export class OpenDmxOutput implements DmxOutput {
   };
   readonly path: string;
   breakMode: BreakMode;
+  readonly stopBits: 1 | 2;
+  readonly breakMs: number;
 
   #port: DmxSerialPort | undefined;
   #createPort: (settings: PortSettings) => DmxSerialPort;
@@ -82,6 +88,8 @@ export class OpenDmxOutput implements DmxOutput {
   constructor(opts: OpenDmxOptions) {
     this.path = toCalloutPath(opts.path);
     this.breakMode = opts.breakMode ?? "brk";
+    this.stopBits = opts.stopBits ?? 2;
+    this.breakMs = opts.breakMs ?? 1;
     this.#createPort =
       opts.createPort ?? ((settings) => new SerialPort(settings));
     this.setFps(opts.fps ?? 30);
@@ -111,7 +119,7 @@ export class OpenDmxOutput implements DmxOutput {
       path: this.path,
       baudRate: DMX_BAUD,
       dataBits: 8,
-      stopBits: 2,
+      stopBits: this.stopBits,
       parity: "none",
       autoOpen: false,
     });
@@ -163,7 +171,7 @@ export class OpenDmxOutput implements DmxOutput {
 
     if (this.breakMode === "brk") {
       await this.#set(port, { brk: true });
-      await sleep(1); // ≥1ms low: well past the 88µs minimum, well under the 1s maximum
+      await sleep(this.breakMs); // ≥1ms low: well past the 88µs minimum, well under the 1s maximum
       await this.#set(port, { brk: false });
     } else {
       await this.#update(port, BREAK_BAUD);
