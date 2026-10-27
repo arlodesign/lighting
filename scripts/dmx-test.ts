@@ -6,6 +6,7 @@
  *   npm run dmx-test -- --walk             light each light in turn, house-left to house-right
  *   npm run dmx-test -- --address 11 --seconds 15
  *   npm run dmx-test -- --dmx qlc          through QLC+ instead (it must be running, web access on)
+ *   npm run dmx-test -- --strobe 0 --mode 0 --rgb 0   try other values on the extra channels
  *
  * Watch the display on the back of the light: blinking = no DMX; steady = DMX arriving.
  */
@@ -20,6 +21,10 @@ const { values } = parseArgs({
     address: { type: "string", default: "1" },
     seconds: { type: "string", default: "10" },
     walk: { type: "boolean", default: false },
+    // Override the "extra" channels (5–7) to experiment: which values leave the light steady?
+    rgb: { type: "string" },
+    strobe: { type: "string" },
+    mode: { type: "string" },
   },
 });
 
@@ -30,7 +35,14 @@ if (!["qlc", "usb", "serial", "fake"].includes(backend)) {
 }
 const address = Number(values.address);
 const seconds = Number(values.seconds);
-const { offsets, neutral } = RIG.profile;
+const { offsets, neutral: configured } = RIG.profile;
+const num = (v: string | undefined, fallback: number) =>
+  v === undefined ? fallback : Math.max(0, Math.min(255, Number(v) || 0));
+const neutral = {
+  rgb: num(values.rgb, configured.rgb),
+  strobe: num(values.strobe, configured.strobe),
+  mode: num(values.mode, configured.mode),
+};
 
 const dmx = new DmxManager({ backend, fps: RIG.fps });
 await dmx.start();
@@ -38,7 +50,8 @@ await dmx.start();
 if (values.walk) {
   // Light each fixture white for 2.5 s in the order the app assumes (L1…L4 then R1…R4,
   // house-left to house-right as the audience sees them) so the real order can be checked.
-  const { offsets: o, neutral: n } = RIG.profile;
+  const o = offsets;
+  const n = neutral;
   console.log(
     `Backend: ${backend}. Lighting each light white in turn. Stand where the audience would,\n` +
       "and check each one is where it says (L1 = far house-left … R4 = far house-right).\n",
@@ -65,7 +78,8 @@ if (values.walk) {
   process.exit(0);
 }
 console.log(
-  `Backend: ${backend}. Lighting the fixture at address ${address} RED for ${seconds}s.`,
+  `Backend: ${backend}. Lighting the fixture at address ${address} for ${seconds}s ` +
+    `(extra channels: rgb=${neutral.rgb} strobe=${neutral.strobe} mode=${neutral.mode}).`,
 );
 console.log("Watch the light and the display on its back. Ctrl-C to stop.\n");
 

@@ -35,8 +35,10 @@ export const RIG: RigConfig = {
   addresses: { L1: 1, L2: 11, L3: 21, L4: 31, R1: 41, R2: 51, R3: 61, R4: 71 },
   profile: {
     offsets: { master: 0, r: 1, g: 2, b: 3, rgb: 4, strobe: 5, mode: 6 },
-    // The 2024 code set strobe and mode to 1, and the manual lists both as 1–255.
-    neutral: { rgb: 0, strobe: 1, mode: 1 },
+    // 0 = steady manual colour. The 2024 show left all three at 0 and the lights held steady;
+    // setting strobe/mode to 1 made them flash in spurts (1 is "strobe slowly"/"run a
+    // program", not "off"), even though the paper manual lists those channels as 1–255.
+    neutral: { rgb: 0, strobe: 0, mode: 0 },
     strobeRange: { slow: 16, fast: 255 },
   },
   maxStrobe: 0.6,

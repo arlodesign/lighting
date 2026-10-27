@@ -74,11 +74,11 @@ function fixture(
 }
 
 /**
- * Values for the "extra" channels that keep a fixture in plain steady manual colour.
- * The fixture manual lists strobe (CH6) and mode (CH7) as 1–255, so 0 is out of range — and
- * the original 2024 code always sent 1 for both. Leaving them at 0 can leave a fixture dark.
+ * Values for the "extra" channels (RGB, strobe, mode) that keep a fixture in plain steady
+ * colour. All 0: the 2024 show left them at 0 and the lights held steady. (Setting strobe and
+ * mode to 1 made them flash in spurts, even though the paper manual lists them as 1–255.)
  */
-const SAFE = { rgb: 0, strobe: 1, mode: 1 } as const;
+const SAFE = { rgb: 0, strobe: 0, mode: 0 } as const;
 
 /**
  * Most fixtures with a small address display blink it while NO DMX signal arrives and go
@@ -113,7 +113,7 @@ async function findFirstLight(dmx: OpenDmxOutput): Promise<FirstLightResult> {
   console.log(c.dim(`  ${DISPLAY_TELL}`));
   if (
     await yesNo(
-      `  Sending ${c.bold("red")} to address 1 (strobe and mode set to 1). Did ANY light turn red?`,
+      `  Sending ${c.bold("red")} to address 1 (strobe and mode at 0). Did ANY light turn red?`,
       "y",
     )
   ) {
