@@ -15,7 +15,8 @@
     "start": "npm run build:hud && node src/server/main.ts",
     "dev": "node scripts/dev.ts",
     "build:hud": "vite build",
-    "dmx-test": "node scripts/dmx-test.ts"
+    "dmx-test": "node scripts/dmx-test.ts",
+    "strobe-sweep": "node scripts/strobe-sweep.ts"
   },
   "dependencies": {
     "@julusian/midi": "^3.8.1",

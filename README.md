@@ -23,16 +23,16 @@ Then open http://localhost:4000. The two dots at the bottom say whether the Mini
 lights are connected. **Quit QLC+ first** (and any other lighting app): only one program can use
 the Open DMX at a time.
 
-| Command                              | What it does                                                                         |
-| ------------------------------------ | ------------------------------------------------------------------------------------ |
-| `npm start`                          | Build the display and run the show                                                   |
-| `npm run dev`                        | Same, with live reload for development (open http://localhost:5173)                  |
-| `npm run dmx-test`                   | Light one fixture red/green/blue for 10 s, no MiniLab needed                         |
-| `npm run dmx-test -- --walk`         | Light each light in turn: check they're in the right left-to-right order             |
-| `npm run dmx-test -- --strobe-sweep` | Step the strobe channel slow → fast (fast flashing!) to measure what each value does |
-| `npm run preview`                    | Draw the lights in the terminal (no hardware)                                        |
-| `npm run probe`                      | Guided hardware check that writes a report to `probe-reports/`                       |
-| `npm test`                           | Run the tests                                                                        |
+| Command                      | What it does                                                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `npm start`                  | Build the display and run the show                                                                               |
+| `npm run dev`                | Same, with live reload for development (open http://localhost:5173)                                              |
+| `npm run dmx-test`           | Light one fixture red/green/blue for 10 s, no MiniLab needed                                                     |
+| `npm run dmx-test -- --walk` | Light each light in turn: check they're in the right left-to-right order                                         |
+| `npm run strobe-sweep`       | Measure the strobe channel: tap along on the MiniLab with each flash speed; saves a JSON report (fast flashing!) |
+| `npm run preview`            | Draw the lights in the terminal (no hardware)                                                                    |
+| `npm run probe`              | Guided hardware check that writes a report to `probe-reports/`                                                   |
+| `npm test`                   | Run the tests                                                                                                    |
 
 DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- --dmx qlc`):
 

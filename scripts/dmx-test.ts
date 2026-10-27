@@ -7,7 +7,6 @@
  *   npm run dmx-test -- --address 11 --seconds 15
  *   npm run dmx-test -- --dmx qlc          through QLC+ instead (it must be running, web access on)
  *   npm run dmx-test -- --strobe 0 --mode 0 --rgb 0   try other values on the extra channels
- *   npm run dmx-test -- --strobe-sweep     step the strobe channel from slow to fast (FAST FLASHING)
  *
  * Watch the display on the back of the light: blinking = no DMX; steady = DMX arriving.
  */
@@ -22,7 +21,6 @@ const { values } = parseArgs({
     address: { type: "string", default: "1" },
     seconds: { type: "string", default: "10" },
     walk: { type: "boolean", default: false },
-    "strobe-sweep": { type: "boolean", default: false },
     // Override the "extra" channels (5–7) to experiment: which values leave the light steady?
     rgb: { type: "string" },
     strobe: { type: "string" },
@@ -48,39 +46,6 @@ const neutral = {
 
 const dmx = new DmxManager({ backend, fps: RIG.fps });
 await dmx.start();
-
-if (values["strobe-sweep"]) {
-  // The strobe channel: 0 = off, 1 = slowest, 255 = presumably fastest. Step through it so
-  // the real flash rate of each value can be noted by eye.
-  const steps = [1, 8, 16, 24, 32, 48, 64, 96, 128, 160, 192, 224, 255];
-  const b = address - 1;
-  console.log(
-    `Backend: ${backend}. Strobing the light at address ${address} white, one value at a time (3 s each).\n` +
-      "WARNING: this includes fast flashing. Skip it (Ctrl-C) if flashing lights bother you.\n" +
-      "For each value, note roughly how many flashes per second you see.\n",
-  );
-  for (const value of steps) {
-    dmx.universe.fill(0);
-    dmx.universe[b + offsets.master] = 255;
-    dmx.universe[b + offsets.r] = 255;
-    dmx.universe[b + offsets.g] = 255;
-    dmx.universe[b + offsets.b] = 255;
-    dmx.universe[b + offsets.rgb] = neutral.rgb;
-    dmx.universe[b + offsets.strobe] = value;
-    dmx.universe[b + offsets.mode] = neutral.mode;
-    console.log(
-      `  strobe = ${String(value).padStart(3)}  ${dmx.status.connected || backend === "fake" ? "" : "NOT CONNECTED"}`,
-    );
-    await sleep(3000);
-  }
-  dmx.universe.fill(0);
-  await sleep(300);
-  await dmx.stop();
-  console.log(
-    "\nDone. Tell me roughly how many flashes per second each value gave.",
-  );
-  process.exit(0);
-}
 
 if (values.walk) {
   // Light each fixture white for 2.5 s in the order the app assumes (L1…L4 then R1…R4,
