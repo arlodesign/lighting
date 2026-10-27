@@ -80,6 +80,15 @@ function fixture(
  */
 const SAFE = { rgb: 0, strobe: 1, mode: 1 } as const;
 
+/**
+ * Most fixtures with a small address display blink it while NO DMX signal arrives and go
+ * steady once valid DMX does. That makes the display a better "is DMX arriving?" detector
+ * than the lights themselves: it works even when the address or mode is wrong.
+ */
+const DISPLAY_TELL =
+  "Tip: if the lights show a blinking address (like A001), that blinking means they are NOT " +
+  "receiving DMX. When DMX arrives the display should go steady.";
+
 export interface FirstLightResult {
   lit: boolean;
   /** "address-1": normal red test worked. */
@@ -101,6 +110,7 @@ async function findFirstLight(dmx: OpenDmxOutput): Promise<FirstLightResult> {
   dmx.universe.fill(0);
   fixture(dmx, 1, { master: 255, r: 255, ...SAFE });
   await sleep(700);
+  console.log(c.dim(`  ${DISPLAY_TELL}`));
   if (
     await yesNo(
       `  Sending ${c.bold("red")} to address 1 (strobe and mode set to 1). Did ANY light turn red?`,
@@ -112,12 +122,17 @@ async function findFirstLight(dmx: OpenDmxOutput): Promise<FirstLightResult> {
 
   console.log(
     `\n${c.bold("Signal test.")} Every one of the 512 channels goes to 255 for 4 seconds. ` +
-      "Whatever address or mode the lights are in, anything listening to DMX should react: " +
-      "light up, flash, or change colour or program.",
+      "Whatever address or mode the lights are in, anything receiving DMX should react: " +
+      "light up, flash, change colour or program, " +
+      c.bold("or the display on the back stops blinking") +
+      ".",
   );
   dmx.universe.fill(255);
   await sleep(4000);
-  const blastResponse = await yesNo("  Did ANY light do ANYTHING?", "n");
+  const blastResponse = await yesNo(
+    "  Did ANY light do anything, or did ANY display on the back stop blinking?",
+    "n",
+  );
   dmx.universe.fill(0);
   if (!blastResponse) return { lit: false, blastResponse };
 
@@ -406,12 +421,16 @@ async function variantSweep(path: string): Promise<VariantSweepResult> {
   ];
   console.log(
     `\n${c.bold("Variant sweep.")} Six different ways of building the signal, ~7 seconds each, ` +
-      "all channels at 255. Watch the lights and press Enter " +
-      c.bold("the moment ANY light does anything") +
-      " (lights up, flashes, changes colour).",
+      "all channels at 255. Watch the lights AND the displays on the back, and press Enter " +
+      c.bold(
+        "the moment ANY light does anything or ANY display stops blinking",
+      ) +
+      ".",
   );
   let pressed = false;
-  const answered = ask(c.dim("  Press Enter when a light reacts…")).then(() => {
+  const answered = ask(
+    c.dim("  Press Enter when a light reacts or a display stops blinking…"),
+  ).then(() => {
     pressed = true;
   });
   let reactedDuring: string | null = null;
@@ -454,29 +473,34 @@ async function variantSweep(path: string): Promise<VariantSweepResult> {
 
 function printNoLightAdvice(signalArrives: boolean): void {
   console.log(
-    `\n${c.red("No light turned on.")} The report records what was tried.`,
+    `\n${c.red("No light reacted.")} The report records what was tried.`,
   );
   if (signalArrives) {
     console.log(
-      "\nSince a light DID react to the all-channels test, DMX is reaching the fixtures. " +
-        "So the lights' address or mode doesn't match what the app assumes. Check the lights' " +
-        "displays: they should show the 7-channel mode and an address. Tell me what they show.",
+      "\nSomething DID react to the all-channels test, so DMX is reaching the fixtures. " +
+        "The address or mode on the lights probably doesn't match what the app assumes. " +
+        "Tell me what the displays show (mode and address).",
     );
     return;
   }
   console.log(`
-Nothing reacted even with every channel at 255, so DMX isn't getting to (or isn't being
-understood by) the lights. Check, in this order:
-  1. Lights have power and their display is on.
-  2. Lights are in DMX mode (not auto/sound/master-slave), not just powered.
-  3. XLR cable from the Open DMX OUTPUT to the first light's DMX IN.
-     A mic cable (2-wire) usually still works at short range; a loose or damaged cable won't.
-  4. The Open DMX's XLR is the 3-pin output (not a wrong-gender adapter wired differently).
-  5. Try the other break method (the probe already did both) and another USB port,
-     preferably straight into the laptop rather than the hub.
-  6. A 120-ohm terminator plug (or a resistor between pins 2 and 3 in a spare XLR) in the
-     LAST light's DMX OUT fixes flaky or missing signal on many cheap fixtures.
-Then re-run:  npm run probe -- dmx`);
+Nothing reacted, and no display stopped blinking, so DMX is not getting into the lights.
+This is almost always physical, not software. Check, in this order:
+  1. DMX IN, not OUT. The cable from the Open DMX must go into the first light's DMX IN
+     socket (the OUT socket only passes signal along). Try this first.
+  2. One light only. Unplug the chain: Open DMX -> one cable -> one light's DMX IN.
+     A single bad cable or light further down can take the whole chain down.
+  3. A different cable. Swap in another XLR cable (a short one). Mic cables usually
+     work for short runs.
+  4. Swapped data wires. Some cheap Open DMX adapters wire pins 2 and 3 the other way
+     round from the lights. A "phase reverse" XLR adapter (or a cable with pins 2 and 3
+     crossed) fixes it. If cables 1-3 fail, this is the next suspect.
+  5. Adapter connector. The Open DMX should be using its DMX OUTPUT socket (3-pin or 5-pin).
+     With 5-pin you need pins 1, 2, 3 to line up with a 3-pin cable. Use the proper adapter.
+  6. Terminator. Plug a 120-ohm DMX terminator (or a resistor across pins 2 and 3 in a spare
+     XLR) into the LAST light's DMX OUT. Many cheap lights need it.
+  7. USB. Plug the adapter straight into the laptop, not through a hub.
+Re-run \`npm run probe -- dmx\` after each change and watch whether the displays stop blinking.`);
 }
 
 export async function runDmxSection(): Promise<DmxSection> {
@@ -524,6 +548,7 @@ export async function runDmxSection(): Promise<DmxSection> {
       "Make sure the lights are powered, cabled, and set to 7-channel DMX mode.",
     ),
   );
+  console.log(c.dim(DISPLAY_TELL));
   await pause();
 
   // What does macOS think of the adapter? Useful whether or not the lights respond.

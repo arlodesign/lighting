@@ -90,12 +90,35 @@ If not:
 - If you ever installed FTDI's VCP driver (Arduino setups sometimes do), unload it:
   `sudo kextunload -b com.FTDI.driver.FTDIUSBSerialDriver`
 
-**No light turns on in the DMX section**: the probe works out why. It first sends red to
-address 1; if that fails it sets every channel to 255 (anything listening to DMX should react),
-and if something does react it sweeps red across every address so you can say when a light
-turns red. The report records which of those happened, plus what macOS reports about the adapter.
-If nothing reacts at all, the probe prints a wiring checklist (power, DMX mode, the cable from the
-Open DMX's output to the first light's input, USB port, a terminator plug in the last light).
+### The lights don't respond to DMX
+
+**First, look at the displays on the back of the lights.** If they show a _blinking_ address
+(like `A001`), the lights are in DMX mode but are **not receiving any DMX signal**. When valid
+DMX arrives, the display should go steady. This is the best test there is: it works even if
+the address or mode is wrong, and it works the same in QLC+ or this app. Run
+`npm run probe -- dmx` and watch the displays.
+
+If they keep blinking, the problem is between the adapter and the first light, not software.
+Try these in order, re-running the probe (or QLC+) after each:
+
+1. **DMX IN, not OUT.** The cable from the Open DMX goes into the first light's **DMX IN**
+   socket. The OUT socket only passes the signal on to the next light.
+2. **One light only.** Unplug the chain: Open DMX → one cable → one light's DMX IN. A bad cable
+   or light further along can take the whole chain down.
+3. **A different, short cable.** Mic cables usually work for short runs.
+4. **Swapped data wires.** Some cheap Open DMX adapters wire pins 2 and 3 the opposite way round
+   from the lights. A "phase reverse" XLR adapter (or a cable with pins 2 and 3 crossed)
+   fixes it.
+5. **The adapter's output socket**, 3-pin or 5-pin: use the right adapter so pins 1, 2, 3 line up.
+6. **A terminator.** A 120-ohm DMX terminator plug (or a resistor between pins 2 and 3 in a spare
+   XLR) in the **last** light's DMX OUT. Many cheap lights need one.
+7. **USB.** Plug the adapter straight into the laptop, not through a hub.
+
+If the displays stop blinking but the lights still don't light up, the signal is arriving and
+the address or mode is the problem: tell me what the displays show.
+
+The probe also records how fast bytes leave the adapter at the DMX speed and tries different ways
+of building the signal; send me the report and I can read the results.
 
 **Lights flicker during the flicker test**: that's exactly what the test is for. Answer
 honestly; the app will pick the steadiest rate.
