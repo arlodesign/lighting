@@ -16,7 +16,8 @@
     "dev": "node scripts/dev.ts",
     "build:hud": "vite build",
     "dmx-test": "node scripts/dmx-test.ts",
-    "strobe-sweep": "node scripts/strobe-sweep.ts"
+    "strobe-sweep": "node scripts/strobe-sweep.ts",
+    "minilab-screen": "node scripts/minilab-screen.ts"
   },
   "dependencies": {
     "@julusian/midi": "^3.8.1",
