@@ -121,6 +121,18 @@ describe("Engine modifiers", () => {
   });
 });
 
+describe("Engine strips", () => {
+  it("reports the touch strips so the display can mirror them", () => {
+    const e = engine();
+    expect(e.status(0)).toMatchObject({ spotlight: null, swell: 0 });
+    e.dispatch({ type: "spotlight", value: 0.7 }, 0);
+    e.dispatch({ type: "swell", value: 0.4 }, 0);
+    expect(e.status(0)).toMatchObject({ spotlight: 0.7, swell: 0.4 });
+    e.dispatch({ type: "spotlight", value: null }, 0); // finger lifted
+    expect(e.status(0).spotlight).toBeNull();
+  });
+});
+
 describe("Engine setlist", () => {
   const SET: Song[] = [{ name: "One", bpm: 90, look: "blue" }, { name: "Two" }];
 

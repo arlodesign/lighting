@@ -26,7 +26,8 @@ body {
 
 body {
   display: grid;
-  grid-template-rows: minmax(200px, 1fr) auto auto auto;
+  grid-template-rows: auto auto auto auto auto;
+  align-content: start;
   grid-template-columns: minmax(
     0,
     1fr
@@ -75,21 +76,21 @@ kbd {
 
 .stage {
   display: grid;
-  align-self: center;
   grid-template-columns: 1fr minmax(40px, 14vw) 1fr;
   align-items: center;
-  padding: clamp(24px, 5vh, 56px) 0 8px;
+  padding: clamp(10px, 2.5vh, 28px) 0 4px;
 }
 
 .side {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 64px));
+  justify-content: center;
   gap: clamp(8px, 1.6vw, 24px);
 }
 
 .band {
   align-self: stretch;
-  margin: 18% 0;
+  margin: 10% 0;
   border-left: 1px dashed var(--ink-faint);
   border-right: 1px dashed var(--ink-faint);
 }
@@ -135,12 +136,12 @@ kbd {
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding: 44px 0 26px;
+  padding: 12px 0 8px;
   border-bottom: 1px solid var(--ink-faint);
 }
 
 #look-name {
-  font: 800 clamp(56px, 10vw, 132px) / 0.85 var(--display);
+  font: 800 clamp(48px, 7vw, 100px) / 0.85 var(--display);
   color: var(--accent);
   letter-spacing: -0.01em;
   transition: color 300ms;
@@ -150,7 +151,7 @@ kbd {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 10px;
   font: 600 22px/1 var(--display);
 }
 
@@ -170,7 +171,7 @@ kbd {
 }
 
 .bpm {
-  font: 800 clamp(48px, 7vw, 96px) / 0.85 var(--display);
+  font: 800 clamp(40px, 5.2vw, 76px) / 0.85 var(--display);
 }
 
 .bpm small {
@@ -209,73 +210,173 @@ kbd {
   font-weight: 600;
 }
 
-/* ── the MiniLab, mirrored ───────────────────────────────────────── */
+/* ── the MiniLab, mirrored ───────────────────────────────────────────
+   Positions come from a photo of the real top panel and are percentages of its width and
+   height, so the layout keeps its proportions at any window size. Sizes inside use cqw
+   (1% of the board's width), so text scales with it too. */
 
-.console {
-  display: grid;
-  grid-template-columns: auto auto auto;
-  justify-content: space-between;
-  gap: clamp(20px, 3vw, 44px);
-  padding: 24px 0;
-  align-items: start;
+.board,
+.keyboard-panel {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  container-type: inline-size;
 }
 
-.row {
-  display: flex;
-  gap: 8px;
-}
-
-.pad {
-  width: 64px;
-  height: 64px;
-  border-radius: 8px;
+.board {
+  position: relative;
+  aspect-ratio: 1830 / 550;
+  margin-top: 6px;
+  border-radius: 2.2cqw;
+  background: #0b0a09;
   border: 1px solid var(--ink-faint);
+}
+
+.at {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink-faint);
+  border-radius: 0.5cqw;
+  color: var(--ink-dim);
+  font-size: 1.05cqw;
+  opacity: 0.7;
+}
+
+.strip {
+  border: 1px solid var(--ink-faint);
+  border-radius: 0.8cqw;
+  overflow: hidden;
   display: flex;
   align-items: flex-end;
-  padding: 6px;
-  font-size: 12px;
-  line-height: 1.15;
+  justify-content: center;
+}
+
+.strip span {
+  position: relative;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding-bottom: 0.6cqw;
+  font-size: 1cqw;
   color: var(--ink-dim);
 }
 
-.pad.held {
+.strip .fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.strip .mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.6cqw;
   background: var(--ink);
-  color: #000;
-  border-color: var(--ink);
+  opacity: 0;
+  transform: translateY(50%);
 }
 
-.knob {
-  width: 58px;
-  text-align: center;
-  font-size: 12px;
+.screen {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9cqw;
+  border-radius: 0.8cqw;
+  background: #131110;
+  border: 1px solid var(--ink-faint);
+  overflow: hidden;
+}
+
+.s-label {
+  font-size: 0.95cqw;
   color: var(--ink-dim);
+}
+
+.s-name {
+  font: 600 1.9cqw/1.05 var(--display);
+  margin-bottom: 0.5cqw;
+}
+
+.s-name.dim {
+  color: var(--ink-dim);
+}
+
+.s-notes {
+  font-size: 1cqw;
+  line-height: 1.25;
+  color: var(--accent);
+  margin-bottom: 0.5cqw;
+}
+
+.encoder {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1.3;
+  border-radius: 50%;
+  border: 1px solid var(--ink-faint);
+  text-align: center;
+  font-size: 0.85cqw;
+  line-height: 1.25;
+  color: var(--ink-dim);
+}
+
+.cell {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--ink-dim);
+  font-size: 1.05cqw;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.cell .num {
+  color: var(--ink-faint);
+  filter: brightness(2);
+  margin-right: 0.3em;
 }
 
 .knob svg {
+  width: 5.2cqw;
+  height: 5.2cqw;
   display: block;
-  margin: 0 auto 4px;
 }
 
 .knob .value {
-  display: block;
   color: var(--ink);
-  font: 600 16px/1.1 var(--display);
-  margin-bottom: 2px;
-}
-
-.fader {
-  width: 34px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--ink-dim);
+  font: 600 1.7cqw/1.1 var(--display);
 }
 
 .fader .track {
   position: relative;
-  height: 74px;
-  width: 8px;
-  margin: 0 auto 6px;
-  border-radius: 4px;
+  flex: 0 0 76%;
+  width: 0.75cqw;
+  margin-bottom: 0.5cqw;
+  border-radius: 0.4cqw;
   background: var(--ink-faint);
   overflow: hidden;
 }
@@ -288,27 +389,119 @@ kbd {
   background: var(--ink);
 }
 
-.set {
-  display: grid;
-  gap: 14px;
-  margin-left: auto;
-  padding-right: clamp(16px, 4vw, 64px);
-  border-right: 1px solid var(--ink-faint);
-  text-align: right;
+.pad {
+  align-items: stretch;
+  justify-content: space-between;
+  padding: 0.5cqw 0.6cqw;
+  border-radius: 0.9cqw;
+  border: 1px solid var(--ink-faint);
+  background: #100f0d;
+  text-align: left;
 }
 
-.song p {
-  font: 600 28px/1.05 var(--display);
+.pad .num {
+  font-size: 0.9cqw;
 }
 
-.song.next p {
+.pad .name {
+  font-size: 1.05cqw;
+}
+
+.pad.held {
+  background: var(--ink);
+  color: #000;
+  border-color: var(--ink);
+}
+
+.pad.held .num {
+  color: #000;
+  filter: none;
+}
+
+/* The 25 keys: which look each one plays. */
+
+.keyboard-panel {
+  margin-top: 1cqw;
+}
+
+.keyboard {
+  position: relative;
+  margin-left: 6.1%;
+  width: 88.6%;
+  aspect-ratio: 1620 / 190;
+}
+
+.keys-row {
+  display: flex;
+  height: 100%;
+}
+
+.key {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.6cqw;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.key span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 1.15cqw;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.key.white {
+  flex: 1;
+  background: #1c1a17;
+  color: var(--ink);
+  border-radius: 0 0 0.5cqw 0.5cqw;
+  border: 1px solid #0b0a09;
+}
+
+.key.black {
+  position: absolute;
+  top: 0;
+  height: 68%;
+  width: 4.2%;
+  background: #050505;
+  color: var(--ink);
+  border-radius: 0 0 0.4cqw 0.4cqw;
+  border: 1px solid #2b2824;
+  z-index: 1;
+}
+
+.key.black span {
+  font-size: 1cqw;
+}
+
+.key.spooky span {
+  font-style: italic;
+}
+
+.key.spare {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.key.on {
+  background: var(--accent);
+  color: #000;
+}
+
+.key:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+.caption {
+  margin: 0.5cqw 0 0 6.1%;
+  font-size: 1cqw;
   color: var(--ink-dim);
-}
-
-.song .notes {
-  font: 400 14px/1.3 var(--body);
-  color: var(--accent);
-  margin-top: 4px;
 }
 
 /* ── footer: mic, devices, keyboard ──────────────────────────────── */
@@ -318,7 +511,7 @@ footer {
   flex-wrap: wrap;
   align-items: center;
   gap: 18px 32px;
-  padding: 14px 0 20px;
+  padding: 8px 0 10px;
   border-top: 1px solid var(--ink-faint);
   color: var(--ink-dim);
   font-size: 13px;
@@ -401,51 +594,22 @@ footer {
   background: var(--warn);
 }
 
-.keys {
-  margin-left: auto;
+.keys kbd {
+  font-size: 0.95cqw;
 }
 
-/* ── smaller screens: stack the console ──────────────────────────── */
-
-@media (max-width: 1100px) {
-  .console {
-    grid-template-columns: auto 1fr;
-    justify-content: start;
-  }
-  .pads,
-  .knobs {
-    grid-column: 1 / -1;
-  }
-  .row {
-    flex-wrap: wrap;
-  }
-}
+/* ── smaller screens ─────────────────────────────────────────────── */
 
 @media (max-width: 700px) {
-  .console {
-    grid-template-columns: 1fr;
-  }
-  .row {
-    flex-wrap: wrap;
-  }
   .now {
     flex-direction: column;
     align-items: flex-start;
-  }
-  .set {
-    margin-left: 0;
-    padding-right: 0;
-    border-right: 0;
-    text-align: left;
   }
   .tempo {
     text-align: left;
   }
   .beats {
     justify-content: flex-start;
-  }
-  .keys {
-    margin-left: 0;
   }
 }
 

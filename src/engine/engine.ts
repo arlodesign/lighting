@@ -314,6 +314,10 @@ export class Engine {
       hue: c.hue,
       saturation: c.saturation,
       sensitivity: c.sensitivity,
+      /** Pitch strip: spotlight position across the stage 0–1, or null when released. */
+      spotlight: c.spotlight,
+      /** Mod strip: brightness swell 0–1. */
+      swell: c.swell,
       faders: {
         master: c.master,
         left: c.left,

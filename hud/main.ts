@@ -114,50 +114,126 @@ function build(h: Hello): void {
     lampGlows.push(glow);
   });
 
-  $("pads").replaceChildren(
-    ...MINILAB_MAPPING.pads.roles.map((role) => {
-      const pad = el("div", "pad", HIT_LABELS[role]);
-      padEls.push(pad);
-      return pad;
-    }),
-  );
+  const layer = $("layer");
+  const cells: HTMLElement[] = [];
 
-  $("knobs").replaceChildren(
-    ...MINILAB_MAPPING.knobs.roles.map((role) => {
-      const knob = el("div", "knob");
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", "40");
-      svg.setAttribute("height", "40");
-      svg.setAttribute("viewBox", "0 0 40 40");
-      svg.innerHTML = `<path d="${arc(1)}" fill="none" stroke="#2b2824" stroke-width="4" stroke-linecap="round"/>`;
-      const fill = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "path",
+  // Pads: one row of eight under the knobs and faders, as on the device.
+  MINILAB_MAPPING.pads.roles.forEach((role, i) => {
+    const pad = cell("pad", PAD_COLS[i]!, 7.2, 75, 22);
+    pad.append(
+      el("span", "num", String(i + 1)),
+      el("span", "name", HIT_LABELS[role]),
+    );
+    padEls.push(pad);
+    cells.push(pad);
+  });
+
+  // Knobs 1–4 on top, 5–8 below.
+  MINILAB_MAPPING.knobs.roles.forEach((role, i) => {
+    const knob = cell(
+      "knob",
+      KNOB_COLS[i % 4]!,
+      9,
+      KNOB_ROW_TOPS[i < 4 ? 0 : 1]!,
+      24,
+    );
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 40 40");
+    const track = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "path",
+    );
+    track.setAttribute("d", arc(1));
+    track.setAttribute("fill", "none");
+    track.setAttribute("stroke", "#2b2824");
+    track.setAttribute("stroke-width", "4");
+    track.setAttribute("stroke-linecap", "round");
+    const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    fill.setAttribute("fill", "none");
+    fill.setAttribute("stroke", "currentColor");
+    fill.setAttribute("stroke-width", "4");
+    fill.setAttribute("stroke-linecap", "round");
+    fill.style.color = "var(--ink)";
+    svg.append(track, fill);
+    const value = el("span", "value", "—");
+    const label = el("span", "label");
+    label.append(el("span", "num", String(i + 1)), KNOB_LABELS[role]);
+    knob.append(svg, value, label);
+    knobEls.push({ arc: fill, value });
+    cells.push(knob);
+  });
+
+  // Faders 1–4 to the right of the knobs.
+  MINILAB_MAPPING.faders.roles.forEach((role, i) => {
+    const fader = cell("fader", FADER_COLS[i]!, 5.6, 19, 47);
+    const track = el("div", "track");
+    const fill = el("div", "fill");
+    track.append(fill);
+    const label = el("span", "label");
+    label.append(el("span", "num", String(i + 1)), FADER_LABELS[role]);
+    fader.append(track, label);
+    faderFills.push(fill);
+    cells.push(fader);
+  });
+
+  layer.replaceChildren(...cells);
+  buildKeyboard(h);
+}
+
+// Centres (% of the board's width) and tops (% of its height), measured from the real panel.
+const KNOB_COLS = [35.8, 45.2, 54.5, 63.7];
+const KNOB_ROW_TOPS = [13.6, 44.5];
+const FADER_COLS = [72.7, 78.7, 84.7, 90.7];
+const PAD_COLS = [26.5, 35.9, 45.3, 54.5, 63.7, 72.9, 81.9, 90.9];
+
+function cell(cls: string, centreX: number, w: number, y: number, h: number) {
+  const node = el("div", `cell ${cls}`);
+  node.style.setProperty("--x", `${centreX - w / 2}%`);
+  node.style.setProperty("--y", `${y}%`);
+  node.style.setProperty("--w", `${w}%`);
+  node.style.setProperty("--h", `${h}%`);
+  return node;
+}
+
+// ── the 25 keys: which look each one plays ───────────────────────────────────────
+
+const keyEls: HTMLElement[] = [];
+/** C C♯ D D♯ E F F♯ G G♯ A A♯ B: true = black key. The MiniLab's keys run C to C. */
+const BLACK_KEY = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0].map(Boolean);
+const KEY_COUNT = 25;
+const WHITE_KEY_COUNT = 15;
+
+function buildKeyboard(h: Hello): void {
+  keyEls.length = 0;
+  const row = el("div", "keys-row");
+  const blacks: HTMLElement[] = [];
+  let whites = 0;
+  for (let k = 0; k < KEY_COUNT; k++) {
+    const look = h.looks[k];
+    const black = BLACK_KEY[k % 12]!;
+    const key = el("button", `key ${black ? "black" : "white"}`);
+    key.setAttribute("type", "button");
+    if (look) {
+      key.append(el("span", undefined, look.name));
+      key.title = `Look ${k + 1}: ${look.name}`;
+      if (look.spooky) key.classList.add("spooky");
+      key.addEventListener("pointerdown", () =>
+        act({ type: "look", index: k, velocity: 0.8 }),
       );
-      fill.setAttribute("fill", "none");
-      fill.setAttribute("stroke", "currentColor");
-      fill.setAttribute("stroke-width", "4");
-      fill.setAttribute("stroke-linecap", "round");
-      fill.style.color = "var(--ink)";
-      svg.append(fill);
-      const value = el("span", "value", "—");
-      knob.append(svg, value, document.createTextNode(KNOB_LABELS[role]));
-      knobEls.push({ arc: fill, value });
-      return knob;
-    }),
-  );
-
-  $("faders").replaceChildren(
-    ...MINILAB_MAPPING.faders.roles.map((role) => {
-      const fader = el("div", "fader");
-      const track = el("div", "track");
-      const fill = el("div", "fill");
-      track.append(fill);
-      fader.append(track, document.createTextNode(FADER_LABELS[role]));
-      faderFills.push(fill);
-      return fader;
-    }),
-  );
+    } else {
+      key.classList.add("spare");
+      key.setAttribute("disabled", "");
+    }
+    if (black) {
+      key.style.left = `${whites * (100 / WHITE_KEY_COUNT) - 2.1}%`;
+      blacks.push(key);
+    } else {
+      row.append(key);
+      whites++;
+    }
+    keyEls.push(key);
+  }
+  $("keyboard").replaceChildren(row, ...blacks);
 }
 
 /** SVG arc for a knob dial: 270° sweep starting bottom-left, `t` 0–1 of the way round. */
@@ -234,6 +310,12 @@ function update(state: State): void {
     if (fill) fill.style.height = `${s.faders[role] * 100}%`;
   });
 
+  const spotlight = $("spotlight-mark");
+  spotlight.style.opacity = s.spotlight === null ? "0" : "1";
+  if (s.spotlight !== null) spotlight.style.bottom = `${s.spotlight * 100}%`;
+  $("swell-fill").style.height = `${s.swell * 100}%`;
+  keyEls.forEach((key, i) => key.classList.toggle("on", i === s.lookIndex));
+
   $("song-now").textContent = s.setlist.current?.name ?? "—";
   $("song-notes").textContent = s.setlist.current?.notes ?? "";
   const nextIsNew = s.setlist.next && s.setlist.cursor !== s.setlist.loaded;
@@ -253,15 +335,13 @@ function update(state: State): void {
 
 function lightsLabel(dmx: State["devices"]["dmx"]): string {
   if (dmx.backend === "qlc") {
-    return dmx.connected
-      ? "Lights (via QLC+)"
-      : "Lights: waiting for QLC+ (start it with web access on)";
+    return dmx.connected ? "Lights (via QLC+)" : "Lights: waiting for QLC+";
   }
   if (dmx.backend === "fake") return "Lights: preview only (no DMX output)";
   if (dmx.backend === "usb") {
     return dmx.connected
       ? "Lights (USB)"
-      : "Lights: can't open the Open DMX (plug it in; quit QLC+ if it's running)";
+      : "Lights: can't open Open DMX (quit QLC+?)";
   }
   return dmx.connected ? "Lights" : "Lights: no Open DMX found";
 }
