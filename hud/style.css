@@ -4,7 +4,7 @@
   --ink-dim: #6f685d;
   --ink-faint: #2b2824;
   --warn: #ff4a3d;
-  /* Set from the live palette every frame, so the HUD's accent is the show's colour. */
+  /* Set from the live palette every frame, so the HUD's accent is the show's color. */
   --accent: #b00010;
   --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
   --body: system-ui, -apple-system, "Helvetica Neue", sans-serif;
@@ -107,7 +107,7 @@ kbd {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  /* colour + bloom set inline from the frame */
+  /* color + bloom set inline from the frame */
 }
 
 .lamp .label {

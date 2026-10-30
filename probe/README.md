@@ -59,7 +59,7 @@ Sections run in order: **MIDI → DMX → mic**. You can run one or two at a tim
 - At each step, do what it says, then press **Enter**. Type `s` to skip a step, `r` to redo it,
   or type a short note before Enter.
 - The DMX section asks you to describe what the lights do. Short is fine ("fast strobe",
-  "auto colour fade", "nothing").
+  "auto color fade", "nothing").
 - For the mic test, a browser page opens. Click start and allow the microphone. For the
   "loud" part, play music loudly through a speaker or clap near the laptop.
 - Ctrl-C at any time still saves what's been recorded so far.

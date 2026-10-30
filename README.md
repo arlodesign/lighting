@@ -43,16 +43,16 @@ DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- -
 
 ## Controls
 
-| Control     | Does                                                                                                                  |
-| ----------- | --------------------------------------------------------------------------------------------------------------------- |
-| Keys        | Pick a look (lowest key = first look). Hit harder for a brighter look.                                                |
-| Pads 1–8    | Strobe (press harder = faster), white flash, blackout, colour bump, left flash, right flash, tap tempo, lightning     |
-| Knobs       | Speed, hue, colour, palette, width, fade, shape, mic sensitivity                                                      |
-| Faders      | Master, left, right, audio reactivity                                                                                 |
-| Pitch strip | Slide a spotlight across the lights                                                                                   |
-| Mod strip   | Swell the brightness                                                                                                  |
-| Big knob    | Scroll the setlist; click to load the song's tempo, palette and look                                                  |
-| Laptop keys | Space = tap tempo, Esc = blackout, `S` strobe, `F` flash, `L` lightning, `1`–`9` looks, ↑/↓ and Enter for the setlist |
+| Control     | Does                                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Keys        | White keys pick a look, calmest on the left to most frantic on the right. Hit harder for a brighter look.                       |
+| Pads 1–8    | Strobe (press harder = faster, 2–6 flashes/s), white flash, blackout, color bump, left flash, right flash, lightning, tap tempo |
+| Knobs       | Speed, hue, color, palette, width, fade, shape, mic sensitivity                                                                 |
+| Faders      | Master, left, right, audio reactivity                                                                                           |
+| Pitch strip | Slide a spotlight across the lights                                                                                             |
+| Mod strip   | Swell the brightness                                                                                                            |
+| Big knob    | Scroll the setlist; click to load the song's tempo, palette and look                                                            |
+| Laptop keys | Space = tap tempo, Esc = blackout, `S` strobe, `F` flash, `L` lightning, `1`–`9` looks, ↑/↓ and Enter for the setlist           |
 
 ## The setlist and saving presets on site
 

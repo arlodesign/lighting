@@ -38,7 +38,7 @@ export const lightning: Look = {
   },
 };
 
-/** Steady colour, but bulbs stutter as if failing; a couple are really on their way out. */
+/** Steady color, but bulbs stutter as if failing; a couple are really on their way out. */
 export const dyingBulb: Look = {
   id: "dying-bulb",
   name: "Dying Bulb",
@@ -74,7 +74,7 @@ export const creep: Look = {
   },
 };
 
-/** A calm wash that's randomly seized by violent colour glitches. */
+/** A calm wash that's randomly seized by violent color glitches. */
 export const possession: Look = {
   id: "possession",
   name: "Possession",

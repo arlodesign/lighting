@@ -42,7 +42,7 @@ describe("every look", () => {
   // Sweep a long stretch of time across every geometry, palette and width:
   // a NaN or out-of-range value here would be a flicker or a crash on stage.
   for (const [index, look] of LOOKS.entries()) {
-    it(`${look.name} always outputs 8 valid colours`, () => {
+    it(`${look.name} always outputs 8 valid colors`, () => {
       for (const geometry of GEOMETRIES) {
         for (const palette of PALETTES) {
           for (const width of [0, 0.5, 1]) {
@@ -73,7 +73,7 @@ describe("every look", () => {
       }
     });
 
-    it(`${look.name} is deterministic (same moment → same colours)`, () => {
+    it(`${look.name} is deterministic (same moment → same colors)`, () => {
       const ctx = context({ beats: 13.3, time: 42.42 });
       expect(render(index, ctx)).toEqual(render(index, ctx));
     });

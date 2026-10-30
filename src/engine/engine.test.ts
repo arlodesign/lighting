@@ -52,6 +52,36 @@ describe("Engine looks", () => {
     expect(e.render(0).lights[0]).toMatchObject({ r: 0, b: 1 });
   });
 
+  it("palette changes crossfade over the fade length too", () => {
+    const paint: Look = {
+      id: "paint",
+      name: "paint",
+      render: (ctx, out) => out.fill(ctx.colors[0]!),
+    };
+    const e = new Engine({
+      now: 0,
+      bpm: 120,
+      looks: [paint],
+      palettes: [
+        { id: "red", name: "Red", colors: [{ r: 1, g: 0, b: 0 }] },
+        { id: "blue", name: "Blue", colors: [{ r: 0, g: 0, b: 1 }] },
+      ],
+    });
+    e.controls.master = 1;
+    e.controls.lookIntensity = 1;
+    e.controls.fadeIndex = FADE_STEPS.indexOf(2); // 1000ms at 120 BPM
+    e.dispatch(
+      { type: "knob", knob: "palette", delta: countsPerStep("palette") },
+      0,
+    );
+    expect(e.controls.paletteIndex).toBe(1);
+    expect(e.render(0).lights[0]).toMatchObject({ r: 1, b: 0 });
+    const mid = e.render(500).lights[0]!;
+    expect(mid.r).toBeCloseTo(0.5);
+    expect(mid.b).toBeCloseTo(0.5);
+    expect(e.render(1000).lights[0]).toMatchObject({ r: 0, b: 1 });
+  });
+
   it("key velocity sets intensity, but soft keys still show", () => {
     const e = engine();
     e.controls.fadeIndex = 0;
@@ -77,6 +107,19 @@ describe("Engine hits", () => {
     const frame = e.render(0);
     expect(frame.strobe).toBe(0);
     expect(frame.lights[0]).toEqual({ r: 0, g: 0, b: 0 });
+  });
+
+  it("strobe rate follows pressure smoothly, starting right at the first press", () => {
+    const e = engine();
+    e.dispatch({ type: "hit", hit: "strobe", down: true, pressure: 0.2 }, 0);
+    expect(e.render(0).strobe).toBeCloseTo(0.2);
+    e.dispatch({ type: "hit", hit: "strobe", down: true, pressure: 1 }, 10);
+    const soon = e.render(33).strobe; // one frame later: on its way, not there yet
+    expect(soon).toBeGreaterThan(0.2);
+    expect(soon).toBeLessThan(0.5);
+    expect(e.render(1000).strobe).toBeCloseTo(1, 2);
+    e.dispatch({ type: "hit", hit: "strobe", down: false }, 1000);
+    expect(e.render(1001).strobe).toBe(0);
   });
 
   it("left flash only touches the left side", () => {
@@ -145,7 +188,7 @@ describe("Engine modifiers", () => {
     expect(e.controls.geometry).toBe("linear");
   });
 
-  it("hue knob wraps around the colour wheel", () => {
+  it("hue knob wraps around the color wheel", () => {
     const e = engine();
     e.dispatch({ type: "knob", knob: "hue", delta: -1 }, 0);
     expect(e.controls.hue).toBeGreaterThan(0.9);

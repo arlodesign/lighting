@@ -56,7 +56,7 @@ for (const name of toRun) {
 }
 
 const note = await ask(
-  "\nAnything else worth noting (weird behaviour, ideas)? Enter to skip:",
+  "\nAnything else worth noting (weird behavior, ideas)? Enter to skip:",
 );
 if (note) report.notes.final = note;
 report.finishedAt = new Date().toISOString();

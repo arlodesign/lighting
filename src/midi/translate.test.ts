@@ -37,8 +37,8 @@ describe("MidiTranslator", () => {
     expect(t().translate([0x89, 36, 0])).toEqual([
       { type: "hit", hit: "strobe", down: false },
     ]);
-    expect(t().translate([0x99, 42, 100])).toEqual([{ type: "tap" }]);
-    expect(t().translate([0x89, 42, 0])).toEqual([]);
+    expect(t().translate([0x99, 43, 100])).toEqual([{ type: "tap" }]);
+    expect(t().translate([0x89, 43, 0])).toEqual([]);
   });
 
   it("pad pressure updates the held hit", () => {
@@ -104,7 +104,7 @@ describe("MidiTranslator", () => {
     ]);
   });
 
-  it("pitch strip drives the spotlight and releases at centre", () => {
+  it("pitch strip drives the spotlight and releases at center", () => {
     expect(t().translate([0xe0, 0x7f, 0x7f])).toEqual([
       { type: "spotlight", value: 1 },
     ]);
@@ -114,7 +114,7 @@ describe("MidiTranslator", () => {
   });
 
   it("main encoder moves and loads the setlist (Arturia program, as recorded)", () => {
-    // Each click sends 65 (right) or 62 (left), then returns to the 64 centre.
+    // Each click sends 65 (right) or 62 (left), then returns to the 64 center.
     expect(t().translate([0xb0, 114, 65])).toEqual([
       { type: "setlist-move", delta: 1 },
     ]);

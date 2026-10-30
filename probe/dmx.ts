@@ -75,7 +75,7 @@ function fixture(
 
 /**
  * Values for the "extra" channels (RGB, strobe, mode) that keep a fixture in plain steady
- * colour. All 0: the 2024 show left them at 0 and the lights held steady. (Setting strobe and
+ * color. All 0: the 2024 show left them at 0 and the lights held steady. (Setting strobe and
  * mode to 1 made them flash in spurts, even though the paper manual lists them as 1–255.)
  */
 const SAFE = { rgb: 0, strobe: 0, mode: 0 } as const;
@@ -123,7 +123,7 @@ async function findFirstLight(dmx: OpenDmxOutput): Promise<FirstLightResult> {
   console.log(
     `\n${c.bold("Signal test.")} Every one of the 512 channels goes to 255 for 4 seconds. ` +
       "Whatever address or mode the lights are in, anything receiving DMX should react: " +
-      "light up, flash, change colour or program, " +
+      "light up, flash, change color or program, " +
       c.bold("or the display on the back stops blinking") +
       ".",
   );
@@ -598,9 +598,9 @@ export async function runDmxSection(): Promise<DmxSection> {
   section.firstLight = true;
 
   try {
-    // Colour order: confirms R/G/B channel offsets.
+    // Color order: confirms R/G/B channel offsets.
     console.log(
-      `\n${c.bold("Colour check")} on the same light: red → green → blue → white.`,
+      `\n${c.bold("Color check")} on the same light: red → green → blue → white.`,
     );
     for (const [name, rgb] of [
       ["red", [255, 0, 0]],
@@ -624,7 +624,7 @@ export async function runDmxSection(): Promise<DmxSection> {
     );
     if (!section.colorOrderOk) {
       section.errors.push(
-        `colour order: ${await ask("  What did you see instead?")}`,
+        `color order: ${await ask("  What did you see instead?")}`,
       );
     }
 
@@ -646,7 +646,7 @@ export async function runDmxSection(): Promise<DmxSection> {
           0,
         ),
         mode: parse(
-          await ask("  Which mode value gave plain manual colour? (e.g. 1)"),
+          await ask("  Which mode value gave plain manual color? (e.g. 1)"),
           0,
         ),
         rgb: parse(await ask("  Which rgb value changed nothing? (e.g. 0)"), 0),

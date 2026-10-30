@@ -71,7 +71,7 @@ export function toHsv({ r, g, b }: Rgb): { h: number; s: number; v: number } {
   return { h: h / 6, s, v };
 }
 
-/** The operator's colour knobs: rotate hue (turns) and scale saturation. */
+/** The operator's color knobs: rotate hue (turns) and scale saturation. */
 export function adjust(c: Rgb, hueShift: number, saturation: number): Rgb {
   if (hueShift === 0 && saturation === 1) return { ...c };
   const { h, s, v } = toHsv(c);

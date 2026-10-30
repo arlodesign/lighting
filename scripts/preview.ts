@@ -1,5 +1,5 @@
 /**
- * Terminal preview of the engine — no hardware needed. Draws the 8 lights as colour blocks.
+ * Terminal preview of the engine — no hardware needed. Draws the 8 lights as color blocks.
  *
  *   npm run preview
  *

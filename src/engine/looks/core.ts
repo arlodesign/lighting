@@ -5,7 +5,7 @@ const frac = (x: number) => x - Math.floor(x);
 /** Triangle wave 0 → 1 → 0 over one unit of x. */
 const tri = (x: number) => 1 - Math.abs(frac(x) * 2 - 1);
 
-/** Solid palette colours drifting slowly; width spreads the palette across the stage. */
+/** Solid palette colors drifting slowly; width spreads the palette across the stage. */
 export const wash: Look = {
   id: "wash",
   name: "Wash",
@@ -16,7 +16,7 @@ export const wash: Look = {
   },
 };
 
-/** Everything swells on each beat; colour drifts per bar. */
+/** Everything swells on each beat; color drifts per bar. */
 export const breathe: Look = {
   id: "breathe",
   name: "Breathe",
@@ -50,7 +50,7 @@ export const chase: Look = {
   },
 };
 
-/** A pulse travels from position 0 to 1 each beat (centre-out in mirror geometry). */
+/** A pulse travels from position 0 to 1 each beat (center-out in mirror geometry). */
 export const ripple: Look = {
   id: "ripple",
   name: "Ripple",
@@ -118,7 +118,7 @@ export const rainbowRoll: Look = {
   },
 };
 
-/** Left = palette colour A, right = colour B; they swap every bar with a downbeat hit. */
+/** Left = palette color A, right = color B; they swap every bar with a downbeat hit. */
 export const split: Look = {
   id: "split",
   name: "Split",

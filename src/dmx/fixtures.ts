@@ -1,4 +1,8 @@
-import type { RigConfig } from "../config.ts";
+import {
+  strobeHzForValue,
+  strobeValueForHz,
+  type RigConfig,
+} from "../config.ts";
 import type { Frame } from "../engine/engine.ts";
 import { LIGHT_IDS } from "../engine/rig.ts";
 
@@ -7,10 +11,13 @@ const to255 = (x: number) => Math.round(Math.min(1, Math.max(0, x)) * 255);
 /**
  * Turn an engine frame into DMX channel values.
  *
- * Brightness goes on the fixture's master dimmer and *colour* on R/G/B at full chroma.
+ * Brightness goes on the fixture's master dimmer and *color* on R/G/B at full chroma.
  * Splitting it this way gives far smoother fades at low levels than dimming R/G/B alone:
  * a dim purple as R=8,G=0,B=12 has only a handful of possible shades, but as
- * master=12 + R=170,B=255 the colour stays exact while the dimmer does the fading.
+ * master=12 + R=170,B=255 the color stays exact while the dimmer does the fading.
+ *
+ * Strobe 0–1 is linear in flashes per second across strobeRange. The fixture's channel
+ * is exponential, so half pressure gives the rate halfway between, not a value halfway.
  */
 export function writeFrame(
   frame: Frame,
@@ -18,13 +25,14 @@ export function writeFrame(
   universe: Uint8Array,
 ): void {
   const { offsets, neutral, strobeRange } = rig.profile;
-  const strobeValue =
-    frame.strobe > 0
-      ? Math.round(
-          strobeRange.slow +
-            (strobeRange.fast - strobeRange.slow) * Math.min(1, frame.strobe),
-        )
-      : neutral.strobe;
+  let strobeValue = neutral.strobe;
+  if (frame.strobe > 0) {
+    const slow = strobeHzForValue(strobeRange.slow);
+    const fast = strobeHzForValue(strobeRange.fast);
+    strobeValue = strobeValueForHz(
+      slow + (fast - slow) * Math.min(1, frame.strobe),
+    );
+  }
 
   LIGHT_IDS.forEach((id, i) => {
     const color = frame.lights[i] ?? { r: 0, g: 0, b: 0 };

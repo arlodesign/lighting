@@ -59,10 +59,12 @@ export function countsPerStep(knob: KnobId): number {
 
 const KICK_DECAY_MS = 160;
 const AUDIO_STALE_MS = 1000;
+/** How quickly the strobe rate follows pad pressure (time constant). */
+const STROBE_SMOOTH_MS = 150;
 
 /** One rendered moment: what the lights should be doing. */
 export interface Frame {
-  /** One colour per light, channels clamped 0–1, brightness baked in. */
+  /** One color per light, channels clamped 0–1, brightness baked in. */
   lights: Rgb[];
   /** Hardware strobe, 0 = off, otherwise 0–1 slow → fast (already safety-capped). */
   strobe: number;
@@ -152,6 +154,14 @@ export class Engine {
   #fadeFrom: { lookIndex: number; intensity: number } | null = null;
   #fadeStartBeat = 0;
   #fadeBeats = 0;
+  /** The palette's colors we're fading away from (raw, before hue/saturation). */
+  #paletteFrom: {
+    colors: readonly Rgb[];
+    startBeat: number;
+    beats: number;
+  } | null = null;
+  /** Strobe pressure after smoothing; null while the pad is up. */
+  #strobePressure: number | null = null;
   #audio = { level: 0, bass: 0, at: -Infinity };
   #kickAt = -Infinity;
   #bassEnv = 0;
@@ -228,7 +238,7 @@ export class Engine {
         }
         break;
       case "knob":
-        this.#turn(action.knob, action.delta);
+        this.#turn(action.knob, action.delta, now);
         break;
       case "fader":
         this.controls[action.fader satisfies FaderId] = clamp01(action.value);
@@ -337,7 +347,17 @@ export class Engine {
     if (strobeHit) {
       lights = lights.map(() => WHITE);
       // Pressure picks a point along the strobe range (light press = slowest usable flash).
-      strobe = Math.max(0.02, strobeHit.pressure) * this.maxStrobe;
+      // Smoothed, because aftertouch jitters and each new rate restarts the flash timer.
+      const target = Math.max(0.02, strobeHit.pressure);
+      this.#strobePressure =
+        this.#strobePressure === null
+          ? target
+          : this.#strobePressure +
+            (target - this.#strobePressure) *
+              (1 - Math.exp(-dt / STROBE_SMOOTH_MS));
+      strobe = this.#strobePressure * this.maxStrobe;
+    } else {
+      this.#strobePressure = null;
     }
     if (held("blackout")) {
       lights = lights.map(() => BLACK);
@@ -437,12 +457,13 @@ export class Engine {
 
   #context(now: number): LookContext {
     const c = this.controls;
-    const palette = this.palettes[c.paletteIndex] ?? this.palettes[0]!;
     const stale = now - this.#audio.at > AUDIO_STALE_MS;
     return {
       beats: this.clock.beats(now) * SPEED_STEPS[c.speedIndex]!,
       time: now / 1000,
-      colors: palette.colors.map((col) => adjust(col, c.hue, c.saturation)),
+      colors: this.#paletteColors(now).map((col) =>
+        adjust(col, c.hue, c.saturation),
+      ),
       width: c.width,
       geometry: c.geometry,
       // Scatter reshuffles once per bar of the look's own time.
@@ -456,6 +477,36 @@ export class Engine {
         ? { level: 0, bass: 0 }
         : { level: this.#audio.level, bass: this.#audio.bass },
     };
+  }
+
+  /** The palette's colors, crossfading from the previous palette if one is changing. */
+  #paletteColors(now: number): readonly Rgb[] {
+    const to = (this.palettes[this.controls.paletteIndex] ?? this.palettes[0]!)
+      .colors;
+    const from = this.#paletteFrom;
+    if (!from) return to;
+    const t =
+      from.beats <= 0
+        ? 1
+        : (this.clock.beats(now) - from.startBeat) / from.beats;
+    if (t >= 1) {
+      this.#paletteFrom = null;
+      return to;
+    }
+    // Palettes differ in length: color i fades from whatever the old palette had there.
+    return to.map((col, i) => mix(pick(from.colors, i), col, clamp01(t)));
+  }
+
+  #setPalette(index: number, now: number): void {
+    const c = this.controls;
+    if (index === c.paletteIndex) return;
+    this.#paletteFrom = {
+      // Start from what's showing, so turning mid-fade doesn't jump.
+      colors: this.#paletteColors(now),
+      startBeat: this.clock.beats(now),
+      beats: FADE_STEPS[c.fadeIndex]!,
+    };
+    c.paletteIndex = index;
   }
 
   #renderLook(index: number, intensity: number, ctx: LookContext): Rgb[] {
@@ -481,7 +532,7 @@ export class Engine {
     c.lookIntensity = intensity;
   }
 
-  #turn(knob: KnobId, delta: number): void {
+  #turn(knob: KnobId, delta: number, now: number): void {
     const c = this.controls;
     const feel: { steps?: number; perCount?: number } = KNOB_FEEL[knob];
     if (feel.perCount !== undefined) {
@@ -507,9 +558,9 @@ export class Engine {
         c.fadeIndex = clampIndex(c.fadeIndex + steps, FADE_STEPS.length);
         break;
       case "palette": // wraps: scrolling past the last palette comes back to the first
-        c.paletteIndex = wrapIndex(
-          c.paletteIndex + steps,
-          this.palettes.length,
+        this.#setPalette(
+          wrapIndex(c.paletteIndex + steps, this.palettes.length),
+          now,
         );
         break;
       case "geometry":
@@ -546,17 +597,17 @@ export class Engine {
   /** Apply whatever a preset mentions; leave everything else as the operator has it. */
   #applySettings(s: SongSettings, now: number): void {
     const c = this.controls;
+    if (s.fade !== undefined) c.fadeIndex = nearestIndex(FADE_STEPS, s.fade);
+    // Palette and look after the fade, so both crossfade over the preset's fade length.
     const pal = this.palettes.findIndex((p) => p.id === s.palette);
-    if (pal >= 0) c.paletteIndex = pal;
+    if (pal >= 0) this.#setPalette(pal, now);
     if (s.hue !== undefined) c.hue = clamp01(s.hue);
     if (s.saturation !== undefined) c.saturation = clamp01(s.saturation);
     if (s.width !== undefined) c.width = clamp01(s.width);
     if (s.swell !== undefined) c.swell = clamp01(s.swell);
     if (s.speed !== undefined)
       c.speedIndex = nearestIndex(SPEED_STEPS, s.speed);
-    if (s.fade !== undefined) c.fadeIndex = nearestIndex(FADE_STEPS, s.fade);
     if (s.geometry && GEOMETRIES.includes(s.geometry)) c.geometry = s.geometry;
-    // Look last, so its crossfade uses the preset's fade length.
     if (s.look) {
       const lookIndex = this.looks.findIndex((l) => l.id === s.look);
       if (lookIndex >= 0) this.#setLook(lookIndex, undefined, now);

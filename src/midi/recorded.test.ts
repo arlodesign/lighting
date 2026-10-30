@@ -3,7 +3,7 @@ import { MINILAB_MAPPING } from "./mapping.ts";
 import { MidiTranslator } from "./translate.ts";
 
 // Real messages recorded from a MiniLab 3 (default Arturia program) by the hardware probe,
-// 2026-10-25. They pin down behaviour the docs didn't: knob acceleration, repeated end
+// 2026-10-25. They pin down behavior the docs didn't: knob acceleration, repeated end
 // values, how the main encoder reports clicks, and message order when a pad is released.
 
 /** Knob 3 (CC76) swept fully right, held at the end, then fully left and held. */

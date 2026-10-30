@@ -40,7 +40,7 @@ const HIT_LABELS: Record<HitId | "tap", string> = {
   strobe: "Strobe",
   "white-flash": "White flash",
   blackout: "Blackout",
-  "color-bump": "Colour bump",
+  "color-bump": "Color bump",
   "left-flash": "Left flash",
   "right-flash": "Right flash",
   lightning: "Lightning",
@@ -50,7 +50,7 @@ const HIT_LABELS: Record<HitId | "tap", string> = {
 const KNOB_LABELS = {
   speed: "Speed",
   hue: "Hue",
-  saturation: "Colour",
+  saturation: "Color",
   palette: "Palette",
   width: "Width",
   fade: "Fade",
@@ -194,15 +194,15 @@ function build(h: Hello): void {
   buildKeyboard(h);
 }
 
-// Centres (% of the board's width) and tops (% of its height), measured from the real panel.
+// Centers (% of the board's width) and tops (% of its height), measured from the real panel.
 const KNOB_COLS = [35.8, 45.2, 54.5, 63.7];
 const KNOB_ROW_TOPS = [13.6, 44.5];
 const FADER_COLS = [72.7, 78.7, 84.7, 90.7];
 const PAD_COLS = [26.5, 35.9, 45.3, 54.5, 63.7, 72.9, 81.9, 90.9];
 
-function cell(cls: string, centreX: number, w: number, y: number, h: number) {
+function cell(cls: string, centerX: number, w: number, y: number, h: number) {
   const node = el("div", `cell ${cls}`);
-  node.style.setProperty("--x", `${centreX - w / 2}%`);
+  node.style.setProperty("--x", `${centerX - w / 2}%`);
   node.style.setProperty("--y", `${y}%`);
   node.style.setProperty("--w", `${w}%`);
   node.style.setProperty("--h", `${h}%`);
@@ -272,7 +272,7 @@ function update(state: State): void {
 
   const palette = h.palettes[s.paletteIndex];
   if (palette) {
-    // The HUD's accent is the palette's brightest colour, so it stays readable on black.
+    // The HUD's accent is the palette's brightest color, so it stays readable on black.
     const [r, g, b] = palette.colors.reduce((a, c) =>
       sum(c) > sum(a) ? c : a,
     );

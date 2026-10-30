@@ -20,7 +20,7 @@ function svgEl<K extends keyof SVGElementTagNameMap>(
   return node;
 }
 
-/** A point on a circle around the centre; turn 0 = top, increasing clockwise. */
+/** A point on a circle around the center; turn 0 = top, increasing clockwise. */
 function point(turn: number, r: number): string {
   const a = turn * 2 * Math.PI;
   return `${(20 + r * Math.sin(a)).toFixed(2)} ${(20 - r * Math.cos(a)).toFixed(2)}`;

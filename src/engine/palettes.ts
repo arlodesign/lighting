@@ -3,7 +3,7 @@ import { hex, type Rgb } from "./color.ts";
 export interface Palette {
   id: string;
   name: string;
-  /** 1–4 colours that look good together. Looks pick from or blend across these. */
+  /** 1–4 colors that look good together. Looks pick from or blend across these. */
   colors: readonly Rgb[];
   spooky?: boolean;
 }
@@ -21,7 +21,7 @@ const p = (
 });
 
 /**
- * Saturated colours with real darkness read best in fog; pastels just turn the haze grey.
+ * Saturated colors with real darkness read best in fog; pastels just turn the haze gray.
  * Order = the order the palette knob scrolls through.
  */
 export const PALETTES: readonly Palette[] = [

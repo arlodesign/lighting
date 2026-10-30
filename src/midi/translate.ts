@@ -154,7 +154,7 @@ export class MidiTranslator {
 
       case "pitchBend": {
         if (!onChannel(m.strips.channel)) return [];
-        // The strip springs back to dead centre when released; treat that as "let go".
+        // The strip springs back to dead center when released; treat that as "let go".
         const v = msg.value ?? PITCH_CENTER;
         return [
           { type: "spotlight", value: v === PITCH_CENTER ? null : v / 16383 },

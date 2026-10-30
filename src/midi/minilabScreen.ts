@@ -23,7 +23,7 @@ export const ENTER_DAW_MODE: readonly number[] = [
   END,
 ];
 
-/** Back to its normal standalone behaviour. */
+/** Back to its normal standalone behavior. */
 export const EXIT_DAW_MODE: readonly number[] = [
   ...HEADER,
   0x02,

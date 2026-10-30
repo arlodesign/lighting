@@ -8,7 +8,7 @@ const PORT = 4321;
 
 /**
  * Microphone access is easy and accurate in a browser (Web Audio), and that's where the real
- * app will analyse audio too — so the probe tests the same path: a page served from localhost.
+ * app will analyze audio too — so the probe tests the same path: a page served from localhost.
  */
 export async function runMicSection(): Promise<unknown> {
   heading("Microphone");

@@ -64,8 +64,8 @@ export const MINILAB_MAPPING: MidiMapping = {
       "color-bump",
       "left-flash",
       "right-flash",
-      "tap",
       "lightning",
+      "tap", // pad 8 is printed "Tap" on the MiniLab
     ],
   },
   keys: { channel: 1, baseNote: 48 },

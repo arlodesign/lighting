@@ -7,7 +7,7 @@ export interface LookContext {
   beats: number;
   /** Wall-clock seconds, for things that shouldn't follow tempo (flicker, noise). */
   time: number;
-  /** The active palette after hue/saturation knobs. Always at least one colour. */
+  /** The active palette after hue/saturation knobs. Always at least one color. */
   colors: readonly Rgb[];
   /** Width/size knob, 0–1. Each look decides what it means (tail length, density, …). */
   width: number;
@@ -23,14 +23,14 @@ export interface LookContext {
 }
 
 /**
- * A look is a pure function of its context: same context in → same colours out.
+ * A look is a pure function of its context: same context in → same colors out.
  * No hidden state means crossfades (render two looks at once), restarts and tests just work.
  */
 export interface Look {
   id: string;
   name: string;
   spooky?: boolean;
-  /** Write one colour per light into `out` (brightness baked into the colour). */
+  /** Write one color per light into `out` (brightness baked into the color). */
   render(ctx: LookContext, out: Rgb[]): void;
 }
 
@@ -52,7 +52,7 @@ export function noise(t: number, seed: number): number {
   return hash(i, seed) * (1 - s) + hash(i + 1, seed) * s;
 }
 
-/** Palette colour i (wrapping). */
+/** Palette color i (wrapping). */
 export function pick(colors: readonly Rgb[], i: number): Rgb {
   const n = colors.length;
   return colors[((Math.floor(i) % n) + n) % n]!;
