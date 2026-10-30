@@ -68,9 +68,9 @@ describe("balanceGains", () => {
     expect(balanceGains(0.53)).toEqual({ left: 1, right: 1 });
   });
 
-  it("fades the far side out smoothly toward each end", () => {
-    expect(balanceGains(0)).toEqual({ left: 1, right: 0 });
-    expect(balanceGains(1)).toEqual({ left: 0, right: 1 });
-    expect(balanceGains(0.56).left).toBeGreaterThan(0.95); // no jump off the dead zone
+  it("up keeps the left and fades the right; down the reverse", () => {
+    expect(balanceGains(1)).toEqual({ left: 1, right: 0 });
+    expect(balanceGains(0)).toEqual({ left: 0, right: 1 });
+    expect(balanceGains(0.56).right).toBeGreaterThan(0.95); // no jump off the dead zone
   });
 });

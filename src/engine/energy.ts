@@ -153,13 +153,14 @@ export function blendFeel(
   };
 }
 
-/** Left ↔ right balance (fader 3): the middle keeps both sides full; each end fades the other side out. */
+/** Left ↔ right balance (fader 3): the middle keeps both sides full; up keeps the left and fades the
+ * right out, down the reverse. */
 export function balanceGains(balance: number): { left: number; right: number } {
   const b = Math.min(1, Math.max(0, balance));
   const off = Math.abs(b - 0.5) - BALANCE_CENTER;
   if (off <= 0) return { left: 1, right: 1 };
   const other = 1 - off / (0.5 - BALANCE_CENTER); // 1 at the dead zone's edge → 0 at the end
-  return b > 0.5 ? { left: other, right: 1 } : { left: 1, right: other };
+  return b > 0.5 ? { left: 1, right: other } : { left: other, right: 1 };
 }
 /** A small dead zone around the middle, since a fader has no center click. */
 const BALANCE_CENTER = 0.05;

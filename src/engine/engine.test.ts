@@ -132,10 +132,10 @@ describe("Engine hits", () => {
 });
 
 describe("Engine modifiers", () => {
-  it("grand master scales everything; balance toward the left fades the right out", () => {
+  it("grand master scales everything; balance up fades the right out", () => {
     const e = engine();
     e.dispatch({ type: "fader", fader: "master", value: 0.5 }, 0);
-    e.dispatch({ type: "fader", fader: "balance", value: 0 }, 0);
+    e.dispatch({ type: "fader", fader: "balance", value: 1 }, 0);
     const { lights } = e.render(0);
     expect(lights[0]!.r).toBeCloseTo(0.5);
     expect(lights[7]!.r).toBe(0);
