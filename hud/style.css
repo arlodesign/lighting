@@ -26,9 +26,9 @@ body {
 
 body {
   display: grid;
-  /* stage · now · board · keys · footer. The keys row takes the spare height, which keeps
-     the footer pinned to the bottom of the window. */
-  grid-template-rows: auto auto auto 1fr auto;
+  /* stage · (space) · board · keys · (space) · footer. The two spare rows share the
+     leftover height, which centers the MiniLab and pins the footer to the bottom. */
+  grid-template-rows: auto 1fr auto auto 1fr auto;
   grid-template-columns: minmax(
     0,
     1fr
@@ -77,7 +77,7 @@ kbd {
 
 .stage {
   display: grid;
-  grid-template-columns: 1fr minmax(40px, 14vw) 1fr;
+  grid-template-columns: 1fr minmax(170px, 14vw) 1fr;
   align-items: center;
   padding: clamp(10px, 2.5vh, 28px) 0 4px;
 }
@@ -94,6 +94,10 @@ kbd {
   margin: 10% 0;
   border-left: 1px dashed var(--ink-faint);
   border-right: 1px dashed var(--ink-faint);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lamp {
@@ -130,73 +134,39 @@ kbd {
   border: 2px dashed #fff;
 }
 
-/* ── what's playing ──────────────────────────────────────────────── */
+/* ── tempo, between the two sides ────────────────────────────────── */
 
-.now {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 12px 0 8px;
-  border-bottom: 1px solid var(--ink-faint);
-}
-
-#look-name {
-  font: 800 clamp(48px, 7vw, 100px) / 0.85 var(--display);
-  color: var(--accent);
-  letter-spacing: -0.01em;
-  transition: color 300ms;
-}
-
-.palette {
+.tempo {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 10px;
-  font: 600 22px/1 var(--display);
-}
-
-#palette-swatches {
-  display: inline-flex;
-  gap: 4px;
-}
-
-#palette-swatches i {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-}
-
-.tempo {
-  text-align: right;
 }
 
 .bpm {
-  font: 800 clamp(40px, 5.2vw, 76px) / 0.85 var(--display);
+  font: 700 20px/1 var(--display);
+  white-space: nowrap;
 }
 
 .bpm small {
-  font: 600 18px var(--display);
+  font: 600 12px var(--display);
   color: var(--ink-dim);
-  margin-left: 6px;
 }
 
 .beats {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 14px;
+  align-items: center;
+  gap: 6px;
 }
 
 .beats i {
-  width: 18px;
-  height: 18px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 2px solid var(--ink-faint);
+  border: 1.5px solid var(--ink-faint);
 }
 
 .beats i:first-child {
-  width: 26px; /* the downbeat */
+  width: 15px; /* the downbeat */
 }
 
 .beats i.on {
@@ -205,10 +175,12 @@ kbd {
 }
 
 .tapping {
-  height: 18px;
-  margin-top: 8px;
+  position: absolute;
+  top: calc(50% + 16px);
   color: var(--accent);
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 /* ── the MiniLab, mirrored ───────────────────────────────────────────
@@ -310,8 +282,16 @@ kbd {
   color: var(--ink-dim);
 }
 
+/* One line each, cut off with … so a long title never pushes the knob around. */
+.s-name,
+.s-notes {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .s-name {
-  font: 600 1.9cqw/1.05 var(--display);
+  font: 600 1.5cqw/1.15 var(--display);
   margin-bottom: 0.5cqw;
 }
 
@@ -328,16 +308,11 @@ kbd {
 
 .encoder {
   margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1.3;
+  align-self: center;
+  width: 80%;
+  aspect-ratio: 1;
   border-radius: 50%;
   border: 1px solid var(--ink-faint);
-  text-align: center;
-  font-size: 0.85cqw;
-  line-height: 1.25;
-  color: var(--ink-dim);
 }
 
 .cell {
@@ -428,8 +403,20 @@ kbd {
 /* The 25 keys: which look each one plays. */
 
 .keyboard-panel {
-  align-self: start;
   margin-top: 1cqw;
+}
+
+.stage {
+  grid-row: 1;
+}
+.board {
+  grid-row: 3;
+}
+.keyboard-panel {
+  grid-row: 4;
+}
+footer {
+  grid-row: 6;
 }
 
 .keyboard {
@@ -665,31 +652,6 @@ footer {
 
 .dev.bad::before {
   background: var(--warn);
-}
-
-.keys kbd {
-  font-size: 0.95cqw;
-}
-
-/* ── smaller screens ─────────────────────────────────────────────── */
-
-@media (max-width: 700px) {
-  .now {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .tempo {
-    text-align: left;
-  }
-  .beats {
-    justify-content: flex-start;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #look-name {
-    transition: none;
-  }
 }
 
 /* ── shortcuts card ───────────────────────────────────────────────── */

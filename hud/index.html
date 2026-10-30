@@ -12,25 +12,16 @@
 
     <section class="stage" aria-label="Lights">
       <div class="side" id="side-L"></div>
-      <div class="band" aria-hidden="true"></div>
-      <div class="side" id="side-R"></div>
-    </section>
-
-    <section class="now">
-      <div class="look">
-        <h1 id="look-name">Connecting…</h1>
-        <div class="palette">
-          <span id="palette-swatches"></span>
-          <span id="palette-name"></span>
-        </div>
-      </div>
-      <div class="tempo">
-        <div class="bpm"><span id="bpm">—</span><small>bpm</small></div>
-        <div class="beats" id="beats" aria-hidden="true">
-          <i></i><i></i><i></i><i></i>
+      <div class="band">
+        <div class="tempo">
+          <span class="bpm"><span id="bpm">—</span> <small>bpm</small></span>
+          <span class="beats" id="beats" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
         </div>
         <div class="tapping" id="tapping"></div>
       </div>
+      <div class="side" id="side-R"></div>
     </section>
 
     <section class="board" id="board" aria-label="MiniLab 3 controls">
@@ -75,9 +66,7 @@
         <p class="s-notes" id="song-notes"></p>
         <p class="s-label">Next</p>
         <p class="s-name dim" id="song-next">—</p>
-        <div class="encoder">
-          <span>turn: scroll<br />click: load</span>
-        </div>
+        <div class="encoder"></div>
       </div>
 
       <div class="layer" id="layer"></div>

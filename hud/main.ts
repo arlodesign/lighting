@@ -274,24 +274,14 @@ function update(state: State): void {
     .classList.toggle("strobing", state.strobe > 0);
 
   if (s.colors.length > 0) {
-    // The colors the lights are using right now (after Variety, hue and color knobs).
-    // The HUD's accent is the brightest, so it stays readable on black.
+    // The HUD's accent is the brightest color the lights are using right now (after
+    // Variety, hue and color knobs), so it stays readable on black.
     const [r, g, b] = s.colors.reduce((a, c) => (sum(c) > sum(a) ? c : a));
     document.documentElement.style.setProperty(
       "--accent",
       `rgb(${r * 255} ${g * 255} ${b * 255})`,
     );
-    const swatches = $("palette-swatches");
-    while (swatches.children.length < s.colors.length) swatches.append(el("i"));
-    while (swatches.children.length > s.colors.length)
-      swatches.lastElementChild!.remove();
-    s.colors.forEach(([cr, cg, cb], i) => {
-      (swatches.children[i] as HTMLElement).style.background =
-        `rgb(${cr * 255} ${cg * 255} ${cb * 255})`;
-    });
   }
-  $("look-name").textContent = s.look;
-  $("palette-name").textContent = s.palette;
   $("bpm").textContent = String(Math.round(s.bpm));
   [...$("beats").children].forEach((dot, i) =>
     dot.classList.toggle("on", i === s.beatOfBar),
