@@ -318,10 +318,11 @@ kbd {
   margin-bottom: 0.5cqw;
 }
 
+/* The song knob: the same size as the other knobs, as on the real MiniLab. */
 .encoder {
-  margin-top: auto;
+  margin: auto 0 1cqw;
   align-self: center;
-  width: 80%;
+  width: 5.2cqw;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 1px solid var(--ink-faint);
