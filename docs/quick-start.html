@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Lights: Quick Start</title>
+    <title>Lights: How to Play</title>
     <style>
       @page {
         size: letter;
@@ -25,19 +25,19 @@
       .page {
         width: 7.5in;
         height: 10in;
-        margin: 0.4in auto;
-        padding: 0;
+        margin: 0 auto;
         background: #fff;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        gap: 0.16in;
+        gap: 0.14in;
       }
       @media screen {
         .page {
-          padding: 0.5in;
           width: 8.5in;
           height: 11in;
+          margin: 0.4in auto;
+          padding: 0.5in;
           box-shadow: 0 2px 12px rgb(0 0 0 / 0.2);
         }
       }
@@ -45,326 +45,365 @@
         body {
           background: none;
         }
-        .page {
-          margin: 0;
-        }
       }
       header {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
         border-bottom: 3px solid #111;
-        padding-bottom: 6pt;
+        padding-bottom: 5pt;
       }
       h1 {
         margin: 0;
-        font-size: 26pt;
+        font-size: 24pt;
         letter-spacing: -0.02em;
       }
       header p {
         margin: 0;
-        font-size: 10pt;
         color: #555;
       }
-      h2 {
-        margin: 0 0 4pt;
-        font-size: 10.5pt;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
-      h2 b {
-        display: inline-block;
-        width: 15pt;
-        height: 15pt;
-        margin-right: 5pt;
-        border-radius: 50%;
-        background: #111;
-        color: #fff;
-        text-align: center;
-        line-height: 15pt;
-        font-size: 9pt;
-        letter-spacing: 0;
-      }
-      p,
-      ol,
-      ul {
-        margin: 0;
-      }
-      ol,
-      ul {
-        padding-left: 14pt;
-      }
-      li + li {
-        margin-top: 2pt;
+      svg {
+        display: block;
+        width: 100%;
+        font-family: inherit;
       }
       .cols {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.22in;
+        gap: 0.12in 0.25in;
       }
-      .minilab {
-        display: block;
-        width: 100%;
-        margin: 2pt 0 8pt;
-        font-family: inherit;
+      h2 {
+        margin: 0 0 3pt;
+        font-size: 9.5pt;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        border-bottom: 1px solid #111;
+        padding-bottom: 2pt;
       }
-      table {
-        width: 100%;
-        border-collapse: collapse;
+      dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 2.5pt 8pt;
+        margin: 0;
       }
-      th,
-      td {
-        text-align: left;
-        vertical-align: top;
-        padding: 3pt 6pt 3pt 0;
-        border-top: 1px solid #ccc;
+      dt {
+        font-weight: 700;
       }
-      th {
-        width: 1.05in;
-        white-space: nowrap;
+      dd {
+        margin: 0;
       }
-      code,
+      p {
+        margin: 0;
+      }
       kbd {
         font:
-          8.5pt "SF Mono",
+          8pt "SF Mono",
           Menlo,
           monospace;
-      }
-      kbd {
         border: 1px solid #999;
         border-radius: 3px;
         padding: 0 3px;
       }
-      pre {
-        margin: 4pt 0;
-        padding: 5pt 7pt;
-        background: #f2f2f2;
-        border-radius: 4px;
-        font:
-          8.5pt "SF Mono",
-          Menlo,
-          monospace;
-      }
-      .note {
-        color: #555;
-      }
-      .warn {
-        font-weight: 600;
-      }
-      footer {
+      .tip {
         margin-top: auto;
-        font-size: 8pt;
-        color: #777;
-        border-top: 1px solid #ccc;
-        padding-top: 4pt;
+        padding: 6pt 9pt;
+        background: #f0f0f0;
+        border-radius: 5px;
       }
     </style>
   </head>
   <body>
     <div class="page">
       <header>
-        <h1>Lights</h1>
-        <p>MiniLab 3 + laptop + 8 lights · Quick start</p>
+        <h1>How to play the lights</h1>
+        <p>MiniLab 3 · 8 lights · already set up</p>
       </header>
 
+      <svg viewBox="0 0 720 344" role="img" aria-label="The MiniLab 3, labeled">
+        <g fill="none" stroke="#111" stroke-width="1.5">
+          <rect x="1" y="1" width="718" height="250" rx="16" />
+          <!-- small buttons: leave alone -->
+          <g stroke="#bbb">
+            <rect x="40" y="18" width="40" height="22" rx="3" />
+            <rect x="94" y="18" width="40" height="22" rx="3" />
+            <rect x="40" y="52" width="40" height="18" rx="3" />
+            <rect x="94" y="52" width="40" height="18" rx="3" />
+          </g>
+          <!-- touch strips -->
+          <rect x="44" y="98" width="34" height="144" rx="4" />
+          <rect x="98" y="98" width="34" height="144" rx="4" />
+          <!-- screen + big knob -->
+          <rect x="150" y="12" width="84" height="156" rx="6" />
+          <circle cx="192" cy="128" r="27" />
+          <!-- knobs -->
+          <circle cx="282" cy="46" r="15" />
+          <circle cx="350" cy="46" r="15" />
+          <circle cx="418" cy="46" r="15" />
+          <circle cx="486" cy="46" r="15" />
+          <circle cx="282" cy="118" r="15" />
+          <circle cx="350" cy="118" r="15" />
+          <circle cx="418" cy="118" r="15" />
+          <circle cx="486" cy="118" r="15" />
+          <!-- faders -->
+          <line x1="542" y1="22" x2="542" y2="128" />
+          <line x1="585" y1="22" x2="585" y2="128" />
+          <line x1="628" y1="22" x2="628" y2="128" />
+          <line x1="671" y1="22" x2="671" y2="128" />
+          <!-- pads -->
+          <rect x="160" y="184" width="58" height="56" rx="5" />
+          <rect x="228" y="184" width="58" height="56" rx="5" />
+          <rect x="296" y="184" width="58" height="56" rx="5" />
+          <rect x="364" y="184" width="58" height="56" rx="5" />
+          <rect x="432" y="184" width="58" height="56" rx="5" />
+          <rect x="500" y="184" width="58" height="56" rx="5" />
+          <rect x="568" y="184" width="58" height="56" rx="5" />
+          <rect x="636" y="184" width="58" height="56" rx="5" />
+        </g>
+        <!-- fader caps -->
+        <g fill="#111">
+          <rect x="535" y="44" width="14" height="8" />
+          <rect x="578" y="72" width="14" height="8" />
+          <rect x="621" y="72" width="14" height="8" />
+          <rect x="664" y="96" width="14" height="8" />
+        </g>
+        <g font-size="8" fill="#aaa" text-anchor="middle">
+          <text x="60" y="32">Shift</text>
+          <text x="114" y="32">Hold</text>
+          <text x="60" y="64">Oct −</text>
+          <text x="114" y="64">Oct +</text>
+          <text x="87" y="84">leave alone</text>
+        </g>
+        <g font-size="10" font-weight="700" fill="#111" text-anchor="middle">
+          <text
+            x="61"
+            y="234"
+            transform="rotate(-90 61 234)"
+            text-anchor="start"
+          >
+            SPOTLIGHT
+          </text>
+          <text
+            x="115"
+            y="234"
+            transform="rotate(-90 115 234)"
+            text-anchor="start"
+          >
+            SWELL
+          </text>
+          <text x="192" y="30" font-size="8" font-weight="400">screen:</text>
+          <text x="192" y="42" font-size="8" font-weight="400">
+            song now / next
+          </text>
+          <text x="192" y="125" font-size="9">SONGS</text>
+          <text x="192" y="137" font-size="7" font-weight="400">
+            turn · click
+          </text>
+          <text x="282" y="76">SPEED</text>
+          <text x="350" y="76">HUE</text>
+          <text x="418" y="76">COLOR</text>
+          <text x="486" y="76">PALETTE</text>
+          <text x="282" y="148">WIDTH</text>
+          <text x="350" y="148">FADE</text>
+          <text x="418" y="148">SHAPE</text>
+          <text x="486" y="148">VARIETY</text>
+          <text x="542" y="144" font-size="9">MASTER</text>
+          <text x="585" y="144" font-size="9">ENERGY</text>
+          <text x="628" y="144" font-size="9">BALANCE</text>
+          <text x="671" y="144" font-size="9">AUDIO</text>
+          <text x="542" y="18" font-size="7" font-weight="400">brightness</text>
+          <text x="585" y="18" font-size="7" font-weight="400">chorus ↑</text>
+          <text x="628" y="18" font-size="7" font-weight="400">R ↑ L ↓</text>
+          <text x="671" y="18" font-size="7" font-weight="400">pulse</text>
+        </g>
+        <g font-size="9" font-weight="700" fill="#111" text-anchor="middle">
+          <text x="189" y="216">STROBE</text>
+          <text x="257" y="210">WHITE</text>
+          <text x="257" y="222">FLASH</text>
+          <text x="325" y="216">BLACKOUT</text>
+          <text x="393" y="210">COLOR</text>
+          <text x="393" y="222">BUMP</text>
+          <text x="461" y="210">LEFT</text>
+          <text x="461" y="222">FLASH</text>
+          <text x="529" y="210">RIGHT</text>
+          <text x="529" y="222">FLASH</text>
+          <text x="597" y="216">LIGHTNING</text>
+          <text x="665" y="210">TAP</text>
+          <text x="665" y="222">TEMPO</text>
+        </g>
+        <!-- keyboard: 15 white keys, each a look -->
+        <g id="keys" fill="none" stroke="#111" stroke-width="1.2"></g>
+        <g id="keylabels" font-size="8.5" fill="#111"></g>
+        <g font-size="8" fill="#555" text-anchor="middle">
+          <text x="360" y="342">
+            calm ←——— white keys pick a look ———→ frantic
+          </text>
+        </g>
+        <script>
+          // Draw the 25-key keyboard (C to C, two octaves): 15 white keys, each a look.
+          const looks = [
+            "Wash",
+            "Creep",
+            "Breathe",
+            "Rainbow Roll",
+            "Split",
+            "Fire",
+            "Heartbeat",
+            "Sweep Fill",
+            "Ripple",
+            "Ping-Pong",
+            "Chase",
+            "Dying Bulb",
+            "Sparkle",
+            "Possession",
+            "Lightning",
+          ];
+          const ns = "http://www.w3.org/2000/svg";
+          const x0 = 20,
+            w = 680 / 15,
+            y0 = 262,
+            h = 66;
+          const keys = document.getElementById("keys");
+          const labels = document.getElementById("keylabels");
+          looks.forEach((name, i) => {
+            const r = document.createElementNS(ns, "rect");
+            Object.entries({
+              x: x0 + i * w,
+              y: y0,
+              width: w,
+              height: h,
+            }).forEach(([k, v]) => r.setAttribute(k, v));
+            keys.append(r);
+            const t = document.createElementNS(ns, "text");
+            const cx = x0 + i * w + w / 2 + 3;
+            t.setAttribute(
+              "transform",
+              `translate(${cx} ${y0 + h - 4}) rotate(-90)`,
+            );
+            t.textContent = name;
+            labels.append(t);
+          });
+          // Black keys sit after these white keys (within each octave: C D, F G A).
+          [0, 1, 3, 4, 5, 7, 8, 10, 11, 12].forEach((i) => {
+            const r = document.createElementNS(ns, "rect");
+            Object.entries({
+              x: x0 + (i + 1) * w - w * 0.3,
+              y: y0,
+              width: w * 0.6,
+              height: h * 0.3,
+              fill: "#ccc",
+              stroke: "none",
+            }).forEach(([k, v]) => r.setAttribute(k, v));
+            keys.append(r);
+          });
+        </script>
+      </svg>
+
       <div class="cols">
         <section>
-          <h2><b>1</b>Connect</h2>
-          <ol>
-            <li>
-              Lights: power on, DMX cable daisy-chained, first light's
-              <b>DMX IN</b>.
-            </li>
-            <li>Open DMX dongle → laptop USB (straight in, no hub).</li>
-            <li>MiniLab → laptop USB.</li>
-            <li class="warn">Quit QLC+ and any other lighting app.</li>
-          </ol>
+          <h2>Songs and looks</h2>
+          <dl>
+            <dt>Songs</dt>
+            <dd>
+              Turn the big knob to find the next song on the screen, click it to
+              load. The song brings its own look, colors and tempo.
+            </dd>
+            <dt>Keys</dt>
+            <dd>
+              Each white key is a look, calm on the left, wild on the right.
+              Play harder for brighter. Black keys do nothing.
+            </dd>
+            <dt>Tap tempo</dt>
+            <dd>
+              Tap pad 8 on the beat, 4 times or more. Everything follows the
+              beat.
+            </dd>
+          </dl>
         </section>
+
         <section>
-          <h2><b>2</b>Start</h2>
-          <pre>
-cd lighting
-npm start</pre>
-          <p>
-            Open <b>localhost:4000</b>. Both dots at the bottom should be green:
-            <i>MiniLab</i> and <i>Lights</i>.
-          </p>
+          <h2>Pads (hold them)</h2>
+          <dl>
+            <dt>Strobe</dt>
+            <dd>Press harder to flash faster.</dd>
+            <dt>White flash</dt>
+            <dd>Every light full white.</dd>
+            <dt>Blackout</dt>
+            <dd>Everything off (the panic button).</dd>
+            <dt>Color bump</dt>
+            <dd>All lights jump to the next color.</dd>
+            <dt>Left / Right</dt>
+            <dd>Flash one side of the stage white.</dd>
+            <dt>Lightning</dt>
+            <dd>Random lightning strikes.</dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Knobs</h2>
+          <dl>
+            <dt>Speed</dt>
+            <dd>How fast the look moves, from ¼ to 8 × the beat.</dd>
+            <dt>Hue</dt>
+            <dd>Turns all the colors around the color wheel.</dd>
+            <dt>Color</dt>
+            <dd>How colorful: all the way down is white.</dd>
+            <dt>Palette</dt>
+            <dd>Picks a set of colors (Blood, Pumpkin, Sunset…).</dd>
+            <dt>Width</dt>
+            <dd>
+              How much of the stage the look uses at once: a short or long chase
+              tail, a thin or wide wave, few or many sparkles.
+            </dd>
+            <dt>Fade</dt>
+            <dd>
+              How slowly a new look or palette blends in: instant up to 4 beats.
+            </dd>
+            <dt>Shape</dt>
+            <dd>
+              Which way moves travel: <b>Sweep</b> left → right,
+              <b>Center</b> out from the band, <b>Split</b> both sides together,
+              <b>Scatter</b> hops around.
+            </dd>
+            <dt>Variety</dt>
+            <dd>
+              How different the colors are: one color, neighbors, three-way,
+              opposites.
+            </dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Faders and strips</h2>
+          <dl>
+            <dt>Master</dt>
+            <dd>Overall brightness.</dd>
+            <dt>Energy</dt>
+            <dd>
+              Down for the verse (dim, slow, one color), middle for the song as
+              set, up for the chorus (bright, fast, more colors).
+            </dd>
+            <dt>Balance</dt>
+            <dd>Middle = both sides. Up favors the right, down the left.</dd>
+            <dt>Audio</dt>
+            <dd>
+              Up makes the lights pulse with the band, and lets a loud chorus
+              push Energy up on its own.
+            </dd>
+            <dt>Spotlight</dt>
+            <dd>Slide a finger to move a white spot across the stage.</dd>
+            <dt>Swell</dt>
+            <dd>Push up to bring every light toward full brightness.</dd>
+          </dl>
         </section>
       </div>
 
-      <section>
-        <h2><b>3</b>Play</h2>
-        <svg
-          class="minilab"
-          viewBox="0 0 720 258"
-          role="img"
-          aria-label="MiniLab 3 layout"
-        >
-          <g fill="none" stroke="#111" stroke-width="1.5">
-            <rect x="1" y="1" width="718" height="214" rx="16" />
-            <!-- touch strips -->
-            <rect x="49" y="100" width="34" height="108" rx="4" />
-            <rect x="100" y="100" width="34" height="108" rx="4" />
-            <!-- screen + big knob -->
-            <rect x="152" y="12" width="78" height="138" rx="6" />
-            <circle cx="191" cy="118" r="25" />
-            <!-- knobs -->
-            <g id="knobs">
-              <circle cx="275" cy="50" r="14" />
-              <circle cx="342" cy="50" r="14" />
-              <circle cx="409" cy="50" r="14" />
-              <circle cx="476" cy="50" r="14" />
-              <circle cx="275" cy="117" r="14" />
-              <circle cx="342" cy="117" r="14" />
-              <circle cx="409" cy="117" r="14" />
-              <circle cx="476" cy="117" r="14" />
-            </g>
-            <!-- faders -->
-            <line x1="532" y1="30" x2="532" y2="120" />
-            <line x1="575" y1="30" x2="575" y2="120" />
-            <line x1="618" y1="30" x2="618" y2="120" />
-            <line x1="661" y1="30" x2="661" y2="120" />
-            <!-- pads -->
-            <rect x="170" y="162" width="56" height="44" rx="4" />
-            <rect x="237" y="162" width="56" height="44" rx="4" />
-            <rect x="304" y="162" width="56" height="44" rx="4" />
-            <rect x="371" y="162" width="56" height="44" rx="4" />
-            <rect x="438" y="162" width="56" height="44" rx="4" />
-            <rect x="505" y="162" width="56" height="44" rx="4" />
-            <rect x="572" y="162" width="56" height="44" rx="4" />
-            <rect x="639" y="162" width="56" height="44" rx="4" />
-            <!-- keys -->
-            <rect x="44" y="222" width="632" height="34" rx="3" />
-          </g>
-          <g fill="#111" stroke="none">
-            <rect x="526" y="62" width="12" height="7" />
-            <rect x="569" y="50" width="12" height="7" />
-            <rect x="612" y="74" width="12" height="7" />
-            <rect x="655" y="58" width="12" height="7" />
-          </g>
-          <g font-size="10" fill="#111" text-anchor="middle" font-weight="600">
-            <text x="66" y="94">Spotlight</text>
-            <text x="117" y="94">Swell</text>
-            <text x="191" y="36">Now / Next</text>
-            <text x="191" y="121" font-size="8">Big knob</text>
-            <text x="275" y="80">Speed</text>
-            <text x="342" y="80">Hue</text>
-            <text x="409" y="80">Color</text>
-            <text x="476" y="80">Palette</text>
-            <text x="275" y="147">Width</text>
-            <text x="342" y="147">Fade</text>
-            <text x="409" y="147">Shape</text>
-            <text x="476" y="147">Variety</text>
-            <text x="532" y="138">Master</text>
-            <text x="575" y="138">Energy</text>
-            <text x="618" y="138">Balance</text>
-            <text x="661" y="138">Audio</text>
-          </g>
-          <g font-size="9" fill="#111" text-anchor="middle">
-            <text x="198" y="189">Strobe</text>
-            <text x="265" y="189">White</text>
-            <text x="332" y="189">Blackout</text>
-            <text x="399" y="189">Color</text>
-            <text x="466" y="189">Left</text>
-            <text x="533" y="189">Right</text>
-            <text x="600" y="189">Lightning</text>
-            <text x="667" y="189">Tap</text>
-            <text x="360" y="243" font-weight="600">
-              WHITE KEYS = LOOKS · calm ← → frantic
-            </text>
-          </g>
-        </svg>
-        <table>
-          <tr>
-            <th>Big knob</th>
-            <td>Turn to scroll the setlist, click to load the song.</td>
-          </tr>
-          <tr>
-            <th>White keys</th>
-            <td>
-              Pick a look, calm (left) → frantic (right). Hit harder = brighter.
-              Black keys do nothing.
-            </td>
-          </tr>
-          <tr>
-            <th>Pads 1–8</th>
-            <td>
-              Strobe (press harder = faster) · White flash · Blackout · Color
-              bump · Left flash · Right flash · Lightning · Tap tempo. Hits last
-              as long as you hold.
-            </td>
-          </tr>
-          <tr>
-            <th>Knobs 1–8</th>
-            <td>
-              Speed · Hue · Color · Palette · Width · Fade · Shape · Variety
-              (one color → many)
-            </td>
-          </tr>
-          <tr>
-            <th>Faders 1–4</th>
-            <td>
-              <b>Master</b> · <b>Energy</b> (bottom verse, middle song, top
-              chorus) · <b>Balance</b> (left ↔ right) · <b>Audio</b> (lights
-              pulse with the band)
-            </td>
-          </tr>
-          <tr>
-            <th>Touch strips</th>
-            <td>
-              Left: slide a spotlight across the stage. Right: swell brightness.
-            </td>
-          </tr>
-          <tr>
-            <th>Laptop</th>
-            <td>
-              Backup for everything: <kbd>space</kbd> tap ·
-              <kbd>esc</kbd> blackout · <kbd>S</kbd> strobe · <kbd>F</kbd> flash
-              · <kbd>L</kbd> lightning · <kbd>1</kbd>–<kbd>9</kbd> looks ·
-              <kbd>↑</kbd><kbd>↓</kbd> <kbd>enter</kbd> setlist. Press
-              <kbd>?</kbd> for the list.
-            </td>
-          </tr>
-        </table>
-      </section>
-
-      <div class="cols">
-        <section>
-          <h2><b>4</b>Save a song</h2>
-          <ol>
-            <li>Load the song, set it the way you like, tap the tempo.</li>
-            <li>Press <kbd>⌘S</kbd>. It starts that way next time.</li>
-          </ol>
-          <p class="note" style="margin-top: 4pt">
-            Saves the Energy level you're in: push Energy to the top first to
-            set the chorus. <b>Reset song</b> undoes it.
-            <b>Export setlist</b> downloads all songs for the repo.
-          </p>
-        </section>
-        <section>
-          <h2><b>5</b>Lights not working?</h2>
-          <p>Look at the display on the back of a light.</p>
-          <ul>
-            <li>
-              <b>Blinking</b> (<code>A001</code>): no DMX. Quit QLC+, check
-              cable is in <b>IN</b>, plug dongle in directly, try another cable.
-            </li>
-            <li>
-              <b>Steady but dark</b>: check Master fader and Blackout, then the
-              light's address and 7-channel mode.
-            </li>
-            <li>
-              <b>MiniLab dot red</b>: replug USB. If pads act odd, quit and run
-              <code>npm start -- --no-screen</code>.
-            </li>
-          </ul>
-        </section>
-      </div>
-
-      <footer>
-        Addresses: 1, 11, 21 … 71, house left → right (L1–L4, R1–R4) · Setlist:
-        <code>src/setlist.json</code> · More: <code>README.md</code>
-      </footer>
+      <p class="tip">
+        <b>Lost?</b> Bring Energy to the middle and load the song again with the
+        big knob. <b>Laptop backup:</b> <kbd>space</kbd> tap,
+        <kbd>esc</kbd> blackout, <kbd>S</kbd> strobe, <kbd>F</kbd> flash,
+        <kbd>1</kbd>–<kbd>9</kbd> looks. Press <kbd>?</kbd> on the laptop for
+        the full list.
+      </p>
     </div>
   </body>
 </html>
