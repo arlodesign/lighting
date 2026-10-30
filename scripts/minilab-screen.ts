@@ -1,6 +1,6 @@
 /**
- * Try writing song names to the MiniLab 3's screen. EXPERIMENTAL and separate from the show:
- * run it on its own (quit the show app first so only one program talks to the MiniLab).
+ * Test the MiniLab 3's screen on its own (the show app does this itself while it runs). Quit the
+ * show app first so only one program talks to the MiniLab.
  *
  *   npm run minilab-screen                 cycle through the setlist, 3 s per song
  *   npm run minilab-screen -- --no-daw     skip the DAW-mode switch (see if text shows anyway)

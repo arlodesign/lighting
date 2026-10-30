@@ -23,6 +23,8 @@ import { Engine } from "../engine/engine.ts";
 import { LIGHT_IDS } from "../engine/rig.ts";
 import { MINILAB_MAPPING } from "../midi/mapping.ts";
 import { MidiInput } from "../midi/midiInput.ts";
+import { MiniLabDisplay } from "../midi/minilabDisplay.ts";
+import { SetlistScreen } from "../midi/minilabScreen.ts";
 import { SETLIST } from "../setlist.ts";
 import { loadAutosave, saveAutosave } from "./autosave.ts";
 import {
@@ -50,6 +52,8 @@ const { values: args } = parseArgs({
     // Listen on the network (e.g. for a future iPad remote). Off by default: anyone on
     // the bar's Wi-Fi could otherwise drive the lights.
     lan: { type: "boolean", default: false },
+    // Leave the MiniLab's screen alone (and the MiniLab out of its "DAW connected" mode).
+    "no-screen": { type: "boolean", default: false },
   },
 });
 const port = Number(args.port);
@@ -113,6 +117,11 @@ const midi = new MidiInput({
   onAction: (a) => engine.dispatch(a, now()),
 });
 midi.start();
+
+// Song names on the MiniLab's screen, above the big knob.
+const screen = args["no-screen"] ? null : new MiniLabDisplay();
+const screenText = new SetlistScreen();
+screen?.start();
 
 // Keep the Mac awake for as long as this process runs (macOS only).
 if (process.platform === "darwin" && !args["no-caffeinate"]) {
@@ -268,13 +277,15 @@ const frameTimer = setInterval(() => {
   const t = now();
   const frame = engine.render(t);
   writeFrame(frame, RIG, dmx.universe);
+  const status = engine.status(t);
+  screen?.show(...screenText.text(status.setlist, t));
 
   if (wss.clients.size === 0) return;
   const msg: ServerMessage = {
     type: "state",
     lights: frame.lights.map((c) => [round3(c.r), round3(c.g), round3(c.b)]),
     strobe: frame.strobe,
-    status: engine.status(t),
+    status,
     devices: { dmx: dmx.status, midi: midi.status },
   };
   const json = JSON.stringify(msg);
@@ -304,6 +315,7 @@ async function shutdown(): Promise<void> {
   clearInterval(saveTimer);
   await autosave();
   midi.stop();
+  await screen?.stop();
   wss.close();
   server.close();
   await dmx.stop();
