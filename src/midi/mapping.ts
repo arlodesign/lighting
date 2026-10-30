@@ -91,7 +91,7 @@ export const MINILAB_MAPPING: MidiMapping = {
       [82, 83, 85, 17], // Arturia program
       [14, 15, 30, 31], // DAW program
     ],
-    roles: ["master", "left", "right", "audio"],
+    roles: ["master", "energy", "balance", "audio"],
   },
   strips: { modCc: 1 },
   mainEncoder: {

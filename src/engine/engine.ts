@@ -15,6 +15,19 @@ import type { Look, LookContext } from "./look.ts";
 import { pick } from "./look.ts";
 import { LOOKS } from "./looks/index.ts";
 import { lightningAt } from "./looks/spooky.ts";
+import {
+  balanceGains,
+  blendFeel,
+  blendLevels,
+  blendPosition,
+  deriveLevel,
+  editingLevel,
+  LEVEL_FIELDS,
+  pickLevel,
+  type Level,
+  type LevelId,
+  type LevelOverrides,
+} from "./energy.ts";
 import { PALETTES, vary, type Palette } from "./palettes.ts";
 import {
   GEOMETRIES,
@@ -72,6 +85,12 @@ const LEVEL_RELEASE_MS = 12000;
 const LEVEL_MAX_GAIN = 4;
 const LEVEL_MIN_GAIN = 0.5;
 
+// Energy autopilot: loudness over a few seconds compared with over the last minute.
+const ENERGY_SHORT_MS = 4000;
+const ENERGY_LONG_MS = 60000;
+/** How far the autopilot can push Energy (0–1 of the fader) with the Audio fader all the way up. */
+const ENERGY_NUDGE = 0.3;
+
 function followLoudness(ref: number, x: number, dt: number): number {
   const tau = x > ref ? LEVEL_ATTACK_MS : LEVEL_RELEASE_MS;
   return ref + (x - ref) * (1 - Math.exp(-dt / tau));
@@ -108,8 +127,10 @@ export interface Controls {
   /** Color scheme spread 0–1: monochrome → analogous → triadic → complementary. */
   variety: number;
   master: number;
-  left: number;
-  right: number;
+  /** Fader 2: 0 = the song's Low (verse) version, 0.5 = Mid, 1 = High (chorus). */
+  energy: number;
+  /** Fader 3: 0.5 = both sides full; toward 0 fades the right side out, toward 1 the left. */
+  balance: number;
   audio: number;
   swell: number;
   spotlight: number | null;
@@ -118,6 +139,8 @@ export interface Controls {
 export interface Snapshot {
   version: 1;
   controls: Controls;
+  /** What was changed in the Low and High versions of the song (on top of Mid). */
+  levels?: { low: LevelOverrides; high: LevelOverrides };
   bpm: number;
   setlistCursor: number;
   setlistLoaded: number | null;
@@ -145,8 +168,8 @@ export const DEFAULT_CONTROLS: Readonly<Controls> = Object.freeze({
   width: 0.4,
   variety: 1 / 3, // analogous
   master: 0.7, // start pleasant, not blinding
-  left: 1,
-  right: 1,
+  energy: 0.5,
+  balance: 0.5,
   audio: 0,
   swell: 0,
   spotlight: null,
@@ -183,6 +206,15 @@ export class Engine {
   } | null = null;
   /** Strobe pressure after smoothing; null while the pad is up. */
   #strobePressure: number | null = null;
+  /** What was changed in the song's Low and High versions (Mid lives in `controls`). */
+  #overrides: { low: LevelOverrides; high: LevelOverrides } = {
+    low: {},
+    high: {},
+  };
+  /** The look and palette on the lights at the last render, to notice changes and fade. */
+  #shown: { lookIndex: number; paletteIndex: number };
+  /** Room loudness over a few seconds vs. over a minute: the Energy autopilot. */
+  #energyLoudness = { short: 0, long: 0 };
   #audio = { level: 0, bass: 0, at: -Infinity };
   /** Slow-moving loudness of the room, for automatic mic leveling. */
   #loudness = { level: LEVEL_TARGET, bass: LEVEL_TARGET };
@@ -197,6 +229,7 @@ export class Engine {
     this.palettes = opts.palettes ?? PALETTES;
     this.#setlist = opts.setlist ?? [];
     this.maxStrobe = opts.maxStrobe ?? 1;
+    this.#shown = this.#shownNow(now);
   }
 
   get setlist(): readonly Song[] {
@@ -216,19 +249,30 @@ export class Engine {
    * preset survives looks being reordered or speed steps being added.
    */
   capture(): SongSettings & { bpm: number } {
-    const c = this.controls;
     return {
       bpm: Math.round(this.clock.bpm * 10) / 10,
-      look: this.looks[c.lookIndex]?.id,
-      palette: this.palettes[c.paletteIndex]?.id,
-      hue: round3(c.hue),
-      saturation: round3(c.saturation),
-      speed: SPEED_STEPS[c.speedIndex]!,
-      fade: FADE_STEPS[c.fadeIndex]!,
-      geometry: c.geometry,
-      width: round3(c.width),
-      variety: round3(c.variety),
-      swell: round3(c.swell),
+      ...this.#toSettings(this.controls),
+      swell: round3(this.controls.swell),
+    };
+  }
+
+  /** What's been changed in the song's Low or High version, as preset values. */
+  captureLevel(id: "low" | "high"): SongSettings {
+    return this.#toSettings(this.#overrides[id]);
+  }
+
+  /** The version of the song the knobs and keys (and ⌘S) are working on. */
+  get editingLevel(): LevelId {
+    return editingLevel(this.controls.energy);
+  }
+
+  /** One version of the song: Mid as set, or Low/High worked out from Mid plus changes. */
+  level(id: LevelId): Level {
+    const mid = pickLevel(this.controls);
+    if (id === "mid") return mid;
+    return {
+      ...deriveLevel(mid, id, SPEED_STEPS.length),
+      ...this.#overrides[id],
     };
   }
 
@@ -237,7 +281,7 @@ export class Engine {
     const song = this.#setlist[index];
     if (!song) return;
     if (song.bpm) this.clock.setBpm(song.bpm, now);
-    this.#applySettings(song, now);
+    this.#applySettings(song);
     this.setlistLoaded = index;
     this.setlistCursor = clampIndex(index + 1, this.#setlist.length);
   }
@@ -247,7 +291,7 @@ export class Engine {
   dispatch(action: Action, now: number): void {
     switch (action.type) {
       case "look":
-        this.#setLook(action.index, action.velocity, now);
+        this.#setLook(action.index, action.velocity);
         break;
       case "hit":
         if (action.down) {
@@ -262,7 +306,7 @@ export class Engine {
         }
         break;
       case "knob":
-        this.#turn(action.knob, action.delta, now);
+        this.#turn(action.knob, action.delta);
         break;
       case "fader":
         this.controls[action.fader satisfies FaderId] = clamp01(action.value);
@@ -305,6 +349,10 @@ export class Engine {
       dt,
     );
     this.#loudness.bass = followLoudness(this.#loudness.bass, input.bass, dt);
+    const el = this.#energyLoudness;
+    el.short +=
+      (input.level - el.short) * (1 - Math.exp(-dt / ENERGY_SHORT_MS));
+    el.long += (input.level - el.long) * (1 - Math.exp(-dt / ENERGY_LONG_MS));
     this.#audio = {
       level: clamp01(input.level * autoGain(this.#loudness.level)),
       bass: clamp01(input.bass * autoGain(this.#loudness.bass)),
@@ -320,10 +368,12 @@ export class Engine {
       this.#lastRender === undefined ? 0 : Math.max(0, now - this.#lastRender);
     this.#lastRender = now;
     const c = this.controls;
-    const ctx = this.#context(now);
+    const live = this.#live(now);
+    this.#startFades(live.level, now);
+    const ctx = this.#context(now, live.level);
 
     // Layer 1: the look (crossfading from the previous one if needed).
-    let lights = this.#renderLook(c.lookIndex, c.lookIntensity, ctx);
+    let lights = this.#renderLook(live.level.lookIndex, c.lookIntensity, ctx);
     if (this.#fadeFrom) {
       const t =
         this.#fadeBeats <= 0
@@ -344,14 +394,19 @@ export class Engine {
 
     // Layer 2: modifiers.
     lights = this.#applyAudio(lights, now, dt);
-    if (c.swell > 0)
+    // The swell strip and the Energy level's lift both push toward full brightness.
+    const swell = 1 - (1 - c.swell) * (1 - live.feel.lift);
+    if (swell > 0)
       lights = lights.map((col) =>
-        mix(col, fullBrightness(col, ctx.colors), c.swell),
+        mix(col, fullBrightness(col, ctx.colors), swell),
       );
+    if (live.feel.brightness < 1)
+      lights = lights.map((col) => scale(col, live.feel.brightness));
     if (c.spotlight !== null)
       lights = this.#applySpotlight(lights, c.spotlight);
+    const sides = balanceGains(c.balance);
     lights = lights.map((col, i) =>
-      scale(col, sideOf(i) === "L" ? c.left : c.right),
+      scale(col, sideOf(i) === "L" ? sides.left : sides.right),
     );
 
     // Layer 3: hits — momentary overrides, later entries win.
@@ -407,37 +462,45 @@ export class Engine {
   /** What the HUD shows. Plain data, safe to JSON-serialize every frame. */
   status(now: number) {
     const c = this.controls;
+    const { level: l, energy } = this.#live(now);
     const song = (i: number | null) =>
       i === null ? null : (this.setlist[i] ?? null);
     return {
-      look: this.looks[c.lookIndex]?.name ?? "?",
-      lookIndex: c.lookIndex,
-      palette: this.palettes[c.paletteIndex]?.name ?? "?",
-      paletteIndex: c.paletteIndex,
+      // What's on the lights right now (the Energy fader may be blending versions).
+      look: this.looks[l.lookIndex]?.name ?? "?",
+      lookIndex: l.lookIndex,
+      palette: this.palettes[l.paletteIndex]?.name ?? "?",
+      paletteIndex: l.paletteIndex,
       /** The colors in use after the palette fade, Variety, hue and color knobs (0–1 RGB). */
-      colors: this.colors(now).map(
+      colors: this.#colors(now, l).map(
         ({ r, g, b }) => [round3(r), round3(g), round3(b)] as const,
       ),
       bpm: Math.round(this.clock.bpm * 10) / 10,
       beatOfBar: this.clock.beatOfBar(now),
       beatPhase: this.clock.phase(now),
       tapCount: this.clock.tapCount(now),
-      speed: SPEED_STEPS[c.speedIndex]!,
-      fadeBeats: FADE_STEPS[c.fadeIndex]!,
-      geometry: c.geometry,
-      width: c.width,
-      hue: c.hue,
-      saturation: c.saturation,
-      variety: c.variety,
+      speed: SPEED_STEPS[l.speedIndex]!,
+      fadeBeats: FADE_STEPS[l.fadeIndex]!,
+      geometry: l.geometry,
+      width: l.width,
+      hue: l.hue,
+      saturation: l.saturation,
+      variety: l.variety,
       /** Pitch strip: spotlight position across the stage 0–1, or null when released. */
       spotlight: c.spotlight,
       /** Mod strip: brightness swell 0–1. */
       swell: c.swell,
       faders: {
         master: c.master,
-        left: c.left,
-        right: c.right,
+        energy: c.energy,
+        balance: c.balance,
         audio: c.audio,
+      },
+      energy: {
+        /** Where Energy really is, after the autopilot's nudge (0–1). */
+        value: energy,
+        /** The version of the song the knobs, keys and ⌘S work on. */
+        editing: this.editingLevel,
       },
       hits: [...this.#held.keys()],
       audio: {
@@ -461,6 +524,10 @@ export class Engine {
     return {
       version: 1,
       controls: { ...this.controls },
+      levels: {
+        low: { ...this.#overrides.low },
+        high: { ...this.#overrides.high },
+      },
       bpm: this.clock.bpm,
       setlistCursor: this.setlistCursor,
       setlistLoaded: this.setlistLoaded,
@@ -470,16 +537,17 @@ export class Engine {
   /** Restore an autosave. Tolerates saves from older versions (missing fields → defaults). */
   restore(snapshot: Partial<Snapshot>, now: number): void {
     const controls = { ...DEFAULT_CONTROLS, ...snapshot.controls };
-    controls.lookIndex = clampIndex(controls.lookIndex, this.looks.length);
-    controls.paletteIndex = clampIndex(
-      controls.paletteIndex,
-      this.palettes.length,
-    );
-    controls.speedIndex = clampIndex(controls.speedIndex, SPEED_STEPS.length);
-    controls.fadeIndex = clampIndex(controls.fadeIndex, FADE_STEPS.length);
+    Object.assign(controls, this.#validLevel(controls));
     if (!GEOMETRIES.includes(controls.geometry))
       controls.geometry = DEFAULT_CONTROLS.geometry;
+    for (const f of ["energy", "balance", "master", "audio", "swell"] as const)
+      controls[f] = clamp01(controls[f]);
     this.controls = controls;
+    this.#overrides = {
+      low: this.#validLevel(snapshot.levels?.low ?? {}),
+      high: this.#validLevel(snapshot.levels?.high ?? {}),
+    };
+    this.#shown = this.#shownNow(now); // a restore shouldn't fade in from the old state
     if (snapshot.bpm) this.clock.setBpm(snapshot.bpm, now);
     this.setlistCursor = clampIndex(
       snapshot.setlistCursor ?? 0,
@@ -490,40 +558,102 @@ export class Engine {
 
   /** The colors the looks are using right now: palette (mid-fade), Variety, hue, color. */
   colors(now: number): Rgb[] {
-    const c = this.controls;
-    return vary(this.#paletteColors(now), c.variety).map((col) =>
-      adjust(col, c.hue, c.saturation),
-    );
+    return this.#colors(now, this.#live(now).level);
   }
 
   // ── internals ────────────────────────────────────────────────────────────────
 
-  #context(now: number): LookContext {
-    const c = this.controls;
+  /**
+   * What's on the lights right now: the song's Low/Mid/High versions blended by the Energy
+   * fader (nudged by the room's loudness when the Audio fader is up).
+   */
+  #live(now: number): {
+    level: Level;
+    feel: { brightness: number; lift: number };
+    energy: number;
+  } {
+    const energy = clamp01(this.controls.energy + this.#energyNudge(now));
+    const { from, to, t } = blendPosition(energy);
+    const level =
+      from === to
+        ? this.level(from)
+        : blendLevels(this.level(from), this.level(to), t);
+    return { level, feel: blendFeel(from, to, t), energy };
+  }
+
+  /**
+   * Energy autopilot: when the room gets louder than it has been over the last minute
+   * (a chorus), push Energy up a little; quieter (a verse), down. Scaled by the Audio fader,
+   * so it's off when that's down.
+   */
+  #energyNudge(now: number): number {
+    const amount = this.controls.audio;
+    const { short, long } = this.#energyLoudness;
+    if (amount <= 0 || now - this.#audio.at > AUDIO_STALE_MS || long < 0.02)
+      return 0;
+    const swing = Math.max(-1, Math.min(1, Math.log2(short / long)));
+    return swing * ENERGY_NUDGE * amount;
+  }
+
+  /** Start a crossfade whenever the look or palette on the lights changes, whatever changed it. */
+  #shownNow(now: number): { lookIndex: number; paletteIndex: number } {
+    const { lookIndex, paletteIndex } = this.#live(now).level;
+    return { lookIndex, paletteIndex };
+  }
+
+  #startFades(live: Level, now: number): void {
+    const shown = this.#shown;
+    this.#shown = {
+      lookIndex: live.lookIndex,
+      paletteIndex: live.paletteIndex,
+    };
+    const beats = FADE_STEPS[live.fadeIndex]!;
+    if (live.lookIndex !== shown.lookIndex) {
+      this.#fadeFrom = {
+        lookIndex: shown.lookIndex,
+        intensity: this.controls.lookIntensity,
+      };
+      this.#fadeStartBeat = this.clock.beats(now);
+      this.#fadeBeats = beats;
+    }
+    if (live.paletteIndex !== shown.paletteIndex) {
+      this.#paletteFrom = {
+        // Start from what was showing, so changing again mid-fade doesn't jump.
+        colors: this.#paletteColors(now, shown.paletteIndex),
+        startBeat: this.clock.beats(now),
+        beats,
+      };
+    }
+  }
+
+  #colors(now: number, l: Level): Rgb[] {
+    return vary(this.#paletteColors(now, l.paletteIndex), l.variety).map(
+      (col) => adjust(col, l.hue, l.saturation),
+    );
+  }
+
+  #context(now: number, l: Level): LookContext {
     const stale = now - this.#audio.at > AUDIO_STALE_MS;
+    const beats = this.clock.beats(now) * SPEED_STEPS[l.speedIndex]!;
     return {
-      beats: this.clock.beats(now) * SPEED_STEPS[c.speedIndex]!,
+      beats,
       time: now / 1000,
-      colors: this.colors(now),
-      width: c.width,
-      geometry: c.geometry,
+      colors: this.#colors(now, l),
+      width: l.width,
+      geometry: l.geometry,
       // Scatter reshuffles once per bar of the look's own time.
-      pos: positions(
-        c.geometry,
-        Math.floor((this.clock.beats(now) * SPEED_STEPS[c.speedIndex]!) / 4),
-      ),
+      pos: positions(l.geometry, Math.floor(beats / 4)),
       side: Array.from({ length: LIGHT_COUNT }, (_, i) => sideOf(i)),
-      steps: stepCount(c.geometry),
+      steps: stepCount(l.geometry),
       audio: stale
         ? { level: 0, bass: 0 }
         : { level: this.#audio.level, bass: this.#audio.bass },
     };
   }
 
-  /** The palette's colors, crossfading from the previous palette if one is changing. */
-  #paletteColors(now: number): readonly Rgb[] {
-    const to = (this.palettes[this.controls.paletteIndex] ?? this.palettes[0]!)
-      .colors;
+  /** A palette's colors, crossfading from the previous palette if one is changing. */
+  #paletteColors(now: number, index: number): readonly Rgb[] {
+    const to = (this.palettes[index] ?? this.palettes[0]!).colors;
     const from = this.#paletteFrom;
     if (!from) return to;
     const t =
@@ -538,18 +668,6 @@ export class Engine {
     return to.map((col, i) => mix(pick(from.colors, i), col, clamp01(t)));
   }
 
-  #setPalette(index: number, now: number): void {
-    const c = this.controls;
-    if (index === c.paletteIndex) return;
-    this.#paletteFrom = {
-      // Start from what's showing, so turning mid-fade doesn't jump.
-      colors: this.#paletteColors(now),
-      startBeat: this.clock.beats(now),
-      beats: FADE_STEPS[c.fadeIndex]!,
-    };
-    c.paletteIndex = index;
-  }
-
   #renderLook(index: number, intensity: number, ctx: LookContext): Rgb[] {
     const out: Rgb[] = Array.from({ length: LIGHT_COUNT }, () => ({
       ...BLACK,
@@ -558,31 +676,40 @@ export class Engine {
     return out.map((col) => scale(col, intensity));
   }
 
-  #setLook(index: number, velocity: number | undefined, now: number): void {
-    if (index < 0 || index >= this.looks.length) return;
-    const c = this.controls;
-    // Soft keys still read: velocity 0 → 40% intensity, full hit → 100%.
-    const intensity =
-      velocity === undefined ? c.lookIntensity : 0.4 + 0.6 * clamp01(velocity);
-    if (index !== c.lookIndex) {
-      this.#fadeFrom = { lookIndex: c.lookIndex, intensity: c.lookIntensity };
-      this.#fadeStartBeat = this.clock.beats(now);
-      this.#fadeBeats = FADE_STEPS[c.fadeIndex]!;
-    }
-    c.lookIndex = index;
-    c.lookIntensity = intensity;
+  /**
+   * Change part of the version of the song being edited. Mid is `controls` itself; Low and
+   * High keep the change as an override on top of what they'd work out from Mid.
+   */
+  #edit(change: (target: Level) => void): void {
+    const id = this.editingLevel;
+    if (id === "mid") return change(this.controls);
+    const target = this.level(id);
+    const before = { ...target };
+    change(target);
+    for (const f of LEVEL_FIELDS)
+      if (target[f] !== before[f])
+        (this.#overrides[id] as Record<string, unknown>)[f] = target[f];
   }
 
-  #turn(knob: KnobId, delta: number, now: number): void {
-    const c = this.controls;
+  #setLook(index: number, velocity: number | undefined): void {
+    if (index < 0 || index >= this.looks.length) return;
+    // Soft keys still read: velocity 0 → 40% intensity, full hit → 100%.
+    if (velocity !== undefined)
+      this.controls.lookIntensity = 0.4 + 0.6 * clamp01(velocity);
+    this.#edit((l) => (l.lookIndex = index));
+  }
+
+  #turn(knob: KnobId, delta: number): void {
     const feel: { steps?: number; perCount?: number } = KNOB_FEEL[knob];
     if (feel.perCount !== undefined) {
       const amount = delta * feel.perCount;
-      if (knob === "hue") c.hue = (((c.hue + amount) % 1) + 1) % 1;
-      else
-        c[knob as "saturation" | "width" | "variety"] = clamp01(
-          c[knob as "width"] + amount,
-        );
+      this.#edit((l) => {
+        if (knob === "hue") l.hue = (((l.hue + amount) % 1) + 1) % 1;
+        else {
+          const k = knob as "saturation" | "width" | "variety";
+          l[k] = clamp01(l[k] + amount);
+        }
+      });
       return;
     }
     // Stepped knobs: accumulate counts so a small nudge doesn't skip several steps.
@@ -591,26 +718,31 @@ export class Engine {
     const steps = Math.trunc(total / perStep);
     this.#knobRemainder[knob] = total - steps * perStep;
     if (steps === 0) return;
-    switch (knob) {
-      case "speed":
-        c.speedIndex = clampIndex(c.speedIndex + steps, SPEED_STEPS.length);
-        break;
-      case "fade":
-        c.fadeIndex = clampIndex(c.fadeIndex + steps, FADE_STEPS.length);
-        break;
-      case "palette": // wraps: scrolling past the last palette comes back to the first
-        this.#setPalette(
-          wrapIndex(c.paletteIndex + steps, this.palettes.length),
-          now,
-        );
-        break;
-      case "geometry":
-        c.geometry =
-          GEOMETRIES[
-            wrapIndex(GEOMETRIES.indexOf(c.geometry) + steps, GEOMETRIES.length)
-          ]!;
-        break;
-    }
+    this.#edit((l) => {
+      switch (knob) {
+        case "speed":
+          l.speedIndex = clampIndex(l.speedIndex + steps, SPEED_STEPS.length);
+          break;
+        case "fade":
+          l.fadeIndex = clampIndex(l.fadeIndex + steps, FADE_STEPS.length);
+          break;
+        case "palette": // wraps: scrolling past the last palette comes back to the first
+          l.paletteIndex = wrapIndex(
+            l.paletteIndex + steps,
+            this.palettes.length,
+          );
+          break;
+        case "geometry":
+          l.geometry =
+            GEOMETRIES[
+              wrapIndex(
+                GEOMETRIES.indexOf(l.geometry) + steps,
+                GEOMETRIES.length,
+              )
+            ]!;
+          break;
+      }
+    });
   }
 
   #applyAudio(lights: Rgb[], now: number, dt: number): Rgb[] {
@@ -635,25 +767,70 @@ export class Engine {
     });
   }
 
-  /** Apply whatever a preset mentions; leave everything else as the operator has it. */
-  #applySettings(s: SongSettings, now: number): void {
-    const c = this.controls;
-    if (s.fade !== undefined) c.fadeIndex = nearestIndex(FADE_STEPS, s.fade);
-    // Palette and look after the fade, so both crossfade over the preset's fade length.
+  /**
+   * Load a song: Mid takes whatever its preset mentions (everything else stays as the
+   * operator has it); Low and High start over from the song's own changes, if any.
+   */
+  #applySettings(s: Song): void {
+    Object.assign(this.controls, this.#fromSettings(s));
+    if (s.swell !== undefined) this.controls.swell = clamp01(s.swell);
+    this.#overrides = {
+      low: this.#fromSettings(s.low ?? {}),
+      high: this.#fromSettings(s.high ?? {}),
+    };
+  }
+
+  /** Preset values (ids, beats) → positions in this engine's lists. */
+  #fromSettings(s: SongSettings): LevelOverrides {
+    const out: LevelOverrides = {};
+    const look = this.looks.findIndex((l) => l.id === s.look);
+    if (look >= 0) out.lookIndex = look;
     const pal = this.palettes.findIndex((p) => p.id === s.palette);
-    if (pal >= 0) this.#setPalette(pal, now);
-    if (s.hue !== undefined) c.hue = clamp01(s.hue);
-    if (s.saturation !== undefined) c.saturation = clamp01(s.saturation);
-    if (s.width !== undefined) c.width = clamp01(s.width);
-    if (s.variety !== undefined) c.variety = clamp01(s.variety);
-    if (s.swell !== undefined) c.swell = clamp01(s.swell);
+    if (pal >= 0) out.paletteIndex = pal;
+    if (s.hue !== undefined) out.hue = clamp01(s.hue);
+    if (s.saturation !== undefined) out.saturation = clamp01(s.saturation);
+    if (s.width !== undefined) out.width = clamp01(s.width);
+    if (s.variety !== undefined) out.variety = clamp01(s.variety);
     if (s.speed !== undefined)
-      c.speedIndex = nearestIndex(SPEED_STEPS, s.speed);
-    if (s.geometry && GEOMETRIES.includes(s.geometry)) c.geometry = s.geometry;
-    if (s.look) {
-      const lookIndex = this.looks.findIndex((l) => l.id === s.look);
-      if (lookIndex >= 0) this.#setLook(lookIndex, undefined, now);
-    }
+      out.speedIndex = nearestIndex(SPEED_STEPS, s.speed);
+    if (s.fade !== undefined) out.fadeIndex = nearestIndex(FADE_STEPS, s.fade);
+    if (s.geometry && GEOMETRIES.includes(s.geometry))
+      out.geometry = s.geometry;
+    return out;
+  }
+
+  /** Positions in this engine's lists → preset values (only the fields present). */
+  #toSettings(l: LevelOverrides): SongSettings {
+    const out: SongSettings = {};
+    if (l.lookIndex !== undefined) out.look = this.looks[l.lookIndex]?.id;
+    if (l.paletteIndex !== undefined)
+      out.palette = this.palettes[l.paletteIndex]?.id;
+    if (l.hue !== undefined) out.hue = round3(l.hue);
+    if (l.saturation !== undefined) out.saturation = round3(l.saturation);
+    if (l.speedIndex !== undefined) out.speed = SPEED_STEPS[l.speedIndex]!;
+    if (l.fadeIndex !== undefined) out.fade = FADE_STEPS[l.fadeIndex]!;
+    if (l.geometry !== undefined) out.geometry = l.geometry;
+    if (l.width !== undefined) out.width = round3(l.width);
+    if (l.variety !== undefined) out.variety = round3(l.variety);
+    return out;
+  }
+
+  /** Keep a (possibly old or hand-edited) saved level within this engine's lists. */
+  #validLevel(l: LevelOverrides): LevelOverrides {
+    const out: LevelOverrides = { ...l };
+    if (out.lookIndex !== undefined)
+      out.lookIndex = clampIndex(out.lookIndex, this.looks.length);
+    if (out.paletteIndex !== undefined)
+      out.paletteIndex = clampIndex(out.paletteIndex, this.palettes.length);
+    if (out.speedIndex !== undefined)
+      out.speedIndex = clampIndex(out.speedIndex, SPEED_STEPS.length);
+    if (out.fadeIndex !== undefined)
+      out.fadeIndex = clampIndex(out.fadeIndex, FADE_STEPS.length);
+    if (out.geometry !== undefined && !GEOMETRIES.includes(out.geometry))
+      delete out.geometry;
+    for (const f of ["hue", "saturation", "width", "variety"] as const)
+      if (out[f] !== undefined) out[f] = clamp01(out[f]);
+    return out;
   }
 }
 

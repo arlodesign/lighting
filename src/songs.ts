@@ -30,7 +30,17 @@ export interface SongSettings {
   swell?: number;
 }
 
-export interface Song extends SongSettings {
+/**
+ * A song preset: the song's main (Mid) settings, plus what's different in its Low (verse)
+ * and High (chorus) versions on the Energy fader. Low and High are worked out from Mid
+ * (dimmer and calmer / brighter and busier); `low` and `high` only list what's changed.
+ */
+export interface SongPreset extends SongSettings {
+  low?: SongSettings;
+  high?: SongSettings;
+}
+
+export interface Song extends SongPreset {
   name: string;
   /** Starting tempo; tap tempo corrects it live. */
   bpm?: number;
@@ -70,9 +80,21 @@ export function parseSong(raw: unknown): Song | undefined {
   const song: Song = { name: (r.name as string).trim() };
   if (typeof r.bpm === "number" && r.bpm >= 50 && r.bpm <= 220)
     song.bpm = r.bpm;
-  Object.assign(song, parseSongSettings(r));
+  Object.assign(song, parseSongPreset(r));
   if (text(r.notes)) song.notes = r.notes as string;
   return song;
+}
+
+/** Settings plus the optional Low and High changes; an empty level is dropped. */
+export function parseSongPreset(raw: unknown): SongPreset {
+  const out: SongPreset = parseSongSettings(raw);
+  if (!raw || typeof raw !== "object") return out;
+  const r = raw as Record<string, unknown>;
+  for (const level of ["low", "high"] as const) {
+    const settings = parseSongSettings(r[level]);
+    if (Object.keys(settings).length > 0) out[level] = settings;
+  }
+  return out;
 }
 
 export function parseSetlist(raw: unknown): Song[] {

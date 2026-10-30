@@ -2,7 +2,8 @@
 import "@fontsource/big-shoulders-display/600";
 import "@fontsource/big-shoulders-display/800";
 import "./style.css";
-import type { Action, HitId } from "../src/engine/actions.ts";
+import type { Action, FaderId, HitId } from "../src/engine/actions.ts";
+import { balanceGains } from "../src/engine/energy.ts";
 import { MINILAB_MAPPING } from "../src/midi/mapping.ts";
 import {
   WS_PATH,
@@ -68,8 +69,8 @@ const GEOMETRY_LABELS = {
 const GEOMETRY_ORDER = ["linear", "mirror", "split", "scatter"] as const;
 const FADER_LABELS = {
   master: "Master",
-  left: "Left",
-  right: "Right",
+  energy: "Energy",
+  balance: "Balance",
   audio: "Audio",
 } as const;
 
@@ -122,11 +123,11 @@ type KnobDial =
   | { kind: "dots"; dial: DotsDial }
   | { kind: "segments"; dial: SegmentDial };
 const knobEls: { value: HTMLElement; dial: KnobDial }[] = [];
-const faderFills: HTMLElement[] = [];
+const faderEls: { fill: HTMLElement; value: HTMLElement }[] = [];
 
 function build(h: Hello): void {
   keyColorCache = undefined;
-  lampGlows.length = padEls.length = knobEls.length = faderFills.length = 0;
+  lampGlows.length = padEls.length = knobEls.length = faderEls.length = 0;
 
   for (const side of ["L", "R"]) $(`side-${side}`).replaceChildren();
   h.lights.forEach((id) => {
@@ -186,8 +187,9 @@ function build(h: Hello): void {
     track.append(fill);
     const label = el("span", "label");
     label.append(el("span", "num", String(i + 1)), FADER_LABELS[role]);
-    fader.append(track, label);
-    faderFills.push(fill);
+    const value = el("span", "value", "—");
+    fader.append(track, label, value);
+    faderEls.push({ fill, value });
     cells.push(fader);
   });
 
@@ -318,8 +320,10 @@ function update(state: State): void {
   });
 
   MINILAB_MAPPING.faders.roles.forEach((role, i) => {
-    const fill = faderFills[i];
-    if (fill) fill.style.height = `${s.faders[role] * 100}%`;
+    const f = faderEls[i];
+    if (!f) return;
+    f.fill.style.height = `${s.faders[role] * 100}%`;
+    f.value.textContent = faderValue(role, s);
   });
 
   const spotlight = $("spotlight-mark");
@@ -401,6 +405,29 @@ function knobDisplay(
       return [GEOMETRY_LABELS[s.geometry], 0];
     case "variety":
       return [varietyName(s.variety), s.variety];
+  }
+}
+
+const LEVEL_NAMES = { low: "Low", mid: "Mid", high: "High" } as const;
+
+/** The readout under a fader. */
+function faderValue(role: FaderId, s: State["status"]): string {
+  switch (role) {
+    case "energy": {
+      // The version being edited; "auto" when the room's loudness is nudging it.
+      const auto = Math.abs(s.energy.value - s.faders.energy) > 0.02;
+      return `${LEVEL_NAMES[s.energy.editing]}${auto ? " auto" : ""}`;
+    }
+    case "balance": {
+      const { left, right } = balanceGains(s.faders.balance);
+      if (left === 1 && right === 1) return "Both";
+      // Name the side that's fading.
+      return left < 1
+        ? `L ${Math.round(left * 100)}%`
+        : `R ${Math.round(right * 100)}%`;
+    }
+    default:
+      return `${Math.round(s.faders[role] * 100)}%`;
   }
 }
 

@@ -208,6 +208,8 @@ wss.on("connection", (ws) => {
   });
 });
 
+const LEVEL_NAMES = { low: "Low", mid: "Mid", high: "High" } as const;
+
 function notify(text: string, tone: "ok" | "warn" = "ok"): void {
   const json = JSON.stringify({
     type: "notice",
@@ -226,11 +228,20 @@ async function savePreset(): Promise<void> {
     notify("Load a song first (click the big knob), then save.", "warn");
     return;
   }
-  presets = withPreset(presets, song.name, engine.capture());
+  // Saves the version of the song the Energy fader is in, and keeps the other two.
+  const level = engine.editingLevel;
+  const existing = presets.songs[song.name] ?? {};
+  presets = withPreset(
+    presets,
+    song.name,
+    level === "mid"
+      ? { ...existing, ...engine.capture() }
+      : { ...existing, [level]: engine.captureLevel(level) },
+  );
   try {
     await savePresets(presets);
     engine.setSetlist(applyPresets(SETLIST, presets));
-    notify(`Saved “${song.name}”`);
+    notify(`Saved “${song.name}” (${LEVEL_NAMES[level]})`);
   } catch (err) {
     notify(
       `Couldn't save: ${err instanceof Error ? err.message : err}`,

@@ -27,7 +27,7 @@ export const KNOB_IDS = [
 ] as const;
 export type KnobId = (typeof KNOB_IDS)[number];
 
-export const FADER_IDS = ["master", "left", "right", "audio"] as const;
+export const FADER_IDS = ["master", "energy", "balance", "audio"] as const;
 export type FaderId = (typeof FADER_IDS)[number];
 
 export type Action =

@@ -132,10 +132,10 @@ describe("Engine hits", () => {
 });
 
 describe("Engine modifiers", () => {
-  it("grand master scales everything, side faders scale their side", () => {
+  it("grand master scales everything; balance toward the left fades the right out", () => {
     const e = engine();
     e.dispatch({ type: "fader", fader: "master", value: 0.5 }, 0);
-    e.dispatch({ type: "fader", fader: "right", value: 0 }, 0);
+    e.dispatch({ type: "fader", fader: "balance", value: 0 }, 0);
     const { lights } = e.render(0);
     expect(lights[0]!.r).toBeCloseTo(0.5);
     expect(lights[7]!.r).toBe(0);
@@ -341,5 +341,114 @@ describe("Engine persistence", () => {
     e.restore({ controls: { lookIndex: 99, geometry: "spiral" } as never }, 0);
     expect(e.controls.lookIndex).toBe(1);
     expect(e.controls.geometry).toBe("linear");
+  });
+});
+
+describe("Engine Energy fader", () => {
+  const LOW = 0;
+  const HIGH = 1;
+  const energy = (e: Engine, value: number) =>
+    e.dispatch({ type: "fader", fader: "energy", value }, 0);
+
+  it("Low is a calmer, dimmer version of the song; High a busier, brighter one", () => {
+    const e = engine();
+    e.controls.speedIndex = SPEED_STEPS.indexOf(1);
+    e.controls.width = 0.4;
+    e.controls.variety = 1 / 3;
+    energy(e, LOW);
+    expect(e.status(0)).toMatchObject({ speed: 0.5, variety: 0 });
+    expect(e.status(0).width).toBeCloseTo(0.2);
+    expect(e.render(0).lights[0]!.r).toBeCloseTo(0.6); // dimmer
+    energy(e, HIGH);
+    expect(e.status(0)).toMatchObject({ speed: 2 });
+    expect(e.status(0).width).toBeCloseTo(0.7);
+    expect(e.status(0).variety).toBeCloseTo(2 / 3);
+  });
+
+  it("the middle of the fader is the song as set (with room either side)", () => {
+    const e = engine();
+    for (const v of [0.42, 0.5, 0.58]) {
+      energy(e, v);
+      expect(e.editingLevel).toBe("mid");
+      expect(e.status(0).speed).toBe(SPEED_STEPS[e.controls.speedIndex]);
+    }
+  });
+
+  it("blends smoothly in between", () => {
+    const e = engine();
+    e.controls.width = 0.4;
+    energy(e, 0.26); // halfway from Low's plateau to Mid's
+    expect(e.status(0).width).toBeCloseTo(0.3, 1);
+  });
+
+  it("knobs and keys change the version the fader is in, and only that one", () => {
+    const e = engine();
+    e.controls.fadeIndex = 0;
+    energy(e, HIGH);
+    e.dispatch({ type: "look", index: 1, velocity: 1 }, 0); // blue, in High only
+    expect(e.render(0).lights[0]!.b).toBeGreaterThan(0.9);
+    energy(e, 0.5);
+    expect(e.render(10).lights[0]).toMatchObject({ r: 1, b: 0 }); // Mid is still red
+    expect(e.captureLevel("high")).toEqual({ look: "blue" });
+    expect(e.captureLevel("low")).toEqual({});
+  });
+
+  it("crossfades when moving the fader changes the look", () => {
+    const e = engine();
+    e.controls.fadeIndex = FADE_STEPS.indexOf(2); // 1000ms at 120 BPM
+    energy(e, HIGH);
+    e.dispatch({ type: "look", index: 1 }, 0);
+    energy(e, 0.5);
+    e.render(0);
+    energy(e, HIGH); // red → blue
+    e.render(1000);
+    // Halfway: red and blue equally mixed (High also lifts brightness, so not 0.5 each).
+    const mid = e.render(1500).lights[0]!;
+    expect(mid.r).toBeCloseTo(mid.b);
+    expect(mid.r).toBeGreaterThan(0.4);
+    expect(mid.r).toBeLessThan(0.9);
+  });
+
+  it("a song's preset can say how its Low and High differ", () => {
+    const e = engine([
+      { name: "Song", look: "red", high: { look: "blue", speed: 4 } },
+    ]);
+    e.loadSong(0, 0);
+    expect(e.captureLevel("high")).toEqual({ look: "blue", speed: 4 });
+    energy(e, HIGH);
+    expect(e.status(0)).toMatchObject({ look: "blue", speed: 4 });
+  });
+
+  it("loading another song starts its Low and High fresh", () => {
+    const e = engine([{ name: "A" }, { name: "B" }]);
+    energy(e, LOW);
+    e.dispatch({ type: "look", index: 1 }, 0);
+    expect(e.captureLevel("low")).toEqual({ look: "blue" });
+    e.loadSong(1, 0);
+    expect(e.captureLevel("low")).toEqual({});
+  });
+
+  it("the autopilot nudges Energy up when the room gets louder (only with Audio up)", () => {
+    const e = engine();
+    let t = 0;
+    const feed = (level: number, ms: number) => {
+      for (const end = t + ms; t < end; t += 33)
+        e.setAudio({ level, bass: level, kick: false }, t);
+    };
+    feed(0.2, 60_000); // a long quiet verse
+    feed(0.8, 4_000); // the chorus hits
+    expect(e.status(t).energy.value).toBe(0.5); // Audio fader down: no nudge
+    e.dispatch({ type: "fader", fader: "audio", value: 1 }, t);
+    expect(e.status(t).energy.value).toBeGreaterThan(0.7);
+  });
+
+  it("survives a snapshot with its Low and High changes", () => {
+    const a = engine();
+    energy(a, LOW);
+    a.dispatch({ type: "look", index: 1 }, 0);
+    const b = engine();
+    b.restore(JSON.parse(JSON.stringify(a.snapshot())), 0);
+    expect(b.captureLevel("low")).toEqual({ look: "blue" });
+    expect(b.controls.energy).toBe(LOW);
   });
 });

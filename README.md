@@ -48,7 +48,7 @@ DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- -
 | Keys        | White keys pick a look, calmest on the left to most frantic on the right. Hit harder for a brighter look.                                                |
 | Pads 1–8    | Strobe (press harder = faster, 2–6 flashes/s), white flash, blackout, color bump, left flash, right flash, lightning, tap tempo                          |
 | Knobs       | Speed, hue, color, palette, width, fade, shape, variety (mono → analogous → triadic → complementary)                                                     |
-| Faders      | Master, left, right, audio reactivity                                                                                                                    |
+| Faders      | Master · Energy (verse ↔ chorus, see below) · Balance (left ↔ right) · Audio (pulse with the band, and let the room nudge Energy)                        |
 | Pitch strip | Slide a spotlight across the lights                                                                                                                      |
 | Mod strip   | Swell the brightness                                                                                                                                     |
 | Big knob    | Scroll the setlist; click to load the song. The MiniLab's screen shows "Now 3/20" and the song, or "Next" while scrolling (`--no-screen` turns this off) |
@@ -63,12 +63,27 @@ At the venue you can tune a song and keep it:
 
 1. Load the song (turn the big knob, click it).
 2. Set the look, palette, dials and swell the way you want, and tap the tempo.
-3. Press **⌘S** on the laptop (or click **Save to song**). That song now starts this way.
+3. Press **⌘S** on the laptop (or click **Save to song**). That song now starts this way. (It saves
+   the Energy version you're in; see below.)
 
 Saved presets live on the show laptop in `state/presets.json`, on top of the defaults in
 `src/setlist.json`. **Reset song** forgets a song's saved preset. **Export setlist** downloads a
 `setlist.json` with everything saved merged in: drop it into `src/` to make it the new default
 in the repo.
+
+### Energy: each song has a verse and a chorus version
+
+Fader 2 picks how hard the song hits. The bottom is **Low** (verse), the middle **Mid** (the song as
+set), the top **High** (chorus), and it blends in between. Low and High are worked out from Mid
+(Low: dimmer, half speed, one color, narrower. High: brighter, double speed, more colors, wider),
+so every song has them without any setup.
+
+The keys and knobs change whichever version the fader is in, and ⌘S saves that version. To give a
+chorus its own look: push Energy to the top, pick the look, press ⌘S. In `setlist.json` the
+changes show up as `"low": { … }` and `"high": { … }` and list only what's different.
+
+With the Audio fader up, the room helps: when the band gets louder than it's been for the last
+minute, Energy rises a little on its own (the fader readout says "auto").
 
 ## When the lights don't respond
 

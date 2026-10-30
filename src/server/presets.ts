@@ -2,9 +2,9 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   parseSong,
-  parseSongSettings,
+  parseSongPreset,
   type Song,
-  type SongSettings,
+  type SongPreset as SongSettingsPreset,
 } from "../songs.ts";
 
 /**
@@ -20,7 +20,7 @@ export const PRESETS_FILE = path.join(
   "presets.json",
 );
 
-export type SongPreset = SongSettings & { bpm?: number };
+export type SongPreset = SongSettingsPreset & { bpm?: number };
 
 export interface Presets {
   version: 1;
@@ -31,7 +31,7 @@ export interface Presets {
 export const EMPTY_PRESETS: Presets = { version: 1, songs: {} };
 
 function parsePreset(raw: unknown): SongPreset {
-  const preset: SongPreset = parseSongSettings(raw);
+  const preset: SongPreset = parseSongPreset(raw);
   const bpm = (raw as { bpm?: unknown } | null)?.bpm;
   if (typeof bpm === "number" && bpm >= 50 && bpm <= 220) preset.bpm = bpm;
   return preset;

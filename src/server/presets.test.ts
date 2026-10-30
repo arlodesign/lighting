@@ -89,6 +89,30 @@ describe("presets", () => {
     expect(exportSetlist(SETLIST)).toBe(repoFile);
   });
 
+  it("keep a song's Low and High changes, and export them before the notes", async () => {
+    const file = await tmpFile();
+    await savePresets(
+      withPreset(EMPTY_PRESETS, "Two", {
+        look: "wash",
+        high: { look: "chase", speed: 4 },
+        low: {}, // nothing changed: dropped
+      }),
+      file,
+    );
+    const presets = await loadPresets(file);
+    expect(presets.songs.Two).toEqual({
+      look: "wash",
+      high: { look: "chase", speed: 4 },
+    });
+    const text = exportSetlist(applyPresets(SET, presets));
+    expect(Object.keys(JSON.parse(text)[1])).toEqual([
+      "name",
+      "look",
+      "high",
+      "notes",
+    ]);
+  });
+
   it("export of a merged setlist parses back to the same songs", () => {
     const presets = withPreset(EMPTY_PRESETS, "One", {
       look: "ripple",
