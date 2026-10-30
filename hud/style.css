@@ -26,14 +26,14 @@ body {
 
 body {
   display: grid;
-  /* stage · (space) · board · keys · (space) · footer. The two spare rows share the
-     leftover height, which centers the MiniLab and pins the footer to the bottom. */
-  grid-template-rows: auto 1fr auto auto 1fr auto;
+  /* stage · MiniLab · footer. The MiniLab row takes all the leftover height, which also
+     pins the footer to the bottom. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-columns: minmax(
     0,
     1fr
   ); /* never let a wide row stretch the page */
-  min-height: 100vh;
+  height: 100vh;
   padding: 0 clamp(16px, 3vw, 44px);
   overflow-x: hidden;
 }
@@ -188,17 +188,29 @@ kbd {
    height, so the layout keeps its proportions at any window size. Sizes inside use cqw
    (1% of the board's width), so text scales with it too. */
 
+/* The MiniLab (top panel + keys) grows to fill the space between the lights and the
+   footer: as wide as the window allows, unless the height runs out first. Together the two
+   are about 0.405 × their width tall (panel 550/1830 + keys 0.886 × 190/1620), so the
+   height limit is the room left over ÷ 0.405, less the gaps. */
+.rig {
+  container-type: size;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
 .board,
 .keyboard-panel {
-  width: min(100%, 1100px);
-  margin: 0 auto;
+  width: min(100cqw, (100cqh - 40px) / 0.405);
   container-type: inline-size;
 }
 
 .board {
   position: relative;
   aspect-ratio: 1830 / 550;
-  margin-top: 6px;
   border-radius: 2.2cqw;
   background: #0b0a09;
   border: 1px solid var(--ink-faint);
@@ -401,23 +413,6 @@ kbd {
 }
 
 /* The 25 keys: which look each one plays. */
-
-.keyboard-panel {
-  margin-top: 1cqw;
-}
-
-.stage {
-  grid-row: 1;
-}
-.board {
-  grid-row: 3;
-}
-.keyboard-panel {
-  grid-row: 4;
-}
-footer {
-  grid-row: 6;
-}
 
 .keyboard {
   position: relative;

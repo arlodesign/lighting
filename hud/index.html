@@ -24,57 +24,65 @@
       <div class="side" id="side-R"></div>
     </section>
 
-    <section class="board" id="board" aria-label="MiniLab 3 controls">
-      <!-- Positions mirror the real top panel (percent of its width/height). -->
-      <div class="at btn" style="--x: 6.8%; --y: 13.6%; --w: 5.5%; --h: 10.5%">
-        Shift
-      </div>
-      <div class="at btn" style="--x: 13.7%; --y: 13.6%; --w: 4.8%; --h: 10.5%">
-        Hold
-      </div>
-      <div class="at btn" style="--x: 7.1%; --y: 31%; --w: 4.6%; --h: 8.5%">
-        Oct −
-      </div>
-      <div class="at btn" style="--x: 13.7%; --y: 31%; --w: 4.8%; --h: 8.5%">
-        Oct +
-      </div>
+    <div class="rig">
+      <section class="board" id="board" aria-label="MiniLab 3 controls">
+        <!-- Positions mirror the real top panel (percent of its width/height). -->
+        <div
+          class="at btn"
+          style="--x: 6.8%; --y: 13.6%; --w: 5.5%; --h: 10.5%"
+        >
+          Shift
+        </div>
+        <div
+          class="at btn"
+          style="--x: 13.7%; --y: 13.6%; --w: 4.8%; --h: 10.5%"
+        >
+          Hold
+        </div>
+        <div class="at btn" style="--x: 7.1%; --y: 31%; --w: 4.6%; --h: 8.5%">
+          Oct −
+        </div>
+        <div class="at btn" style="--x: 13.7%; --y: 31%; --w: 4.8%; --h: 8.5%">
+          Oct +
+        </div>
 
-      <div
-        class="at strip"
-        id="strip-pitch"
-        style="--x: 6.8%; --y: 46.4%; --w: 4.8%; --h: 51%"
-        title="Pitch strip: slide a spotlight across the lights"
-      >
-        <i class="mark" id="spotlight-mark"></i><span>Spotlight</span>
-      </div>
-      <div
-        class="at strip"
-        id="strip-mod"
-        style="--x: 13.9%; --y: 46.4%; --w: 4.8%; --h: 51%"
-        title="Mod strip: swell the brightness"
-      >
-        <i class="fill" id="swell-fill"></i><span>Swell</span>
-      </div>
+        <div
+          class="at strip"
+          id="strip-pitch"
+          style="--x: 6.8%; --y: 46.4%; --w: 4.8%; --h: 51%"
+          title="Pitch strip: slide a spotlight across the lights"
+        >
+          <i class="mark" id="spotlight-mark"></i><span>Spotlight</span>
+        </div>
+        <div
+          class="at strip"
+          id="strip-mod"
+          style="--x: 13.9%; --y: 46.4%; --w: 4.8%; --h: 51%"
+          title="Mod strip: swell the brightness"
+        >
+          <i class="fill" id="swell-fill"></i><span>Swell</span>
+        </div>
 
-      <div
-        class="at screen"
-        style="--x: 21.1%; --y: 5.5%; --w: 10.8%; --h: 63.6%"
-        title="Big knob: turn to scroll the setlist, click to load the song"
-      >
-        <p class="s-label">Now</p>
-        <p class="s-name" id="song-now">—</p>
-        <p class="s-notes" id="song-notes"></p>
-        <p class="s-label">Next</p>
-        <p class="s-name dim" id="song-next">—</p>
-        <div class="encoder"></div>
-      </div>
+        <div
+          class="at screen"
+          style="--x: 21.1%; --y: 5.5%; --w: 10.8%; --h: 63.6%"
+          title="Big knob: turn to scroll the setlist, click to load the song"
+        >
+          <p class="s-label">Now</p>
+          <p class="s-name" id="song-now">—</p>
+          <p class="s-notes" id="song-notes"></p>
+          <p class="s-label">Next</p>
+          <p class="s-name dim" id="song-next">—</p>
+          <div class="encoder"></div>
+        </div>
 
-      <div class="layer" id="layer"></div>
-    </section>
+        <div class="layer" id="layer"></div>
+      </section>
 
-    <section class="keyboard-panel" aria-label="Keys: looks">
-      <div class="keyboard" id="keyboard"></div>
-    </section>
+      <section class="keyboard-panel" aria-label="Keys: looks">
+        <div class="keyboard" id="keyboard"></div>
+      </section>
+    </div>
 
     <footer>
       <div class="mic">
