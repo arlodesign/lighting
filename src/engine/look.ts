@@ -18,7 +18,7 @@ export interface LookContext {
   side: readonly Side[];
   /** Number of distinct steps along the geometry. */
   steps: number;
-  /** Microphone, already scaled by the sensitivity knob. */
+  /** Microphone, already leveled automatically by the engine. */
   audio: { level: number; bass: number };
 }
 

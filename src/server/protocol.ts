@@ -53,7 +53,7 @@ export type ServerMessage =
 
 export type ClientMessage =
   | { type: "action"; action: Action }
-  /** Mic analysis from the HUD, raw 0–1 (the engine applies the sensitivity knob). */
+  /** Mic analysis from the HUD, raw 0–1 (the engine levels it automatically). */
   | { type: "audio"; level: number; bass: number; kick: boolean }
   /** Save the current settings as the loaded song's preset (⌘S). */
   | { type: "preset-save" }

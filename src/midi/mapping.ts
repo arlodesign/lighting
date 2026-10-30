@@ -82,7 +82,7 @@ export const MINILAB_MAPPING: MidiMapping = {
       "width",
       "fade",
       "geometry",
-      "sensitivity",
+      "variety",
     ],
     encoding: "absolute",
   },

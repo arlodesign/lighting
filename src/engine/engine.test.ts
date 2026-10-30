@@ -228,6 +228,35 @@ describe("Engine setlist", () => {
   });
 });
 
+describe("Engine mic leveling", () => {
+  /** Feed a steady mic level for `ms` at 30 fps; returns the leveled bass afterwards. */
+  function listen(e: Engine, bass: number, from: number, ms: number) {
+    let t = from;
+    for (; t < from + ms; t += 33)
+      e.setAudio({ level: bass, bass, kick: false }, t);
+    return { t, bass: e.status(t).audio.level };
+  }
+
+  it("a quiet room and a loud room end up driving the lights about the same", () => {
+    // Settling on a quiet room is slow on purpose (a breakdown should read as quieter).
+    const quiet = listen(engine(), 0.15, 0, 60_000).bass;
+    const loud = listen(engine(), 0.9, 0, 20_000).bass;
+    expect(quiet).toBeCloseTo(0.5, 1);
+    expect(loud).toBeCloseTo(0.5, 1);
+  });
+
+  it("doesn't pump up silence", () => {
+    expect(listen(engine(), 0.01, 0, 60_000).bass).toBeLessThan(0.05);
+  });
+
+  it("a sudden drop still reads as quieter for a while", () => {
+    const e = engine();
+    const { t } = listen(e, 0.6, 0, 20_000);
+    const afterDrop = listen(e, 0.2, t, 1000).bass;
+    expect(afterDrop).toBeLessThan(0.3);
+  });
+});
+
 describe("Engine song presets", () => {
   it("capture → load round-trips every dial, the swell and the tempo", () => {
     const a = engine([{ name: "Song" }]);
@@ -237,6 +266,7 @@ describe("Engine song presets", () => {
     a.controls.hue = 0.3;
     a.controls.saturation = 0.6;
     a.controls.swell = 0.4;
+    a.controls.variety = 0.9;
     a.controls.speedIndex = SPEED_STEPS.indexOf(2);
     a.controls.fadeIndex = FADE_STEPS.indexOf(2);
     a.controls.geometry = "split";
@@ -246,6 +276,7 @@ describe("Engine song presets", () => {
       bpm: 97,
       look: "blue",
       width: 0.75,
+      variety: 0.9,
       swell: 0.4,
       speed: 2,
       fade: 2,
@@ -259,6 +290,7 @@ describe("Engine song presets", () => {
       width: 0.75,
       hue: 0.3,
       saturation: 0.6,
+      variety: 0.9,
       swell: 0.4,
       speedIndex: SPEED_STEPS.indexOf(2),
       fadeIndex: FADE_STEPS.indexOf(2),

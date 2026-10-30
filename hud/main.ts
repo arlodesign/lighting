@@ -12,6 +12,7 @@ import {
 } from "../src/server/protocol.ts";
 import { startMic } from "./audio.ts";
 import { toHsv } from "../src/engine/color.ts";
+import { varietyName } from "../src/engine/palettes.ts";
 import {
   arcDial,
   css,
@@ -55,7 +56,7 @@ const KNOB_LABELS = {
   width: "Width",
   fade: "Fade",
   geometry: "Shape",
-  sensitivity: "Mic",
+  variety: "Variety",
 } as const;
 
 const GEOMETRY_LABELS = {
@@ -270,23 +271,22 @@ function update(state: State): void {
     .querySelector(".stage")!
     .classList.toggle("strobing", state.strobe > 0);
 
-  const palette = h.palettes[s.paletteIndex];
-  if (palette) {
-    // The HUD's accent is the palette's brightest color, so it stays readable on black.
-    const [r, g, b] = palette.colors.reduce((a, c) =>
-      sum(c) > sum(a) ? c : a,
-    );
+  if (s.colors.length > 0) {
+    // The colors the lights are using right now (after Variety, hue and color knobs).
+    // The HUD's accent is the brightest, so it stays readable on black.
+    const [r, g, b] = s.colors.reduce((a, c) => (sum(c) > sum(a) ? c : a));
     document.documentElement.style.setProperty(
       "--accent",
       `rgb(${r * 255} ${g * 255} ${b * 255})`,
     );
-    $("palette-swatches").replaceChildren(
-      ...palette.colors.map(([cr, cg, cb]) => {
-        const sw = el("i");
-        sw.style.background = `rgb(${cr * 255} ${cg * 255} ${cb * 255})`;
-        return sw;
-      }),
-    );
+    const swatches = $("palette-swatches");
+    while (swatches.children.length < s.colors.length) swatches.append(el("i"));
+    while (swatches.children.length > s.colors.length)
+      swatches.lastElementChild!.remove();
+    s.colors.forEach(([cr, cg, cb], i) => {
+      (swatches.children[i] as HTMLElement).style.background =
+        `rgb(${cr * 255} ${cg * 255} ${cb * 255})`;
+    });
   }
   $("look-name").textContent = s.look;
   $("palette-name").textContent = s.palette;
@@ -399,8 +399,8 @@ function knobDisplay(
       ];
     case "geometry":
       return [GEOMETRY_LABELS[s.geometry], 0];
-    case "sensitivity":
-      return [`${Math.round(s.sensitivity * 100)}%`, s.sensitivity];
+    case "variety":
+      return [varietyName(s.variety), s.variety];
   }
 }
 

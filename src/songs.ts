@@ -24,6 +24,8 @@ export interface SongSettings {
   geometry?: Geometry;
   /** 0–1. */
   width?: number;
+  /** Color scheme spread, 0–1: monochrome → analogous → triadic → complementary. */
+  variety?: number;
   /** Mod-strip brightness swell, 0–1. */
   swell?: number;
 }
@@ -56,6 +58,7 @@ export function parseSongSettings(raw: unknown): SongSettings {
   if (GEOMETRIES.includes(r.geometry as Geometry))
     out.geometry = r.geometry as Geometry;
   if (unit(r.width)) out.width = r.width as number;
+  if (unit(r.variety)) out.variety = r.variety as number;
   if (unit(r.swell)) out.swell = r.swell as number;
   return out;
 }

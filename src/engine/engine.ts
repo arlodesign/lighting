@@ -15,7 +15,7 @@ import type { Look, LookContext } from "./look.ts";
 import { pick } from "./look.ts";
 import { LOOKS } from "./looks/index.ts";
 import { lightningAt } from "./looks/spooky.ts";
-import { PALETTES, type Palette } from "./palettes.ts";
+import { PALETTES, vary, type Palette } from "./palettes.ts";
 import {
   GEOMETRIES,
   LIGHT_COUNT,
@@ -48,7 +48,7 @@ export const KNOB_FEEL = {
   hue: { perCount: 1 / 96 },
   saturation: { perCount: 1 / KNOB_SWEEP },
   width: { perCount: 1 / KNOB_SWEEP },
-  sensitivity: { perCount: 1 / KNOB_SWEEP },
+  variety: { perCount: 1 / KNOB_SWEEP },
 } as const satisfies Record<KnobId, { steps: number } | { perCount: number }>;
 
 /** Counts needed to move a stepped knob by one step (handy for tests and the preview). */
@@ -61,6 +61,27 @@ const KICK_DECAY_MS = 160;
 const AUDIO_STALE_MS = 1000;
 /** How quickly the strobe rate follows pad pressure (time constant). */
 const STROBE_SMOOTH_MS = 150;
+
+// Automatic mic leveling: the gain aims to keep the room's typical loudness at
+// LEVEL_TARGET. It catches up with a louder room in a couple of seconds, and backs off
+// slowly when the room goes quiet, so a breakdown still reads as quieter for a while.
+const LEVEL_TARGET = 0.5;
+const LEVEL_ATTACK_MS = 2000;
+const LEVEL_RELEASE_MS = 12000;
+/** Never boost more than this, so a silent room stays dark instead of amplifying hiss. */
+const LEVEL_MAX_GAIN = 4;
+const LEVEL_MIN_GAIN = 0.5;
+
+function followLoudness(ref: number, x: number, dt: number): number {
+  const tau = x > ref ? LEVEL_ATTACK_MS : LEVEL_RELEASE_MS;
+  return ref + (x - ref) * (1 - Math.exp(-dt / tau));
+}
+
+const autoGain = (loudness: number) =>
+  Math.min(
+    LEVEL_MAX_GAIN,
+    Math.max(LEVEL_MIN_GAIN, LEVEL_TARGET / Math.max(loudness, 1e-3)),
+  );
 
 /** One rendered moment: what the lights should be doing. */
 export interface Frame {
@@ -84,8 +105,8 @@ export interface Controls {
   fadeIndex: number;
   geometry: Geometry;
   width: number;
-  /** Mic gain knob, 0–1 (0.5 = unity). */
-  sensitivity: number;
+  /** Color scheme spread 0–1: monochrome → analogous → triadic → complementary. */
+  variety: number;
   master: number;
   left: number;
   right: number;
@@ -122,7 +143,7 @@ export const DEFAULT_CONTROLS: Readonly<Controls> = Object.freeze({
   fadeIndex: 3,
   geometry: "linear",
   width: 0.4,
-  sensitivity: 0.5,
+  variety: 1 / 3, // analogous
   master: 0.7, // start pleasant, not blinding
   left: 1,
   right: 1,
@@ -163,6 +184,8 @@ export class Engine {
   /** Strobe pressure after smoothing; null while the pad is up. */
   #strobePressure: number | null = null;
   #audio = { level: 0, bass: 0, at: -Infinity };
+  /** Slow-moving loudness of the room, for automatic mic leveling. */
+  #loudness = { level: LEVEL_TARGET, bass: LEVEL_TARGET };
   #kickAt = -Infinity;
   #bassEnv = 0;
   #lastRender: number | undefined;
@@ -204,6 +227,7 @@ export class Engine {
       fade: FADE_STEPS[c.fadeIndex]!,
       geometry: c.geometry,
       width: round3(c.width),
+      variety: round3(c.variety),
       swell: round3(c.swell),
     };
   }
@@ -266,17 +290,24 @@ export class Engine {
   }
 
   /**
-   * Feed one analysis frame from the HUD's microphone. Values are raw 0–1;
-   * the sensitivity knob is applied here so the browser stays dumb.
+   * Feed one analysis frame from the HUD's microphone. Values are raw 0–1. The engine
+   * levels them itself (so the browser stays dumb): a slow loudness tracker sets the gain,
+   * so a quiet song and a loud one both drive the lights the same way.
    */
   setAudio(
     input: { level: number; bass: number; kick: boolean },
     now: number,
   ): void {
-    const gain = 2 ** (this.controls.sensitivity * 4 - 2); // 0.25× … 4×
+    const dt = Math.min(1000, Math.max(0, now - this.#audio.at));
+    this.#loudness.level = followLoudness(
+      this.#loudness.level,
+      input.level,
+      dt,
+    );
+    this.#loudness.bass = followLoudness(this.#loudness.bass, input.bass, dt);
     this.#audio = {
-      level: clamp01(input.level * gain),
-      bass: clamp01(input.bass * gain),
+      level: clamp01(input.level * autoGain(this.#loudness.level)),
+      bass: clamp01(input.bass * autoGain(this.#loudness.bass)),
       at: now,
     };
     if (input.kick) this.#kickAt = now;
@@ -383,6 +414,10 @@ export class Engine {
       lookIndex: c.lookIndex,
       palette: this.palettes[c.paletteIndex]?.name ?? "?",
       paletteIndex: c.paletteIndex,
+      /** The colors in use after the palette fade, Variety, hue and color knobs (0–1 RGB). */
+      colors: this.colors(now).map(
+        ({ r, g, b }) => [round3(r), round3(g), round3(b)] as const,
+      ),
       bpm: Math.round(this.clock.bpm * 10) / 10,
       beatOfBar: this.clock.beatOfBar(now),
       beatPhase: this.clock.phase(now),
@@ -393,7 +428,7 @@ export class Engine {
       width: c.width,
       hue: c.hue,
       saturation: c.saturation,
-      sensitivity: c.sensitivity,
+      variety: c.variety,
       /** Pitch strip: spotlight position across the stage 0–1, or null when released. */
       spotlight: c.spotlight,
       /** Mod strip: brightness swell 0–1. */
@@ -453,6 +488,14 @@ export class Engine {
     this.setlistLoaded = snapshot.setlistLoaded ?? null;
   }
 
+  /** The colors the looks are using right now: palette (mid-fade), Variety, hue, color. */
+  colors(now: number): Rgb[] {
+    const c = this.controls;
+    return vary(this.#paletteColors(now), c.variety).map((col) =>
+      adjust(col, c.hue, c.saturation),
+    );
+  }
+
   // ── internals ────────────────────────────────────────────────────────────────
 
   #context(now: number): LookContext {
@@ -461,9 +504,7 @@ export class Engine {
     return {
       beats: this.clock.beats(now) * SPEED_STEPS[c.speedIndex]!,
       time: now / 1000,
-      colors: this.#paletteColors(now).map((col) =>
-        adjust(col, c.hue, c.saturation),
-      ),
+      colors: this.colors(now),
       width: c.width,
       geometry: c.geometry,
       // Scatter reshuffles once per bar of the look's own time.
@@ -539,7 +580,7 @@ export class Engine {
       const amount = delta * feel.perCount;
       if (knob === "hue") c.hue = (((c.hue + amount) % 1) + 1) % 1;
       else
-        c[knob as "saturation" | "width" | "sensitivity"] = clamp01(
+        c[knob as "saturation" | "width" | "variety"] = clamp01(
           c[knob as "width"] + amount,
         );
       return;
@@ -604,6 +645,7 @@ export class Engine {
     if (s.hue !== undefined) c.hue = clamp01(s.hue);
     if (s.saturation !== undefined) c.saturation = clamp01(s.saturation);
     if (s.width !== undefined) c.width = clamp01(s.width);
+    if (s.variety !== undefined) c.variety = clamp01(s.variety);
     if (s.swell !== undefined) c.swell = clamp01(s.swell);
     if (s.speed !== undefined)
       c.speedIndex = nearestIndex(SPEED_STEPS, s.speed);

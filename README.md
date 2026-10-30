@@ -47,7 +47,7 @@ DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- -
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Keys        | White keys pick a look, calmest on the left to most frantic on the right. Hit harder for a brighter look.                       |
 | Pads 1–8    | Strobe (press harder = faster, 2–6 flashes/s), white flash, blackout, color bump, left flash, right flash, lightning, tap tempo |
-| Knobs       | Speed, hue, color, palette, width, fade, shape, mic sensitivity                                                                 |
+| Knobs       | Speed, hue, color, palette, width, fade, shape, variety (mono → analogous → triadic → complementary)                            |
 | Faders      | Master, left, right, audio reactivity                                                                                           |
 | Pitch strip | Slide a spotlight across the lights                                                                                             |
 | Mod strip   | Swell the brightness                                                                                                            |

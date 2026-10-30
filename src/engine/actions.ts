@@ -23,7 +23,7 @@ export const KNOB_IDS = [
   "width",
   "fade",
   "geometry",
-  "sensitivity",
+  "variety",
 ] as const;
 export type KnobId = (typeof KNOB_IDS)[number];
 
