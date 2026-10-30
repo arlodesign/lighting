@@ -23,6 +23,9 @@ Then open http://localhost:4000. The two dots at the bottom say whether the Mini
 lights are connected. **Quit QLC+ first** (and any other lighting app): only one program can use
 the Open DMX at a time.
 
+For the operator, print [`docs/quick-start.html`](docs/quick-start.html): one page, everything on
+it.
+
 | Command                      | What it does                                                                                                     |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `npm start`                  | Build the display and run the show                                                                               |
