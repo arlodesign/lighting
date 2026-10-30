@@ -47,12 +47,20 @@ describe("MidiTranslator", () => {
     ]);
   });
 
-  it("keys pick looks from the base note, with velocity", () => {
+  it("white keys pick looks in order, with velocity", () => {
     expect(t().translate([0x90, 48, 127])).toEqual([
       { type: "look", index: 0, velocity: 1 },
     ]);
-    expect(t().translate([0x90, 60, 0x40])[0]).toMatchObject({ index: 12 });
+    expect(t().translate([0x90, 50, 127])[0]).toMatchObject({ index: 1 }); // D
+    expect(t().translate([0x90, 53, 127])[0]).toMatchObject({ index: 3 }); // F
+    expect(t().translate([0x90, 60, 127])[0]).toMatchObject({ index: 7 }); // next C
+    expect(t().translate([0x90, 72, 127])[0]).toMatchObject({ index: 14 }); // top C
     expect(t().translate([0x80, 48, 0])).toEqual([]); // key release does nothing
+  });
+
+  it("black keys do nothing", () => {
+    for (const note of [49, 51, 54, 56, 58, 61, 70])
+      expect(t().translate([0x90, note, 100])).toEqual([]);
   });
 
   it("a low key on channel 1 is not mistaken for a pad", () => {

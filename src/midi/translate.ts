@@ -35,6 +35,14 @@ export function knobDelta(
   }
 }
 
+/** C D E F G A B → 0–6 within the octave; black keys (C♯ D♯ F♯ G♯ A♯) → NaN. */
+const WHITE_IN_OCTAVE = [0, NaN, 1, NaN, 2, 3, NaN, 4, NaN, 5, NaN, 6];
+
+/** Counting only white keys: which white key `note` is (NaN for a black key). */
+export function whiteKeyIndex(note: number): number {
+  return Math.floor(note / 12) * 7 + WHITE_IN_OCTAVE[note % 12]!;
+}
+
 /** Position of `cc` within whichever program's CC list contains it, or -1. */
 function indexInSets(sets: readonly (readonly number[])[], cc: number): number {
   for (const set of sets) {
@@ -79,7 +87,9 @@ export class MidiTranslator {
           ];
         }
         if (down && onChannel(m.keys.channel)) {
-          return [{ type: "look", index: note - m.keys.baseNote, velocity }];
+          const index = whiteKeyIndex(note) - whiteKeyIndex(m.keys.baseNote);
+          // Black keys play nothing; out-of-range white keys are ignored by the engine.
+          return Number.isNaN(index) ? [] : [{ type: "look", index, velocity }];
         }
         return [];
       }

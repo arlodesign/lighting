@@ -65,14 +65,14 @@
   {
     "name": "Satanist",
     "bpm": 89,
-    "look": "slow-heartbeat",
+    "look": "heartbeat",
     "palette": "blood",
     "notes": "boygenius · 4:50"
   },
   {
     "name": "Psycho",
     "bpm": 136,
-    "look": "audio-bars",
+    "look": "sweep-fill",
     "palette": "fire",
     "notes": "Muse · 5:16"
   },
@@ -86,7 +86,7 @@
   {
     "name": "Haunt Me",
     "bpm": 65,
-    "look": "candle",
+    "look": "fire",
     "palette": "candle",
     "notes": "Twin Temple · 3:13"
   },

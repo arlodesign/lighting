@@ -22,7 +22,11 @@ export interface MidiMapping {
     notes: readonly number[];
     roles: readonly (HitId | "tap")[];
   };
-  /** Keys: note → look index (note − baseNote). The octave buttons shift notes by ±12. */
+  /**
+   * Keys: only the WHITE keys pick looks (black keys are hard to find in the dark). The
+   * n-th white key counting from `baseNote` plays look n. The octave buttons shift the
+   * keys by an octave, i.e. by 7 white keys.
+   */
   keys: { channel?: number; baseNote: number };
   /**
    * `ccSets[n][i]` is the CC number of the i-th knob in program n; `roles[i]` says what

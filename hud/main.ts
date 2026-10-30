@@ -223,17 +223,20 @@ function buildKeyboard(h: Hello): void {
   const blacks: HTMLElement[] = [];
   let whites = 0;
   for (let k = 0; k < KEY_COUNT; k++) {
-    const look = h.looks[k];
     const black = BLACK_KEY[k % 12]!;
+    // Only white keys play looks; `keyEls[n]` is the key for look n.
+    const index = whites;
+    const look = black ? undefined : h.looks[index];
     const key = el("button", `key ${black ? "black" : "white"}`);
     key.setAttribute("type", "button");
     if (look) {
       key.append(el("span", undefined, look.name));
-      key.title = `Look ${k + 1}: ${look.name}`;
+      key.title = `Look ${index + 1}: ${look.name}`;
       if (look.spooky) key.classList.add("spooky");
       key.addEventListener("pointerdown", () =>
-        act({ type: "look", index: k, velocity: 0.8 }),
+        act({ type: "look", index, velocity: 0.8 }),
       );
+      keyEls.push(key);
     } else {
       key.classList.add("spare");
       key.setAttribute("disabled", "");
@@ -245,7 +248,6 @@ function buildKeyboard(h: Hello): void {
       row.append(key);
       whites++;
     }
-    keyEls.push(key);
   }
   $("keyboard").replaceChildren(row, ...blacks);
 }

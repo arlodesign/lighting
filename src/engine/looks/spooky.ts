@@ -1,6 +1,6 @@
 import { hsv, mix, scale, WHITE, type Rgb } from "../color.ts";
 import { blendAt, hash, noise, pick, type Look } from "../look.ts";
-import { frac, heartbeatLevel } from "./core.ts";
+import { frac } from "./core.ts";
 
 const LIGHTNING_WINDOW_S = 0.3;
 const COLD_WHITE: Rgb = { r: 0.85, g: 0.9, b: 1 };
@@ -57,21 +57,6 @@ export const dyingBulb: Look = {
   },
 };
 
-/** Slow, warm, independent flicker. Best with the Candlelight palette. */
-export const candle: Look = {
-  id: "candle",
-  name: "Candle",
-  spooky: true,
-  render({ time, colors }, out) {
-    for (let i = 0; i < out.length; i++) {
-      const sway = noise(time * 1.8 + i * 5.1, i);
-      const flick = noise(time * 9 + i * 2.3, i + 30);
-      const level = 0.3 + 0.45 * sway + 0.25 * flick * sway;
-      out[i] = scale(blendAt(colors, noise(time * 0.4, i + 60) * 0.5), level);
-    }
-  },
-};
-
 /** One dim light slowly crawls across the line; everything else dark. Width = blob size. */
 export const creep: Look = {
   id: "creep",
@@ -86,20 +71,6 @@ export const creep: Look = {
       const d = (pos[i]! - x) / w;
       out[i] = scale(pick(colors, 0), 0.55 * Math.exp(-d * d));
     }
-  },
-};
-
-/** The heartbeat, at half tempo, darker. Ominous. */
-export const slowHeartbeat: Look = {
-  id: "slow-heartbeat",
-  name: "Slow Heartbeat",
-  spooky: true,
-  render({ beats, colors }, out) {
-    const c = scale(
-      pick(colors, 0),
-      0.02 + 0.98 * heartbeatLevel(frac(beats / 2)),
-    );
-    for (let i = 0; i < out.length; i++) out[i] = c;
   },
 };
 
@@ -134,8 +105,6 @@ export const possession: Look = {
 export const SPOOKY_LOOKS: readonly Look[] = [
   lightning,
   dyingBulb,
-  candle,
   creep,
-  slowHeartbeat,
   possession,
 ];

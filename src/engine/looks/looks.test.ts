@@ -36,7 +36,7 @@ function render(index: number, ctx: LookContext): Rgb[] {
 describe("every look", () => {
   it("has a unique id", () => {
     expect(new Set(LOOKS.map((l) => l.id)).size).toBe(LOOKS.length);
-    expect(LOOKS).toHaveLength(18);
+    expect(LOOKS).toHaveLength(15); // one per white key
   });
 
   // Sweep a long stretch of time across every geometry, palette and width:

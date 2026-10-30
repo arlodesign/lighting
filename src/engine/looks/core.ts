@@ -148,14 +148,18 @@ export const heartbeat: Look = {
   },
 };
 
-/** Every light flickers on its own, like flames. Ignores tempo on purpose. */
+/**
+ * Every light flickers on its own, like flames. The flicker follows the tempo (and the speed
+ * knob): a slow song or a low speed is a gentle candle; a fast one is a roaring fire.
+ */
 export const fire: Look = {
   id: "fire",
   name: "Fire",
-  render({ time, colors }, out) {
+  render({ beats, colors }, out) {
     for (let i = 0; i < out.length; i++) {
-      const slow = noise(time * 5 + i * 3.7, i);
-      const fast = noise(time * 14 + i * 1.3, i + 50);
+      // At 120 BPM and 1×, this matches the old free-running flicker.
+      const slow = noise(beats * 2.5 + i * 3.7, i);
+      const fast = noise(beats * 7 + i * 1.3, i + 50);
       out[i] = scale(
         blendAt(colors, slow * 0.6),
         0.3 + 0.7 * slow * (0.6 + 0.4 * fast),
@@ -178,20 +182,6 @@ export const sweepFill: Look = {
   },
 };
 
-/** VU meter: mic level decides how far the lights fill (mirror geometry = from the centre). */
-export const audioBars: Look = {
-  id: "audio-bars",
-  name: "Audio Bars",
-  render({ beats, colors, pos, audio }, out) {
-    // With no audio coming in, idle on a gentle beat-synced bounce rather than going dark.
-    const level = Math.max(audio.level, 0.15 + 0.2 * pulse(frac(beats), 3));
-    for (let i = 0; i < out.length; i++) {
-      const on = Math.min(1, Math.max(0, (level * 1.1 - pos[i]!) * 8));
-      out[i] = scale(blendAt(colors, pos[i]! * 0.5), on);
-    }
-  },
-};
-
 export const CORE_LOOKS: readonly Look[] = [
   wash,
   breathe,
@@ -204,7 +194,6 @@ export const CORE_LOOKS: readonly Look[] = [
   heartbeat,
   fire,
   sweepFill,
-  audioBars,
 ];
 
 // Exported for the spooky looks to build on.
