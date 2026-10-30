@@ -11,6 +11,18 @@ import {
   type ServerMessage,
 } from "../src/server/protocol.ts";
 import { startMic } from "./audio.ts";
+import { toHsv } from "../src/engine/color.ts";
+import {
+  arcDial,
+  css,
+  dotsDial,
+  hueDial,
+  segmentDial,
+  type ArcDial,
+  type DotsDial,
+  type HueDial,
+  type SegmentDial,
+} from "./dials.ts";
 
 type Hello = Extract<ServerMessage, { type: "hello" }>;
 type State = Extract<ServerMessage, { type: "state" }>;
@@ -48,9 +60,11 @@ const KNOB_LABELS = {
 
 const GEOMETRY_LABELS = {
   linear: "Sweep",
-  mirror: "Centre",
+  mirror: "Center",
   split: "Split",
+  scatter: "Scatter",
 } as const;
+const GEOMETRY_ORDER = ["linear", "mirror", "split", "scatter"] as const;
 const FADER_LABELS = {
   master: "Master",
   left: "Left",
@@ -101,10 +115,16 @@ function showBanner(text: string | null): void {
 
 const lampGlows: HTMLElement[] = [];
 const padEls: HTMLElement[] = [];
-const knobEls: { arc: SVGPathElement; value: HTMLElement }[] = [];
+type KnobDial =
+  | { kind: "arc"; dial: ArcDial }
+  | { kind: "hue"; dial: HueDial }
+  | { kind: "dots"; dial: DotsDial }
+  | { kind: "segments"; dial: SegmentDial };
+const knobEls: { value: HTMLElement; dial: KnobDial }[] = [];
 const faderFills: HTMLElement[] = [];
 
 function build(h: Hello): void {
+  keyColorCache = undefined;
   lampGlows.length = padEls.length = knobEls.length = faderFills.length = 0;
 
   for (const side of ["L", "R"]) $(`side-${side}`).replaceChildren();
@@ -139,29 +159,21 @@ function build(h: Hello): void {
       KNOB_ROW_TOPS[i < 4 ? 0 : 1]!,
       24,
     );
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 40 40");
-    const track = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "path",
-    );
-    track.setAttribute("d", arc(1));
-    track.setAttribute("fill", "none");
-    track.setAttribute("stroke", "#2b2824");
-    track.setAttribute("stroke-width", "4");
-    track.setAttribute("stroke-linecap", "round");
-    const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    fill.setAttribute("fill", "none");
-    fill.setAttribute("stroke", "currentColor");
-    fill.setAttribute("stroke-width", "4");
-    fill.setAttribute("stroke-linecap", "round");
-    fill.style.color = "var(--ink)";
-    svg.append(track, fill);
+    // Knobs that wrap around get ringed dials with no ends; the rest get an arc.
+    const dial: KnobDial =
+      role === "hue"
+        ? { kind: "hue", dial: hueDial() }
+        : role === "palette"
+          ? { kind: "dots", dial: dotsDial(h.palettes.length) }
+          : role === "geometry"
+            ? { kind: "segments", dial: segmentDial(GEOMETRY_ORDER.length) }
+            : { kind: "arc", dial: arcDial() };
+    const svg = dial.dial.svg;
     const value = el("span", "value", "—");
     const label = el("span", "label");
     label.append(el("span", "num", String(i + 1)), KNOB_LABELS[role]);
     knob.append(svg, value, label);
-    knobEls.push({ arc: fill, value });
+    knobEls.push({ value, dial });
     cells.push(knob);
   });
 
@@ -238,15 +250,6 @@ function buildKeyboard(h: Hello): void {
   $("keyboard").replaceChildren(row, ...blacks);
 }
 
-/** SVG arc for a knob dial: 270° sweep starting bottom-left, `t` 0–1 of the way round. */
-function arc(t: number): string {
-  const start = Math.PI * 0.75;
-  const end = start + Math.PI * 1.5 * Math.max(0.001, Math.min(1, t));
-  const r = 16;
-  const p = (a: number) => `${20 + r * Math.cos(a)} ${20 + r * Math.sin(a)}`;
-  return `M ${p(start)} A ${r} ${r} 0 ${end - start > Math.PI ? 1 : 0} 1 ${p(end)}`;
-}
-
 // ── update every frame ───────────────────────────────────────────────────────────
 
 function update(state: State): void {
@@ -304,7 +307,12 @@ function update(state: State): void {
     if (!knob) return;
     const [text, t] = knobDisplay(role, s, h);
     knob.value.textContent = text;
-    knob.arc.setAttribute("d", arc(t));
+    const d = knob.dial;
+    if (d.kind === "arc") d.dial.update(t);
+    else if (d.kind === "hue") d.dial.update(keyHue(h, s.paletteIndex), s.hue);
+    else if (d.kind === "dots")
+      d.dial.update(s.paletteIndex, paletteKeyColors(h));
+    else d.dial.update(GEOMETRY_ORDER.indexOf(s.geometry));
   });
 
   MINILAB_MAPPING.faders.roles.forEach((role, i) => {
@@ -348,6 +356,22 @@ function lightsLabel(dmx: State["devices"]["dmx"]): string {
   return dmx.connected ? "Lights" : "Lights: no Open DMX found";
 }
 
+/** Each palette's main color (its first), as the palette knob's dots show them. */
+let keyColorCache: string[] | undefined;
+function paletteKeyColors(h: Hello): string[] {
+  keyColorCache ??= h.palettes.map(({ colors: [c] }) =>
+    css({ r: c?.[0] ?? 0, g: c?.[1] ?? 0, b: c?.[2] ?? 0 }),
+  );
+  return keyColorCache;
+}
+
+function keyHue(h: Hello, paletteIndex: number): number {
+  const c = h.palettes[paletteIndex]?.colors[0];
+  return c ? toHsv({ r: c[0], g: c[1], b: c[2] }).h : 0;
+}
+
+const FADE_DISPLAY = [0, 0.25, 0.5, 1, 2, 4];
+
 function knobDisplay(
   role: keyof typeof KNOB_LABELS,
   s: EngineStatus,
@@ -355,28 +379,24 @@ function knobDisplay(
 ): [string, number] {
   switch (role) {
     case "speed":
-      return [`×${s.speed}`, Math.log2(s.speed / 0.25) / 4];
+      // ¼× … 8×, evenly spaced along the arc like the steps on the knob.
+      return [`×${s.speed}`, (Math.log2(s.speed) + 2) / 5];
     case "hue":
       return [`${Math.round(s.hue * 360)}°`, s.hue];
     case "saturation":
       return [`${Math.round(s.saturation * 100)}%`, s.saturation];
     case "palette":
-      return [
-        `${s.paletteIndex + 1}`,
-        s.paletteIndex / Math.max(1, h.palettes.length - 1),
-      ];
+      return [h.palettes[s.paletteIndex]?.name ?? `${s.paletteIndex + 1}`, 0];
     case "width":
       return [`${Math.round(s.width * 100)}%`, s.width];
     case "fade":
       return [
         s.fadeBeats === 0 ? "Cut" : `${s.fadeBeats} b`,
-        Math.log2(1 + s.fadeBeats) / Math.log2(5),
+        Math.max(0, FADE_DISPLAY.indexOf(s.fadeBeats)) /
+          (FADE_DISPLAY.length - 1),
       ];
     case "geometry":
-      return [
-        GEOMETRY_LABELS[s.geometry],
-        ["linear", "mirror", "split"].indexOf(s.geometry) / 2,
-      ];
+      return [GEOMETRY_LABELS[s.geometry], 0];
     case "sensitivity":
       return [`${Math.round(s.sensitivity * 100)}%`, s.sensitivity];
   }

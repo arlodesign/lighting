@@ -9,7 +9,7 @@
  */
 import { emitKeypressEvents } from "node:readline";
 import type { HitId, KnobId } from "../src/engine/actions.ts";
-import { Engine, TICKS_PER_STEP } from "../src/engine/engine.ts";
+import { countsPerStep, Engine } from "../src/engine/engine.ts";
 import { LOOKS } from "../src/engine/looks/index.ts";
 import { LIGHT_IDS } from "../src/engine/rig.ts";
 import { SETLIST } from "../src/setlist.ts";
@@ -19,7 +19,10 @@ engine.controls.master = 1;
 
 const now = () => performance.now();
 const turn = (knob: KnobId, steps: number) =>
-  engine.dispatch({ type: "knob", knob, delta: steps * TICKS_PER_STEP }, now());
+  engine.dispatch(
+    { type: "knob", knob, delta: steps * countsPerStep(knob) },
+    now(),
+  );
 const flash = (hit: HitId) => {
   engine.dispatch({ type: "hit", hit, down: true, pressure: 0.7 }, now());
   setTimeout(

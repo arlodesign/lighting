@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Song } from "../setlist.ts";
 import type { Rgb } from "./color.ts";
-import { Engine, FADE_STEPS, SPEED_STEPS, TICKS_PER_STEP } from "./engine.ts";
+import {
+  countsPerStep,
+  Engine,
+  FADE_STEPS,
+  KNOB_SWEEP,
+  SPEED_STEPS,
+} from "./engine.ts";
 import type { Look } from "./look.ts";
 
 // Two trivial looks make expectations easy to read.
@@ -95,7 +101,10 @@ describe("Engine modifiers", () => {
   it("stepped knobs need several ticks per step and don't overshoot", () => {
     const e = engine();
     const start = e.controls.speedIndex;
-    e.dispatch({ type: "knob", knob: "speed", delta: TICKS_PER_STEP - 1 }, 0);
+    e.dispatch(
+      { type: "knob", knob: "speed", delta: countsPerStep("speed") - 1 },
+      0,
+    );
     expect(e.controls.speedIndex).toBe(start);
     e.dispatch({ type: "knob", knob: "speed", delta: 1 }, 0);
     expect(e.controls.speedIndex).toBe(start + 1);
@@ -106,11 +115,33 @@ describe("Engine modifiers", () => {
   it("geometry knob cycles and wraps", () => {
     const e = engine();
     const turn = () =>
-      e.dispatch({ type: "knob", knob: "geometry", delta: TICKS_PER_STEP }, 0);
+      e.dispatch(
+        { type: "knob", knob: "geometry", delta: countsPerStep("geometry") },
+        0,
+      );
     turn();
     expect(e.controls.geometry).toBe("mirror");
     turn();
     turn();
+    expect(e.controls.geometry).toBe("scatter");
+    turn();
+    expect(e.controls.geometry).toBe("linear");
+  });
+
+  it("one full sweep of a knob with ends covers its whole range", () => {
+    const e = engine();
+    e.controls.width = 0;
+    e.dispatch({ type: "knob", knob: "width", delta: KNOB_SWEEP }, 0);
+    expect(e.controls.width).toBeCloseTo(1);
+    e.controls.speedIndex = 0;
+    for (let i = 0; i < KNOB_SWEEP; i++)
+      e.dispatch({ type: "knob", knob: "speed", delta: 1 }, 0);
+    expect(SPEED_STEPS[e.controls.speedIndex]).toBe(8);
+  });
+
+  it("shape needs a deliberate turn, not a nudge, to change", () => {
+    const e = engine();
+    e.dispatch({ type: "knob", knob: "geometry", delta: 10 }, 0);
     expect(e.controls.geometry).toBe("linear");
   });
 

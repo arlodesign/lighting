@@ -26,18 +26,36 @@ import {
 } from "./rig.ts";
 
 /** Speed knob steps, as multiples of the beat. */
-export const SPEED_STEPS = [0.25, 0.5, 1, 2, 4] as const;
+export const SPEED_STEPS = [0.25, 0.5, 1, 2, 4, 8] as const;
 /** Fade knob steps: crossfade length in beats. */
 export const FADE_STEPS = [0, 0.25, 0.5, 1, 2, 4] as const;
-/** Encoder ticks per step for stepped knobs. Tune once the probe shows real tick rates. */
-export const TICKS_PER_STEP = 4;
-/** Fine knobs: how far one encoder tick moves the value. */
-const FINE_TICK = {
-  hue: 1 / 96,
-  saturation: 0.01,
-  width: 0.01,
-  sensitivity: 0.01,
-} as const;
+
+/** Counts in one full sweep of a MiniLab knob (its 0–127 range). */
+export const KNOB_SWEEP = 127;
+
+/**
+ * How each knob responds to turning, in MiniLab counts.
+ * - Knobs with ends: one full sweep covers the whole range, so they feel the same
+ *   everywhere. Stepped ones (speed, fade) spread their steps evenly across the sweep.
+ * - Wrapping knobs (hue, palette, shape) are endless; shape has few options, so it takes
+ *   about a quarter sweep per option and feels like clicking through positions.
+ */
+export const KNOB_FEEL = {
+  speed: { steps: KNOB_SWEEP / (SPEED_STEPS.length - 1) },
+  fade: { steps: KNOB_SWEEP / (FADE_STEPS.length - 1) },
+  palette: { steps: 4 },
+  geometry: { steps: 30 },
+  hue: { perCount: 1 / 96 },
+  saturation: { perCount: 1 / KNOB_SWEEP },
+  width: { perCount: 1 / KNOB_SWEEP },
+  sensitivity: { perCount: 1 / KNOB_SWEEP },
+} as const satisfies Record<KnobId, { steps: number } | { perCount: number }>;
+
+/** Counts needed to move a stepped knob by one step (handy for tests and the preview). */
+export function countsPerStep(knob: KnobId): number {
+  const feel = KNOB_FEEL[knob];
+  return "steps" in feel ? Math.ceil(feel.steps) : 1;
+}
 
 const KICK_DECAY_MS = 160;
 const AUDIO_STALE_MS = 1000;
@@ -427,7 +445,11 @@ export class Engine {
       colors: palette.colors.map((col) => adjust(col, c.hue, c.saturation)),
       width: c.width,
       geometry: c.geometry,
-      pos: positions(c.geometry),
+      // Scatter reshuffles once per bar of the look's own time.
+      pos: positions(
+        c.geometry,
+        Math.floor((this.clock.beats(now) * SPEED_STEPS[c.speedIndex]!) / 4),
+      ),
       side: Array.from({ length: LIGHT_COUNT }, (_, i) => sideOf(i)),
       steps: stepCount(c.geometry),
       audio: stale
@@ -461,8 +483,9 @@ export class Engine {
 
   #turn(knob: KnobId, delta: number): void {
     const c = this.controls;
-    if (knob in FINE_TICK) {
-      const amount = delta * FINE_TICK[knob as keyof typeof FINE_TICK];
+    const feel: { steps?: number; perCount?: number } = KNOB_FEEL[knob];
+    if (feel.perCount !== undefined) {
+      const amount = delta * feel.perCount;
       if (knob === "hue") c.hue = (((c.hue + amount) % 1) + 1) % 1;
       else
         c[knob as "saturation" | "width" | "sensitivity"] = clamp01(
@@ -470,10 +493,11 @@ export class Engine {
         );
       return;
     }
-    // Stepped knobs: accumulate ticks so a small nudge doesn't skip several steps.
+    // Stepped knobs: accumulate counts so a small nudge doesn't skip several steps.
+    const perStep = feel.steps!;
     const total = (this.#knobRemainder[knob] ?? 0) + delta;
-    const steps = Math.trunc(total / TICKS_PER_STEP);
-    this.#knobRemainder[knob] = total - steps * TICKS_PER_STEP;
+    const steps = Math.trunc(total / perStep);
+    this.#knobRemainder[knob] = total - steps * perStep;
     if (steps === 0) return;
     switch (knob) {
       case "speed":
