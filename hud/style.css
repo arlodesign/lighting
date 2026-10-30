@@ -538,6 +538,70 @@ footer {
   border-color: var(--ink);
 }
 
+.presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presets button,
+.presets a {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 1px solid var(--ink-dim);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.presets button:hover,
+.presets a:hover,
+.presets button:focus-visible,
+.presets a:focus-visible {
+  border-color: var(--ink);
+}
+
+.presets kbd {
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 70px;
+  transform: translate(-50%, 8px);
+  z-index: 2;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #1c1a17;
+  border: 1px solid var(--ink-dim);
+  color: var(--ink);
+  font-size: 15px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms,
+    transform 160ms;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast.warn {
+  border-color: var(--warn);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: none;
+  }
+}
+
 .meter {
   width: 140px;
   height: 8px;

@@ -154,6 +154,70 @@ describe("Engine setlist", () => {
   });
 });
 
+describe("Engine song presets", () => {
+  it("capture → load round-trips every dial, the swell and the tempo", () => {
+    const a = engine([{ name: "Song" }]);
+    a.controls.fadeIndex = 0;
+    a.dispatch({ type: "look", index: 1, velocity: 1 }, 0);
+    a.controls.width = 0.75;
+    a.controls.hue = 0.3;
+    a.controls.saturation = 0.6;
+    a.controls.swell = 0.4;
+    a.controls.speedIndex = SPEED_STEPS.indexOf(2);
+    a.controls.fadeIndex = FADE_STEPS.indexOf(2);
+    a.controls.geometry = "split";
+    a.clock.setBpm(97, 0);
+    const preset = a.capture();
+    expect(preset).toMatchObject({
+      bpm: 97,
+      look: "blue",
+      width: 0.75,
+      swell: 0.4,
+      speed: 2,
+      fade: 2,
+      geometry: "split",
+    });
+
+    const b = engine([{ name: "Song", ...preset }]);
+    b.loadSong(0, 0);
+    expect(b.controls).toMatchObject({
+      lookIndex: 1,
+      width: 0.75,
+      hue: 0.3,
+      saturation: 0.6,
+      swell: 0.4,
+      speedIndex: SPEED_STEPS.indexOf(2),
+      fadeIndex: FADE_STEPS.indexOf(2),
+      geometry: "split",
+    });
+    expect(b.clock.bpm).toBeCloseTo(97);
+  });
+
+  it("a preset only changes what it mentions", () => {
+    const e = engine([{ name: "Song", width: 0.9 }]);
+    e.controls.hue = 0.5;
+    e.loadSong(0, 0);
+    expect(e.controls.width).toBe(0.9);
+    expect(e.controls.hue).toBe(0.5);
+  });
+
+  it("speeds and fades snap to the nearest step", () => {
+    const e = engine([{ name: "Song", speed: 1.9, fade: 0.3 }]);
+    e.loadSong(0, 0);
+    expect(SPEED_STEPS[e.controls.speedIndex]).toBe(2);
+    expect(FADE_STEPS[e.controls.fadeIndex]).toBe(0.25);
+  });
+
+  it("swapping in a new setlist keeps the place in the set", () => {
+    const e = engine([{ name: "A" }, { name: "B" }, { name: "C" }]);
+    e.loadSong(1, 0);
+    e.setSetlist([{ name: "A" }, { name: "B", width: 1 }, { name: "C" }]);
+    expect(e.setlistLoaded).toBe(1);
+    expect(e.setlistCursor).toBe(2);
+    expect(e.setlist[1]!.width).toBe(1);
+  });
+});
+
 describe("Engine persistence", () => {
   it("round-trips through a snapshot", () => {
     const a = engine();

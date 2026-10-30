@@ -1,0 +1,142 @@
+[
+  {
+    "name": "Devil Inside",
+    "bpm": 148,
+    "look": "heartbeat",
+    "palette": "blood",
+    "notes": "INXS · 5:13"
+  },
+  {
+    "name": "Halloween",
+    "bpm": 210,
+    "look": "chase",
+    "palette": "pumpkin",
+    "notes": "The Misfits · 1:52"
+  },
+  {
+    "name": "Pretend We're Dead",
+    "bpm": 115,
+    "look": "ping-pong",
+    "palette": "toxic",
+    "notes": "L7 · 3:55"
+  },
+  {
+    "name": "Human Fly",
+    "bpm": 188,
+    "look": "dying-bulb",
+    "palette": "bruise",
+    "notes": "The Cramps · 2:13"
+  },
+  {
+    "name": "Immigrant Song",
+    "bpm": 113,
+    "look": "lightning",
+    "palette": "ice",
+    "notes": "Led Zeppelin · 2:26"
+  },
+  {
+    "name": "Dead Disco",
+    "bpm": 140,
+    "look": "rainbow",
+    "palette": "neon",
+    "notes": "Metric · 3:25"
+  },
+  {
+    "name": "Possum Kingdom",
+    "bpm": 100,
+    "look": "creep",
+    "palette": "vampire",
+    "notes": "Toadies · 5:08"
+  },
+  {
+    "name": "Black Magic Woman",
+    "bpm": 134,
+    "look": "breathe",
+    "palette": "purple-rain",
+    "notes": "Fleetwood Mac · 2:52"
+  },
+  {
+    "name": "Dracula From Houston",
+    "bpm": 99,
+    "look": "possession",
+    "palette": "witching",
+    "notes": "Butthole Surfers · 3:42"
+  },
+  {
+    "name": "Satanist",
+    "bpm": 89,
+    "look": "slow-heartbeat",
+    "palette": "blood",
+    "notes": "boygenius · 4:50"
+  },
+  {
+    "name": "Psycho",
+    "bpm": 136,
+    "look": "audio-bars",
+    "palette": "fire",
+    "notes": "Muse · 5:16"
+  },
+  {
+    "name": "I Might Need You to Kill",
+    "bpm": 92,
+    "look": "sparkle",
+    "palette": "pumpkin",
+    "notes": "The Thermals · 2:27"
+  },
+  {
+    "name": "Haunt Me",
+    "bpm": 65,
+    "look": "candle",
+    "palette": "candle",
+    "notes": "Twin Temple · 3:13"
+  },
+  {
+    "name": "I Bleed",
+    "bpm": 86,
+    "look": "ripple",
+    "palette": "blood",
+    "notes": "Pixies · 2:34"
+  },
+  {
+    "name": "Maneater",
+    "bpm": 205,
+    "look": "chase",
+    "palette": "pumpkin",
+    "notes": "The Koffin Kats · 3:28"
+  },
+  {
+    "name": "Only Shallow",
+    "bpm": 84,
+    "look": "wash",
+    "palette": "ghost",
+    "notes": "my bloody valentine · 3:41"
+  },
+  {
+    "name": "New Rose",
+    "bpm": 180,
+    "look": "split",
+    "palette": "sunset",
+    "notes": "The Damned · 2:44"
+  },
+  {
+    "name": "Twilight Zone",
+    "bpm": 119,
+    "look": "creep",
+    "palette": "witching",
+    "notes": "Golden Earring · 7:58"
+  },
+  {
+    "name": "Hungry Like the Wolf",
+    "bpm": 127,
+    "look": "ripple",
+    "palette": "sunset",
+    "notes": "Duran Duran · 3:40"
+  },
+  {
+    "name": "Wolf Like Me",
+    "bpm": 171,
+    "look": "chase",
+    "palette": "toxic",
+    "notes": "TV on the Radio · 4:37"
+  }
+]

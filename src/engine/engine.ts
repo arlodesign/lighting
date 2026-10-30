@@ -1,4 +1,4 @@
-import type { Song } from "../setlist.ts";
+import type { Song, SongSettings } from "../songs.ts";
 import type { Action, FaderId, HitId, KnobId } from "./actions.ts";
 import { BeatClock } from "./clock.ts";
 import {
@@ -120,8 +120,8 @@ export class Engine {
   readonly clock: BeatClock;
   readonly looks: readonly Look[];
   readonly palettes: readonly Palette[];
-  readonly setlist: readonly Song[];
   readonly maxStrobe: number;
+  #setlist: readonly Song[];
 
   controls: Controls = { ...DEFAULT_CONTROLS };
   setlistCursor = 0;
@@ -144,8 +144,50 @@ export class Engine {
     this.clock = new BeatClock(opts.bpm ?? 120, now);
     this.looks = opts.looks ?? LOOKS;
     this.palettes = opts.palettes ?? PALETTES;
-    this.setlist = opts.setlist ?? [];
+    this.#setlist = opts.setlist ?? [];
     this.maxStrobe = opts.maxStrobe ?? 1;
+  }
+
+  get setlist(): readonly Song[] {
+    return this.#setlist;
+  }
+
+  /** Swap in a new setlist (e.g. after a preset is saved). Keeps the position in the set. */
+  setSetlist(setlist: readonly Song[]): void {
+    this.#setlist = setlist;
+    this.setlistCursor = clampIndex(this.setlistCursor, setlist.length);
+    if (this.setlistLoaded !== null && this.setlistLoaded >= setlist.length)
+      this.setlistLoaded = null;
+  }
+
+  /**
+   * The current settings as a song preset: what ⌘S saves. Real values (ids, beats), so the
+   * preset survives looks being reordered or speed steps being added.
+   */
+  capture(): SongSettings & { bpm: number } {
+    const c = this.controls;
+    return {
+      bpm: Math.round(this.clock.bpm * 10) / 10,
+      look: this.looks[c.lookIndex]?.id,
+      palette: this.palettes[c.paletteIndex]?.id,
+      hue: round3(c.hue),
+      saturation: round3(c.saturation),
+      speed: SPEED_STEPS[c.speedIndex]!,
+      fade: FADE_STEPS[c.fadeIndex]!,
+      geometry: c.geometry,
+      width: round3(c.width),
+      swell: round3(c.swell),
+    };
+  }
+
+  /** Load a song's preset (tempo, look, palette, dials, swell) and point "next" past it. */
+  loadSong(index: number, now: number): void {
+    const song = this.#setlist[index];
+    if (!song) return;
+    if (song.bpm) this.clock.setBpm(song.bpm, now);
+    this.#applySettings(song, now);
+    this.setlistLoaded = index;
+    this.setlistCursor = clampIndex(index + 1, this.#setlist.length);
   }
 
   // ── input ────────────────────────────────────────────────────────────────────
@@ -190,7 +232,7 @@ export class Engine {
         );
         break;
       case "setlist-load":
-        this.#loadSong(this.setlistCursor, now);
+        this.loadSong(this.setlistCursor, now);
         break;
     }
   }
@@ -477,19 +519,36 @@ export class Engine {
     });
   }
 
-  #loadSong(index: number, now: number): void {
-    const song = this.setlist[index];
-    if (!song) return;
-    if (song.bpm) this.clock.setBpm(song.bpm, now);
-    const pal = this.palettes.findIndex((p) => p.id === song.palette);
-    if (pal >= 0) this.controls.paletteIndex = pal;
-    if (song.look) {
-      const lookIndex = this.looks.findIndex((l) => l.id === song.look);
+  /** Apply whatever a preset mentions; leave everything else as the operator has it. */
+  #applySettings(s: SongSettings, now: number): void {
+    const c = this.controls;
+    const pal = this.palettes.findIndex((p) => p.id === s.palette);
+    if (pal >= 0) c.paletteIndex = pal;
+    if (s.hue !== undefined) c.hue = clamp01(s.hue);
+    if (s.saturation !== undefined) c.saturation = clamp01(s.saturation);
+    if (s.width !== undefined) c.width = clamp01(s.width);
+    if (s.swell !== undefined) c.swell = clamp01(s.swell);
+    if (s.speed !== undefined)
+      c.speedIndex = nearestIndex(SPEED_STEPS, s.speed);
+    if (s.fade !== undefined) c.fadeIndex = nearestIndex(FADE_STEPS, s.fade);
+    if (s.geometry && GEOMETRIES.includes(s.geometry)) c.geometry = s.geometry;
+    // Look last, so its crossfade uses the preset's fade length.
+    if (s.look) {
+      const lookIndex = this.looks.findIndex((l) => l.id === s.look);
       if (lookIndex >= 0) this.#setLook(lookIndex, undefined, now);
     }
-    this.setlistLoaded = index;
-    this.setlistCursor = clampIndex(index + 1, this.setlist.length);
   }
+}
+
+const round3 = (x: number) => Math.round(x * 1000) / 1000;
+
+/** Index of the step closest to `value` (e.g. a saved speed of 2 → the "2×" step). */
+function nearestIndex(steps: readonly number[], value: number): number {
+  let best = 0;
+  for (let i = 1; i < steps.length; i++) {
+    if (Math.abs(steps[i]! - value) < Math.abs(steps[best]! - value)) best = i;
+  }
+  return best;
 }
 
 /** The same hue at full brightness — what the swell strip pushes toward. */

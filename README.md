@@ -54,7 +54,21 @@ DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- -
 | Big knob    | Scroll the setlist; click to load the song's tempo, palette and look                                                  |
 | Laptop keys | Space = tap tempo, Esc = blackout, `S` strobe, `F` flash, `L` lightning, `1`–`9` looks, ↑/↓ and Enter for the setlist |
 
-The setlist lives in `src/setlist.ts`. The lights' DMX addresses live in `src/config.ts`.
+## The setlist and saving presets on site
+
+The setlist lives in `src/setlist.json`: song order, tempo, and each song's starting look, palette,
+dials and swell. The lights' DMX addresses live in `src/config.ts`.
+
+At the venue you can tune a song and keep it:
+
+1. Load the song (turn the big knob, click it).
+2. Set the look, palette, dials and swell the way you want, and tap the tempo.
+3. Press **⌘S** on the laptop (or click **Save to song**). That song now starts this way.
+
+Saved presets live on the show laptop in `state/presets.json`, on top of the defaults in
+`src/setlist.json`. **Reset song** forgets a song's saved preset. **Export setlist** downloads a
+`setlist.json` with everything saved merged in: drop it into `src/` to make it the new default
+in the repo.
 
 ## When the lights don't respond
 

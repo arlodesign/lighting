@@ -4,7 +4,7 @@
  */
 import type { Action } from "../engine/actions.ts";
 import type { Engine } from "../engine/engine.ts";
-import type { Song } from "../setlist.ts";
+import type { Song } from "../songs.ts";
 
 export type EngineStatus = ReturnType<Engine["status"]>;
 
@@ -47,12 +47,21 @@ export type ServerMessage =
       strobe: number;
       status: EngineStatus;
       devices: DeviceStatus;
-    };
+    }
+  /** A one-off message for the operator, e.g. "Saved Devil Inside". */
+  | { type: "notice"; text: string; tone: "ok" | "warn" };
 
 export type ClientMessage =
   | { type: "action"; action: Action }
   /** Mic analysis from the HUD, raw 0–1 (the engine applies the sensitivity knob). */
-  | { type: "audio"; level: number; bass: number; kick: boolean };
+  | { type: "audio"; level: number; bass: number; kick: boolean }
+  /** Save the current settings as the loaded song's preset (⌘S). */
+  | { type: "preset-save" }
+  /** Forget the loaded song's saved preset and go back to the repo's default. */
+  | { type: "preset-reset" };
+
+/** Download the setlist with on-site saves merged in, in src/setlist.json's format. */
+export const EXPORT_PATH = "/export/setlist.json";
 
 export const WS_PATH = "/ws";
 export const DEFAULT_PORT = 4000;

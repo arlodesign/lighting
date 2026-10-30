@@ -25,7 +25,20 @@ import { MINILAB_MAPPING } from "../midi/mapping.ts";
 import { MidiInput } from "../midi/midiInput.ts";
 import { SETLIST } from "../setlist.ts";
 import { loadAutosave, saveAutosave } from "./autosave.ts";
-import { DEFAULT_PORT, WS_PATH, type ServerMessage } from "./protocol.ts";
+import {
+  applyPresets,
+  exportSetlist,
+  loadPresets,
+  savePresets,
+  withoutPreset,
+  withPreset,
+} from "./presets.ts";
+import {
+  DEFAULT_PORT,
+  EXPORT_PATH,
+  WS_PATH,
+  type ServerMessage,
+} from "./protocol.ts";
 import { isAllowedOrigin, parseClientMessage } from "./validate.ts";
 
 const { values: args } = parseArgs({
@@ -65,7 +78,17 @@ const now = () => performance.now();
 
 // ── engine + devices ─────────────────────────────────────────────────────────────
 
-const engine = new Engine({ setlist: SETLIST, maxStrobe: RIG.maxStrobe });
+// The setlist the show uses: the repo's src/setlist.json with any presets saved on site
+// (state/presets.json) layered on top.
+let presets = await loadPresets();
+const presetCount = Object.keys(presets.songs).length;
+if (presetCount)
+  console.log(`[presets] ${presetCount} song preset(s) saved on site`);
+
+const engine = new Engine({
+  setlist: applyPresets(SETLIST, presets),
+  maxStrobe: RIG.maxStrobe,
+});
 const saved = await loadAutosave();
 if (saved) {
   engine.restore(saved, now());
@@ -110,6 +133,17 @@ const MIME: Record<string, string> = {
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
+  if (url.pathname === EXPORT_PATH) {
+    // The setlist with on-site saves merged in, ready to replace src/setlist.json.
+    res
+      .writeHead(200, {
+        "content-type": "application/json; charset=utf-8",
+        "content-disposition": 'attachment; filename="setlist.json"',
+        "cache-control": "no-store",
+      })
+      .end(exportSetlist(engine.setlist));
+    return;
+  }
   const rel = url.pathname === "/" ? "index.html" : url.pathname.slice(1);
   const file = path.join(HUD_DIR, path.normalize(rel));
   if (!file.startsWith(HUD_DIR)) return void res.writeHead(403).end();
@@ -160,8 +194,67 @@ wss.on("connection", (ws) => {
     if (!msg) return;
     if (msg.type === "action") engine.dispatch(msg.action, now());
     else if (msg.type === "audio") engine.setAudio(msg, now());
+    else if (msg.type === "preset-save") void savePreset();
+    else if (msg.type === "preset-reset") void resetPreset();
   });
 });
+
+function notify(text: string, tone: "ok" | "warn" = "ok"): void {
+  const json = JSON.stringify({
+    type: "notice",
+    text,
+    tone,
+  } satisfies ServerMessage);
+  for (const ws of wss.clients) if (ws.readyState === ws.OPEN) ws.send(json);
+  console.log(`[presets] ${text}`);
+}
+
+/** ⌘S: make the current settings the loaded song's preset (saved on this laptop). */
+async function savePreset(): Promise<void> {
+  const index = engine.setlistLoaded;
+  const song = index === null ? undefined : engine.setlist[index];
+  if (!song) {
+    notify("Load a song first (click the big knob), then save.", "warn");
+    return;
+  }
+  presets = withPreset(presets, song.name, engine.capture());
+  try {
+    await savePresets(presets);
+    engine.setSetlist(applyPresets(SETLIST, presets));
+    notify(`Saved “${song.name}”`);
+  } catch (err) {
+    notify(
+      `Couldn't save: ${err instanceof Error ? err.message : err}`,
+      "warn",
+    );
+  }
+}
+
+/** Forget the loaded song's on-site preset and reload the repo's default for it. */
+async function resetPreset(): Promise<void> {
+  const index = engine.setlistLoaded;
+  const song = index === null ? undefined : engine.setlist[index];
+  if (!song) {
+    notify("Load a song first (click the big knob), then reset.", "warn");
+    return;
+  }
+  if (!presets.songs[song.name]) {
+    notify(`“${song.name}” is already the default.`);
+    return;
+  }
+  presets = withoutPreset(presets, song.name);
+  try {
+    await savePresets(presets);
+    engine.setSetlist(applyPresets(SETLIST, presets));
+    engine.loadSong(index!, now());
+    notify(`Reset “${song.name}” to the default`);
+  } catch (err) {
+    notify(
+      `Couldn't reset: ${err instanceof Error ? err.message : err}`,
+      "warn",
+    );
+  }
+}
 
 server.listen(port, host, () =>
   console.log(

@@ -72,6 +72,8 @@ function connect(): void {
     if (msg.type === "hello") {
       hello = msg;
       build(msg);
+    } else if (msg.type === "notice") {
+      toast(msg.text, msg.tone);
     } else if (hello) {
       update(msg);
     }
@@ -403,6 +405,13 @@ const holdKey = (e: KeyboardEvent) =>
   HOLD_KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
 
 addEventListener("keydown", (e) => {
+  // ⌘S / Ctrl-S saves the song preset. preventDefault stops the browser's own
+  // "Save Page As…" dialog from opening.
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+    e.preventDefault();
+    if (!e.repeat) savePreset();
+    return;
+  }
   if (e.repeat || e.metaKey || e.ctrlKey) return;
   const hit = holdKey(e);
   if (hit) {
@@ -429,6 +438,31 @@ addEventListener("blur", () => {
   for (const hit of heldByKeyboard) act({ type: "hit", hit, down: false });
   heldByKeyboard.clear();
 });
+
+// ── song presets: save, reset, export ───────────────────────────────────────────
+
+function savePreset(): void {
+  send({ type: "preset-save" });
+}
+
+$("preset-save").addEventListener("click", savePreset);
+$("preset-reset").addEventListener("click", () => {
+  const name = $("song-now").textContent ?? "this song";
+  if (
+    confirm(`Forget what was saved for “${name}” and go back to the default?`)
+  ) {
+    send({ type: "preset-reset" });
+  }
+});
+
+let toastTimer: ReturnType<typeof setTimeout> | undefined;
+function toast(text: string, tone: "ok" | "warn"): void {
+  const node = $("toast");
+  node.textContent = text;
+  node.className = `toast ${tone} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => node.classList.remove("show"), 2600);
+}
 
 // ── mic ──────────────────────────────────────────────────────────────────────────
 

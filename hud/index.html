@@ -8,6 +8,7 @@
   </head>
   <body>
     <div id="banner" hidden></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <section class="stage" aria-label="Lights">
       <div class="side" id="side-L"></div>
@@ -103,6 +104,30 @@
           <div id="mic-level"></div>
         </div>
         <span class="kick" id="kick" title="Kick detected"></span>
+      </div>
+      <div class="presets">
+        <button
+          id="preset-save"
+          type="button"
+          title="Make the current settings this song's preset"
+        >
+          Save to song <kbd>⌘S</kbd>
+        </button>
+        <button
+          id="preset-reset"
+          type="button"
+          title="Forget this song's saved preset"
+        >
+          Reset song
+        </button>
+        <a
+          id="preset-export"
+          href="/export/setlist.json"
+          download="setlist.json"
+          title="Download the setlist with saved presets, to put in the repo as src/setlist.json"
+        >
+          Export setlist
+        </a>
       </div>
       <div class="devices">
         <span id="dev-midi" class="dev">MiniLab</span>

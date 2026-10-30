@@ -40,6 +40,15 @@ describe("parseClientMessage", () => {
   });
 });
 
+describe("preset messages", () => {
+  it("accepts save and reset, and nothing extra", () => {
+    expect(parse({ type: "preset-save" })).toEqual({ type: "preset-save" });
+    expect(parse({ type: "preset-reset", sneaky: 1 })).toEqual({
+      type: "preset-reset",
+    });
+  });
+});
+
 describe("isAllowedOrigin", () => {
   const allowed = ["http://localhost:4000"];
   it("allows the app itself and rejects everyone else", () => {

@@ -7,6 +7,9 @@ export default defineConfig({
   build: { outDir: "../dist/hud", emptyOutDir: true },
   server: {
     port: 5173,
-    proxy: { "/ws": { target: "ws://localhost:4000", ws: true } },
+    proxy: {
+      "/ws": { target: "ws://localhost:4000", ws: true },
+      "/export": "http://localhost:4000",
+    },
   },
 });

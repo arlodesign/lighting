@@ -36,6 +36,9 @@ export function parseClientMessage(raw: string): ClientMessage | undefined {
       kick: m.kick === true,
     };
   }
+  if (m.type === "preset-save" || m.type === "preset-reset") {
+    return { type: m.type };
+  }
   if (m.type === "action") {
     const action = parseAction(m.action);
     return action && { type: "action", action };
