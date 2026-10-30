@@ -26,8 +26,9 @@ body {
 
 body {
   display: grid;
-  grid-template-rows: auto auto auto auto auto;
-  align-content: start;
+  /* stage · now · board · keys · footer. The keys row takes the spare height, which keeps
+     the footer pinned to the bottom of the window. */
+  grid-template-rows: auto auto auto 1fr auto;
   grid-template-columns: minmax(
     0,
     1fr
@@ -427,6 +428,7 @@ kbd {
 /* The 25 keys: which look each one plays. */
 
 .keyboard-panel {
+  align-self: start;
   margin-top: 1cqw;
 }
 
