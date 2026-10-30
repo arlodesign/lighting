@@ -52,7 +52,7 @@ DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- -
 | Pitch strip | Slide a spotlight across the lights                                                                                                                      |
 | Mod strip   | Swell the brightness                                                                                                                                     |
 | Big knob    | Scroll the setlist; click to load the song. The MiniLab's screen shows "Now 3/20" and the song, or "Next" while scrolling (`--no-screen` turns this off) |
-| Laptop keys | Space = tap tempo, Esc = blackout, `S` strobe, `F` flash, `L` lightning, `1`–`9` looks, ↑/↓ and Enter for the setlist                                    |
+| Laptop keys | Space = tap tempo, Esc = blackout, `S` strobe, `F` flash, `L` lightning, `1`–`9` looks, ↑/↓ and Enter for the setlist; `?` lists them                    |
 
 ## The setlist and saving presets on site
 

@@ -453,7 +453,28 @@ const heldByKeyboard = new Set<HitId>();
 const holdKey = (e: KeyboardEvent) =>
   HOLD_KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
 
+// ── shortcuts card (?) ──────────────────────────────────────────────────────────
+
+const shortcuts = $("shortcuts") as HTMLDialogElement;
+function toggleShortcuts(): void {
+  if (shortcuts.open) shortcuts.close();
+  else shortcuts.showModal();
+}
+$("shortcuts-open").addEventListener("click", toggleShortcuts);
+// A click on the dim backdrop (outside the card) closes it.
+shortcuts.addEventListener("click", (e) => {
+  if (e.target === shortcuts) shortcuts.close();
+});
+
 addEventListener("keydown", (e) => {
+  if (e.key === "?" && !e.repeat) {
+    e.preventDefault();
+    toggleShortcuts();
+    return;
+  }
+  // With the card open, esc just closes it (the browser does that); it shouldn't also
+  // black out the stage. Every other key still works.
+  if (e.key === "Escape" && shortcuts.open) return;
   // ⌘S / Ctrl-S saves the song preset. preventDefault stops the browser's own
   // "Save Page As…" dialog from opening.
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {

@@ -85,12 +85,6 @@
 
     <section class="keyboard-panel" aria-label="Keys: looks">
       <div class="keyboard" id="keyboard"></div>
-      <p class="caption keys">
-        Laptop keys: <kbd>space</kbd> tap <kbd>esc</kbd> blackout
-        <kbd>S</kbd> strobe <kbd>F</kbd> flash <kbd>L</kbd> lightning
-        <kbd>1</kbd>–<kbd>9</kbd> looks <kbd>↑</kbd><kbd>↓</kbd> setlist
-        <kbd>enter</kbd> load song
-      </p>
     </section>
 
     <footer>
@@ -129,6 +123,39 @@
         <span id="dev-midi" class="dev">MiniLab</span>
         <span id="dev-dmx" class="dev">Lights</span>
       </div>
+      <button id="shortcuts-open" class="shortcuts-open" type="button">
+        Shortcuts <kbd>?</kbd>
+      </button>
     </footer>
+
+    <dialog id="shortcuts" class="shortcuts" aria-labelledby="shortcuts-title">
+      <h2 id="shortcuts-title">Laptop keys</h2>
+      <p>Backups for the MiniLab. They work with this open, too.</p>
+      <dl>
+        <dt><kbd>space</kbd></dt>
+        <dd>Tap tempo</dd>
+        <dt><kbd>S</kbd></dt>
+        <dd>Strobe (hold)</dd>
+        <dt><kbd>F</kbd></dt>
+        <dd>White flash (hold)</dd>
+        <dt><kbd>L</kbd></dt>
+        <dd>Lightning (hold)</dd>
+        <dt><kbd>esc</kbd></dt>
+        <dd>Blackout (hold)</dd>
+        <dt><kbd>1</kbd>–<kbd>9</kbd></dt>
+        <dd>The first nine looks</dd>
+        <dt><kbd>↑</kbd> <kbd>↓</kbd></dt>
+        <dd>Scroll the setlist</dd>
+        <dt><kbd>enter</kbd></dt>
+        <dd>Load the song</dd>
+        <dt><kbd>⌘S</kbd></dt>
+        <dd>Save to song</dd>
+        <dt><kbd>?</kbd></dt>
+        <dd>Show or hide this</dd>
+      </dl>
+      <form method="dialog">
+        <button type="submit">Close</button>
+      </form>
+    </dialog>
   </body>
 </html>

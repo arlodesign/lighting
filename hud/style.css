@@ -506,12 +506,6 @@ kbd {
   outline-offset: -2px;
 }
 
-.caption {
-  margin: 0.5cqw 0 0 6.1%;
-  font-size: 1cqw;
-  color: var(--ink-dim);
-}
-
 /* ── footer: mic, devices, keyboard ──────────────────────────────── */
 
 footer {
@@ -553,7 +547,9 @@ footer {
 }
 
 .presets button,
-.presets a {
+.presets a,
+.shortcuts-open,
+.shortcuts button {
   font: inherit;
   color: var(--ink);
   background: none;
@@ -567,11 +563,16 @@ footer {
 .presets button:hover,
 .presets a:hover,
 .presets button:focus-visible,
-.presets a:focus-visible {
+.presets a:focus-visible,
+.shortcuts-open:hover,
+.shortcuts-open:focus-visible,
+.shortcuts button:hover,
+.shortcuts button:focus-visible {
   border-color: var(--ink);
 }
 
-.presets kbd {
+.presets kbd,
+.shortcuts-open kbd {
   font-size: 11px;
   margin-left: 4px;
 }
@@ -689,4 +690,52 @@ footer {
   #look-name {
     transition: none;
   }
+}
+
+/* ── shortcuts card ───────────────────────────────────────────────── */
+
+.shortcuts-open {
+  margin-left: auto;
+}
+
+.shortcuts {
+  width: min(420px, calc(100vw - 32px));
+  padding: 22px 26px;
+  border: 1px solid var(--ink-faint);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.shortcuts::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.shortcuts h2 {
+  font: 600 18px/1.2 var(--body);
+}
+
+.shortcuts p {
+  margin: 4px 0 16px;
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+
+.shortcuts dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 18px;
+  margin: 0 0 18px;
+}
+
+.shortcuts dt {
+  text-align: right;
+}
+
+.shortcuts dd {
+  margin: 0;
+}
+
+.shortcuts form {
+  text-align: right;
 }
