@@ -1,5 +1,5 @@
 /**
- * Writing text to the MiniLab 3's small screen (above the big knob).
+ * Writing text to the MiniLab 3's small screen (next to the song knob).
  *
  * Confirmed on the show MiniLab (2026-10-29, `npm run minilab-screen`). Arturia hasn't published
  * this; the byte layouts come from the MiniLab 3 remote script that ships with Ableton Live
@@ -92,7 +92,7 @@ export function songScreen(
   return screenMessage(`${index + 1}/${total}`, name);
 }
 
-/** How long "Next …" stays up after the big knob stops turning. */
+/** How long "Next …" stays up after the song knob stops turning. */
 export const SCROLL_HOLD_MS = 3000;
 
 interface SetlistStatus {
@@ -105,7 +105,7 @@ interface SetlistStatus {
 
 /**
  * What the screen says during the show: the song that's playing ("Now 3/20"), or, while the
- * big knob is being turned, the song a click would load ("Next 4/20"). Goes back to "Now"
+ * song knob is being turned, the song a click would load ("Next 4/20"). Goes back to "Now"
  * a few seconds after the knob stops.
  */
 export class SetlistScreen {

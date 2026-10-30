@@ -68,7 +68,7 @@ if (!values["no-daw"]) {
   await sleep(500);
 }
 
-console.log("Watch the small screen above the big knob. Ctrl-C to stop.\n");
+console.log("Watch the small screen next to the song knob. Ctrl-C to stop.\n");
 
 if (values.text !== undefined || values.text2 !== undefined) {
   send(screenMessage(values.text ?? "", values.text2 ?? ""));

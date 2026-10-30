@@ -54,7 +54,7 @@ DMX goes out one of three ways, chosen with `--dmx` (for example `npm start -- -
 | Faders      | Master · Energy (verse ↔ chorus, see below) · Balance (left ↔ right) · Audio (pulse with the band, and let the room nudge Energy)                        |
 | Pitch strip | Slide a spotlight across the lights                                                                                                                      |
 | Mod strip   | Swell the brightness                                                                                                                                     |
-| Big knob    | Scroll the setlist; click to load the song. The MiniLab's screen shows "Now 3/20" and the song, or "Next" while scrolling (`--no-screen` turns this off) |
+| Song knob   | Scroll the setlist; click to load the song. The MiniLab's screen shows "Now 3/20" and the song, or "Next" while scrolling (`--no-screen` turns this off) |
 | Laptop keys | Space = tap tempo, Esc = blackout, `S` strobe, `F` flash, `L` lightning, `1`–`9` looks, ↑/↓ and Enter for the setlist; `?` lists them                    |
 
 ## The setlist and saving presets on site
@@ -64,7 +64,7 @@ dials and swell. The lights' DMX addresses live in `src/config.ts`.
 
 At the venue you can tune a song and keep it:
 
-1. Load the song (turn the big knob, click it).
+1. Load the song (turn the song knob, click it).
 2. Set the look, palette, dials and swell the way you want, and tap the tempo.
 3. Press **⌘S** on the laptop (or click **Save to song**). That song now starts this way. (It saves
    the Energy version you're in; see below.)

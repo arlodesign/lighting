@@ -118,7 +118,7 @@ const midi = new MidiInput({
 });
 midi.start();
 
-// Song names on the MiniLab's screen, above the big knob.
+// Song names on the MiniLab's screen, next to the song knob.
 const screen = args["no-screen"] ? null : new MiniLabDisplay();
 const screenText = new SetlistScreen();
 screen?.start();
@@ -225,7 +225,7 @@ async function savePreset(): Promise<void> {
   const index = engine.setlistLoaded;
   const song = index === null ? undefined : engine.setlist[index];
   if (!song) {
-    notify("Load a song first (click the big knob), then save.", "warn");
+    notify("Load a song first (click the song knob), then save.", "warn");
     return;
   }
   // Saves the version of the song the Energy fader is in, and keeps the other two.
@@ -255,7 +255,7 @@ async function resetPreset(): Promise<void> {
   const index = engine.setlistLoaded;
   const song = index === null ? undefined : engine.setlist[index];
   if (!song) {
-    notify("Load a song first (click the big knob), then reset.", "warn");
+    notify("Load a song first (click the song knob), then reset.", "warn");
     return;
   }
   if (!presets.songs[song.name]) {
